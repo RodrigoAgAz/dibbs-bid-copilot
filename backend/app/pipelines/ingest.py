@@ -168,6 +168,8 @@ def run_daily_ingest(db: Session, mode: str | None = None, only_date: date | Non
             summary["history_rows"] += res["history_rows"]
             db.commit()
 
+        summary["companies_resolved"] = resolve_new_companies(db, src, errors)
+        db.commit()
         if make_recommendations and new_lines:
             summary.update(_predict_and_recommend(db, [ln.id for ln in new_lines]))
         run.status = "success" if not errors else "partial"
@@ -185,6 +187,30 @@ def run_daily_ingest(db: Session, mode: str | None = None, only_date: date | Non
     summary["errors"] = len(errors)
     summary["status"] = run.status
     return summary
+
+
+MAX_COMPANY_LOOKUPS = 60
+
+
+def resolve_new_companies(db: Session, src: DibbsSource, errors: list) -> int:
+    """Resolve names for awardee / approved-source CAGEs seen on open lines (bounded per run)."""
+    from app.connectors.companies import resolve_company
+    from app.models import ApprovedSource, AwardHistory
+
+    today = today_et()
+    open_nsns = select(SolicitationLine.nsn).join(Solicitation).where(Solicitation.return_by_date >= today)
+    cages = {c for (c,) in db.execute(select(AwardHistory.awardee_cage).where(AwardHistory.nsn.in_(open_nsns))).all() if c}
+    cages |= {c for (c,) in db.execute(select(ApprovedSource.cage_code).where(ApprovedSource.nsn.in_(open_nsns))).all()}
+    known = {c for (c,) in db.execute(select(Company.cage_code).where(Company.name.is_not(None))).all()}
+    n = 0
+    for cage in sorted(cages - known)[:MAX_COMPANY_LOOKUPS]:
+        try:
+            if resolve_company(db, src, cage) and db.get(Company, cage).name:
+                n += 1
+        except Exception as exc:
+            errors.append({"cage": cage, "step": "company", "error": str(exc)[:200]})
+    db.flush()
+    return n
 
 
 def _predict_and_recommend(db: Session, line_ids: list[int]) -> dict:

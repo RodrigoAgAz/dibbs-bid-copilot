@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: { default: "DIBBS Bid Copilot", template: "%s · DIBBS Bid Copilot" },
   description: "Bid recommendations for DLA DIBBS solicitations",
+  icons: { icon: "/favicon.svg" },
 };
 
 // System font stack on purpose: no build-time font downloads, so builds work offline.

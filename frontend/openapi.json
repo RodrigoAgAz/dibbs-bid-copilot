@@ -752,6 +752,1030 @@
           }
         }
       }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Dashboard",
+        "operationId": "dashboard_api_dashboard_get",
+        "parameters": [
+          {
+            "name": "fsc",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fsc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/{solicitation_number}": {
+      "get": {
+        "tags": [
+          "rfq"
+        ],
+        "summary": "Rfq Detail",
+        "operationId": "rfq_detail_api_rfq__solicitation_number__get",
+        "parameters": [
+          {
+            "name": "solicitation_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Solicitation Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitationDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/lines/{line_id}/actual-bid": {
+      "post": {
+        "tags": [
+          "rfq"
+        ],
+        "summary": "Record Actual Bid",
+        "operationId": "record_actual_bid_api_rfq_lines__line_id__actual_bid_post",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualBidIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/lines/{line_id}/refresh": {
+      "post": {
+        "tags": [
+          "rfq"
+        ],
+        "summary": "Refresh Recommendation",
+        "operationId": "refresh_recommendation_api_rfq_lines__line_id__refresh_post",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/lines/{line_id}/quote-requests": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Add Quote Request",
+        "operationId": "add_quote_request_api_rfq_lines__line_id__quote_requests_post",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewQuoteRequestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quote-requests/{qr_id}": {
+      "patch": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Edit Quote Request",
+        "operationId": "edit_quote_request_api_quote_requests__qr_id__patch",
+        "parameters": [
+          {
+            "name": "qr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Qr Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRequestPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quote-requests/{qr_id}/draft": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Redraft",
+        "description": "(Re)generate the RFQ email with the LLM from the strict template.",
+        "operationId": "redraft_api_quote_requests__qr_id__draft_post",
+        "parameters": [
+          {
+            "name": "qr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Qr Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quote-requests/{qr_id}/send": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Send",
+        "operationId": "send_api_quote_requests__qr_id__send_post",
+        "parameters": [
+          {
+            "name": "qr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Qr Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quote-requests/{qr_id}/simulate-reply": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Simulate Reply",
+        "description": "Demo mode only: feed a supplier reply through the same inbound pipeline as the webhook.",
+        "operationId": "simulate_reply_api_quote_requests__qr_id__simulate_reply_post",
+        "parameters": [
+          {
+            "name": "qr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Qr Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatedReplyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quote-requests/{qr_id}/quotes": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Add Manual Quote",
+        "operationId": "add_manual_quote_api_quote_requests__qr_id__quotes_post",
+        "parameters": [
+          {
+            "name": "qr_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Qr Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualQuoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierQuoteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/supplier-quotes/{quote_id}": {
+      "patch": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Edit Quote",
+        "operationId": "edit_quote_api_supplier_quotes__quote_id__patch",
+        "parameters": [
+          {
+            "name": "quote_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Quote Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuotePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierQuoteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/review-queue": {
+      "get": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Review Queue",
+        "operationId": "review_queue_api_review_queue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewItem"
+                  },
+                  "type": "array",
+                  "title": "Response Review Queue Api Review Queue Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/lines/{line_id}/call": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Call",
+        "operationId": "call_api_rfq_lines__line_id__call_post",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallLogOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "History",
+        "operationId": "history_api_history_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/overview": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Overview",
+        "operationId": "overview_api_admin_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/ingestion-runs": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Ingestion Runs",
+        "operationId": "ingestion_runs_api_admin_ingestion_runs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IngestionRunOut"
+                  },
+                  "type": "array",
+                  "title": "Response Ingestion Runs Api Admin Ingestion Runs Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/model-runs": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Model Runs",
+        "operationId": "model_runs_api_admin_model_runs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelRunOut"
+                  },
+                  "type": "array",
+                  "title": "Response Model Runs Api Admin Model Runs Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/model-runs/{run_id}/activate": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Activate Model",
+        "operationId": "activate_model_api_admin_model_runs__run_id__activate_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelRunOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/ingest": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Trigger Ingest",
+        "operationId": "trigger_ingest_api_admin_ingest_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/labels": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Trigger Labels",
+        "operationId": "trigger_labels_api_admin_labels_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/train": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Trigger Train",
+        "operationId": "trigger_train_api_admin_train_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/followups": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Trigger Followups",
+        "operationId": "trigger_followups_api_admin_followups_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/review-queue": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Review Queue",
+        "operationId": "admin_review_queue_api_admin_review_queue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewItem"
+                  },
+                  "type": "array",
+                  "title": "Response Admin Review Queue Api Admin Review Queue Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/supplier-quotes/{quote_id}/review": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Review Quote",
+        "operationId": "review_quote_api_admin_supplier_quotes__quote_id__review_post",
+        "parameters": [
+          {
+            "name": "quote_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Quote Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ReviewItem"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Review Quote Api Admin Supplier Quotes  Quote Id  Review Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{name}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Report File",
+        "operationId": "report_file_api_admin_reports__name__get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/inbound-email": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Inbound Email",
+        "description": "Parsed inbound email (JSON): {from, to, cc?, subject, text, html?, message_id?, attachments?: [\n{filename, content_type, content_base64}]}. Header X-Inbound-Signature = hex HMAC-SHA256(secret, body).",
+        "operationId": "inbound_email_api_webhooks_inbound_email_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Inbound Email Api Webhooks Inbound Email Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/elevenlabs": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Elevenlabs Post Call",
+        "operationId": "elevenlabs_post_call_api_webhooks_elevenlabs_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Elevenlabs Post Call Api Webhooks Elevenlabs Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/twilio/status": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Twilio Status",
+        "operationId": "twilio_status_api_webhooks_twilio_status_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Twilio Status Api Webhooks Twilio Status Post"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -790,6 +1814,764 @@
         ],
         "title": "AcceptInviteIn"
       },
+      "ActualBidIn": {
+        "properties": {
+          "actual_bid": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Bid"
+          }
+        },
+        "type": "object",
+        "title": "ActualBidIn"
+      },
+      "ApprovedSourceOut": {
+        "properties": {
+          "cage_code": {
+            "type": "string",
+            "title": "Cage Code"
+          },
+          "part_number": {
+            "type": "string",
+            "title": "Part Number"
+          },
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cage_code",
+          "part_number"
+        ],
+        "title": "ApprovedSourceOut"
+      },
+      "AwardOut": {
+        "properties": {
+          "award_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Award Date"
+          },
+          "contract_number": {
+            "type": "string",
+            "title": "Contract Number"
+          },
+          "awardee_cage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awardee Cage"
+          },
+          "awardee_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awardee Name"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "unit_of_issue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Of Issue"
+          },
+          "unit_price": {
+            "type": "number",
+            "title": "Unit Price"
+          },
+          "solicitation_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Solicitation Number"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "award_date",
+          "contract_number",
+          "awardee_cage",
+          "quantity",
+          "unit_of_issue",
+          "unit_price",
+          "solicitation_number",
+          "source"
+        ],
+        "title": "AwardOut"
+      },
+      "CallIn": {
+        "properties": {
+          "supplier_contact_id": {
+            "type": "integer",
+            "title": "Supplier Contact Id"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_contact_id"
+        ],
+        "title": "CallIn"
+      },
+      "CallLogOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "ended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended At"
+          },
+          "disclosure_played": {
+            "type": "boolean",
+            "title": "Disclosure Played"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "provider",
+          "started_at",
+          "ended_at",
+          "disclosure_played",
+          "transcript",
+          "outcome"
+        ],
+        "title": "CallLogOut"
+      },
+      "CandidateOut": {
+        "properties": {
+          "cage_code": {
+            "type": "string",
+            "title": "Cage Code"
+          },
+          "company_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "part_numbers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Part Numbers"
+          },
+          "historical_awards": {
+            "type": "integer",
+            "title": "Historical Awards"
+          },
+          "supplier_contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Contact Id"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "phone_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Type"
+          },
+          "call_consent": {
+            "type": "boolean",
+            "title": "Call Consent"
+          },
+          "callable": {
+            "type": "boolean",
+            "title": "Callable"
+          },
+          "call_block_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Call Block Reasons"
+          },
+          "quote_requests": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteRequestOut"
+            },
+            "type": "array",
+            "title": "Quote Requests"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cage_code",
+          "company_name",
+          "reason",
+          "part_numbers",
+          "historical_awards",
+          "supplier_contact_id",
+          "contact_name",
+          "email",
+          "phone",
+          "phone_type",
+          "call_consent",
+          "callable",
+          "call_block_reasons",
+          "quote_requests"
+        ],
+        "title": "CandidateOut"
+      },
+      "DashboardLine": {
+        "properties": {
+          "line_id": {
+            "type": "integer",
+            "title": "Line Id"
+          },
+          "solicitation_number": {
+            "type": "string",
+            "title": "Solicitation Number"
+          },
+          "line_no": {
+            "type": "integer",
+            "title": "Line No"
+          },
+          "type_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Code"
+          },
+          "return_by_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return By Date"
+          },
+          "days_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Left"
+          },
+          "nsn": {
+            "type": "string",
+            "title": "Nsn"
+          },
+          "fsc": {
+            "type": "string",
+            "title": "Fsc"
+          },
+          "nomenclature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomenclature"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "unit_of_issue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Of Issue"
+          },
+          "set_aside": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set Aside"
+          },
+          "predicted_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Median"
+          },
+          "landed_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Landed Cost"
+          },
+          "recommended_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Bid"
+          },
+          "conservative_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conservative Bid"
+          },
+          "aggressive_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aggressive Bid"
+          },
+          "p_win": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Win"
+          },
+          "expected_profit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Profit"
+          },
+          "no_bid": {
+            "type": "boolean",
+            "title": "No Bid"
+          },
+          "no_bid_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Bid Reason"
+          },
+          "actual_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Bid"
+          },
+          "quote_status": {
+            "$ref": "#/components/schemas/QuoteStatusSummary"
+          },
+          "flags": {
+            "$ref": "#/components/schemas/Flags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "solicitation_number",
+          "line_no",
+          "type_code",
+          "return_by_date",
+          "days_left",
+          "nsn",
+          "fsc",
+          "nomenclature",
+          "quantity",
+          "unit_of_issue",
+          "set_aside",
+          "predicted_median",
+          "landed_cost",
+          "recommended_bid",
+          "conservative_bid",
+          "aggressive_bid",
+          "p_win",
+          "expected_profit",
+          "no_bid",
+          "no_bid_reason",
+          "actual_bid",
+          "quote_status",
+          "flags"
+        ],
+        "title": "DashboardLine"
+      },
+      "DashboardOut": {
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/DashboardSummary"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summary",
+          "lines"
+        ],
+        "title": "DashboardOut"
+      },
+      "DashboardSummary": {
+        "properties": {
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "lines": {
+            "type": "integer",
+            "title": "Lines"
+          },
+          "bid_lines": {
+            "type": "integer",
+            "title": "Bid Lines"
+          },
+          "no_bid_lines": {
+            "type": "integer",
+            "title": "No Bid Lines"
+          },
+          "total_expected_profit": {
+            "type": "number",
+            "title": "Total Expected Profit"
+          },
+          "quotes_awaiting_reply": {
+            "type": "integer",
+            "title": "Quotes Awaiting Reply"
+          },
+          "needs_review": {
+            "type": "integer",
+            "title": "Needs Review"
+          },
+          "last_ingest_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Ingest At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "as_of",
+          "lines",
+          "bid_lines",
+          "no_bid_lines",
+          "total_expected_profit",
+          "quotes_awaiting_reply",
+          "needs_review",
+          "last_ingest_at"
+        ],
+        "title": "DashboardSummary"
+      },
+      "EmailOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "from_addr": {
+            "type": "string",
+            "title": "From Addr"
+          },
+          "to_addr": {
+            "type": "string",
+            "title": "To Addr"
+          },
+          "reply_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply To"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "direction",
+          "kind",
+          "from_addr",
+          "to_addr",
+          "reply_to",
+          "subject",
+          "body",
+          "created_at"
+        ],
+        "title": "EmailOut"
+      },
+      "Flags": {
+        "properties": {
+          "fast_award": {
+            "type": "boolean",
+            "title": "Fast Award",
+            "default": false
+          },
+          "approved_source_only": {
+            "type": "boolean",
+            "title": "Approved Source Only",
+            "default": false
+          },
+          "low_data": {
+            "type": "boolean",
+            "title": "Low Data",
+            "default": false
+          },
+          "cold_start": {
+            "type": "boolean",
+            "title": "Cold Start",
+            "default": false
+          },
+          "provisional": {
+            "type": "boolean",
+            "title": "Provisional",
+            "default": true
+          },
+          "first_article": {
+            "type": "boolean",
+            "title": "First Article",
+            "default": false
+          },
+          "aidc": {
+            "type": "boolean",
+            "title": "Aidc",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "Flags"
+      },
       "ForgotPasswordIn": {
         "properties": {
           "email": {
@@ -816,6 +2598,288 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HistoryOut": {
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/HistoryStats"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stats",
+          "rows"
+        ],
+        "title": "HistoryOut"
+      },
+      "HistoryRow": {
+        "properties": {
+          "line_id": {
+            "type": "integer",
+            "title": "Line Id"
+          },
+          "solicitation_number": {
+            "type": "string",
+            "title": "Solicitation Number"
+          },
+          "return_by_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return By Date"
+          },
+          "nsn": {
+            "type": "string",
+            "title": "Nsn"
+          },
+          "nomenclature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomenclature"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "recommended_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Bid"
+          },
+          "actual_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Bid"
+          },
+          "landed_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Landed Cost"
+          },
+          "no_bid": {
+            "type": "boolean",
+            "title": "No Bid"
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          },
+          "winning_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winning Price"
+          },
+          "awardee_cage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awardee Cage"
+          },
+          "award_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Award Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "solicitation_number",
+          "return_by_date",
+          "nsn",
+          "nomenclature",
+          "quantity",
+          "recommended_bid",
+          "actual_bid",
+          "landed_cost",
+          "no_bid",
+          "outcome",
+          "winning_price",
+          "awardee_cage",
+          "award_date"
+        ],
+        "title": "HistoryRow"
+      },
+      "HistoryStats": {
+        "properties": {
+          "tracked": {
+            "type": "integer",
+            "title": "Tracked"
+          },
+          "with_actual_bid": {
+            "type": "integer",
+            "title": "With Actual Bid"
+          },
+          "decided": {
+            "type": "integer",
+            "title": "Decided"
+          },
+          "won": {
+            "type": "integer",
+            "title": "Won"
+          },
+          "lost": {
+            "type": "integer",
+            "title": "Lost"
+          },
+          "win_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Win Rate"
+          },
+          "realized_margin_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realized Margin Pct"
+          },
+          "recommendation_would_have_won": {
+            "type": "integer",
+            "title": "Recommendation Would Have Won"
+          },
+          "recommendation_decided": {
+            "type": "integer",
+            "title": "Recommendation Decided"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tracked",
+          "with_actual_bid",
+          "decided",
+          "won",
+          "lost",
+          "win_rate",
+          "realized_margin_pct",
+          "recommendation_would_have_won",
+          "recommendation_decided"
+        ],
+        "title": "HistoryStats"
+      },
+      "IngestionRunOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "rows_ingested": {
+            "type": "integer",
+            "title": "Rows Ingested"
+          },
+          "errors": {
+            "items": {},
+            "type": "array",
+            "title": "Errors"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "started_at",
+          "finished_at",
+          "status",
+          "rows_ingested",
+          "errors",
+          "details"
+        ],
+        "title": "IngestionRunOut"
       },
       "InvitationOut": {
         "properties": {
@@ -938,6 +3002,198 @@
         ],
         "title": "InviteIn"
       },
+      "JobOut": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "queued": {
+            "type": "string",
+            "title": "Queued"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "queued"
+        ],
+        "title": "JobOut"
+      },
+      "LineDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "line_no": {
+            "type": "integer",
+            "title": "Line No"
+          },
+          "nsn": {
+            "type": "string",
+            "title": "Nsn"
+          },
+          "fsc": {
+            "type": "string",
+            "title": "Fsc"
+          },
+          "niin": {
+            "type": "string",
+            "title": "Niin"
+          },
+          "nomenclature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomenclature"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "unit_of_issue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Of Issue"
+          },
+          "dod_standard_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dod Standard Price"
+          },
+          "amsc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amsc"
+          },
+          "approved_source_only": {
+            "type": "boolean",
+            "title": "Approved Source Only"
+          },
+          "delivery_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Days"
+          },
+          "purchase_request": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Request"
+          },
+          "prediction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PredictionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/AwardOut"
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "approved_sources": {
+            "items": {
+              "$ref": "#/components/schemas/ApprovedSourceOut"
+            },
+            "type": "array",
+            "title": "Approved Sources"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateOut"
+            },
+            "type": "array",
+            "title": "Candidates"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "line_no",
+          "nsn",
+          "fsc",
+          "niin",
+          "nomenclature",
+          "quantity",
+          "unit_of_issue",
+          "dod_standard_price",
+          "amsc",
+          "approved_source_only",
+          "delivery_days",
+          "purchase_request",
+          "prediction",
+          "recommendation",
+          "history",
+          "approved_sources",
+          "candidates",
+          "outcome"
+        ],
+        "title": "LineDetail"
+      },
       "LoginIn": {
         "properties": {
           "email": {
@@ -958,6 +3214,100 @@
           "password"
         ],
         "title": "LoginIn"
+      },
+      "ManualQuoteIn": {
+        "properties": {
+          "unit_price": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Price"
+          },
+          "quoted_part_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quoted Part Number"
+          },
+          "min_order_qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Order Qty"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          },
+          "quote_valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Valid Until"
+          },
+          "freight_terms": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Terms"
+          },
+          "freight_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Cost"
+          },
+          "certs_offered": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Certs Offered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "unit_price"
+        ],
+        "title": "ManualQuoteIn"
       },
       "MeOut": {
         "properties": {
@@ -984,6 +3334,102 @@
           "demo_mode"
         ],
         "title": "MeOut"
+      },
+      "ModelRunOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "model_type": {
+            "type": "string",
+            "title": "Model Type"
+          },
+          "train_window": {
+            "type": "string",
+            "title": "Train Window"
+          },
+          "test_window": {
+            "type": "string",
+            "title": "Test Window"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "model_type",
+          "train_window",
+          "test_window",
+          "metrics",
+          "is_active",
+          "notes"
+        ],
+        "title": "ModelRunOut"
+      },
+      "NewQuoteRequestIn": {
+        "properties": {
+          "cage_code": {
+            "type": "string",
+            "maxLength": 5,
+            "minLength": 5,
+            "title": "Cage Code"
+          },
+          "email_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email To"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cage_code"
+        ],
+        "title": "NewQuoteRequestIn"
       },
       "OkOut": {
         "properties": {
@@ -1042,6 +3488,74 @@
         ],
         "title": "OrganizationOut"
       },
+      "OverviewOut": {
+        "properties": {
+          "organizations": {
+            "type": "integer",
+            "title": "Organizations"
+          },
+          "users": {
+            "type": "integer",
+            "title": "Users"
+          },
+          "solicitations": {
+            "type": "integer",
+            "title": "Solicitations"
+          },
+          "open_lines": {
+            "type": "integer",
+            "title": "Open Lines"
+          },
+          "awards": {
+            "type": "integer",
+            "title": "Awards"
+          },
+          "nsns_with_history": {
+            "type": "integer",
+            "title": "Nsns With History"
+          },
+          "pending_review": {
+            "type": "integer",
+            "title": "Pending Review"
+          },
+          "connector_mode": {
+            "type": "string",
+            "title": "Connector Mode"
+          },
+          "demo_mode": {
+            "type": "boolean",
+            "title": "Demo Mode"
+          },
+          "llm_provider": {
+            "type": "string",
+            "title": "Llm Provider"
+          },
+          "email_provider": {
+            "type": "string",
+            "title": "Email Provider"
+          },
+          "voice_enabled": {
+            "type": "boolean",
+            "title": "Voice Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organizations",
+          "users",
+          "solicitations",
+          "open_lines",
+          "awards",
+          "nsns_with_history",
+          "pending_review",
+          "connector_mode",
+          "demo_mode",
+          "llm_provider",
+          "email_provider",
+          "voice_enabled"
+        ],
+        "title": "OverviewOut"
+      },
       "PhoneType": {
         "type": "string",
         "enum": [
@@ -1050,6 +3564,642 @@
           "unknown"
         ],
         "title": "PhoneType"
+      },
+      "PredictionOut": {
+        "properties": {
+          "levels": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Levels"
+          },
+          "prices": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Prices"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "low_data": {
+            "type": "boolean",
+            "title": "Low Data"
+          },
+          "cold_start": {
+            "type": "boolean",
+            "title": "Cold Start"
+          },
+          "n_prior_awards": {
+            "type": "integer",
+            "title": "N Prior Awards"
+          },
+          "reference_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Price"
+          },
+          "reference_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Type"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "contributions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Contributions"
+          },
+          "similar_awards": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Similar Awards"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "levels",
+          "prices",
+          "median",
+          "low_data",
+          "cold_start",
+          "n_prior_awards",
+          "reference_price",
+          "reference_type",
+          "model",
+          "contributions",
+          "similar_awards",
+          "created_at"
+        ],
+        "title": "PredictionOut"
+      },
+      "QuotePatch": {
+        "properties": {
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "quoted_part_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quoted Part Number"
+          },
+          "min_order_qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Order Qty"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          },
+          "quote_valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Valid Until"
+          },
+          "freight_terms": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Terms"
+          },
+          "freight_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Cost"
+          },
+          "conforms_to_part_number": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conforms To Part Number"
+          },
+          "declined": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declined"
+          },
+          "mark_reviewed": {
+            "type": "boolean",
+            "title": "Mark Reviewed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "QuotePatch"
+      },
+      "QuoteRequestOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "cage_code": {
+            "type": "string",
+            "title": "Cage Code"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "candidate_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Reason"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number"
+          },
+          "email_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email To"
+          },
+          "email_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Subject"
+          },
+          "email_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Body"
+          },
+          "reply_address": {
+            "type": "string",
+            "title": "Reply Address"
+          },
+          "followup_count": {
+            "type": "integer",
+            "title": "Followup Count"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "replied_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replied At"
+          },
+          "quotes": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierQuoteOut"
+            },
+            "type": "array",
+            "title": "Quotes"
+          },
+          "emails": {
+            "items": {
+              "$ref": "#/components/schemas/EmailOut"
+            },
+            "type": "array",
+            "title": "Emails"
+          },
+          "calls": {
+            "items": {
+              "$ref": "#/components/schemas/CallLogOut"
+            },
+            "type": "array",
+            "title": "Calls"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "cage_code",
+          "channel",
+          "status",
+          "candidate_reason",
+          "part_number",
+          "email_to",
+          "email_subject",
+          "email_body",
+          "reply_address",
+          "followup_count",
+          "error",
+          "sent_at",
+          "replied_at"
+        ],
+        "title": "QuoteRequestOut"
+      },
+      "QuoteRequestPatch": {
+        "properties": {
+          "email_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email To"
+          },
+          "email_subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Subject"
+          },
+          "email_body": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email Body"
+          }
+        },
+        "type": "object",
+        "title": "QuoteRequestPatch"
+      },
+      "QuoteStatusSummary": {
+        "properties": {
+          "candidates": {
+            "type": "integer",
+            "title": "Candidates",
+            "default": 0
+          },
+          "draft": {
+            "type": "integer",
+            "title": "Draft",
+            "default": 0
+          },
+          "sent": {
+            "type": "integer",
+            "title": "Sent",
+            "default": 0
+          },
+          "replied": {
+            "type": "integer",
+            "title": "Replied",
+            "default": 0
+          },
+          "parsed": {
+            "type": "integer",
+            "title": "Parsed",
+            "default": 0
+          },
+          "declined": {
+            "type": "integer",
+            "title": "Declined",
+            "default": 0
+          },
+          "no_response": {
+            "type": "integer",
+            "title": "No Response",
+            "default": 0
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed",
+            "default": 0
+          },
+          "needs_review": {
+            "type": "integer",
+            "title": "Needs Review",
+            "default": 0
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "default": "not started"
+          }
+        },
+        "type": "object",
+        "title": "QuoteStatusSummary"
+      },
+      "RecommendationOut": {
+        "properties": {
+          "landed_cost_per_unit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Landed Cost Per Unit"
+          },
+          "landed_breakdown": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Landed Breakdown"
+          },
+          "provisional": {
+            "type": "boolean",
+            "title": "Provisional"
+          },
+          "recommended_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Bid"
+          },
+          "p_win_at_recommended": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Win At Recommended"
+          },
+          "expected_profit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Profit"
+          },
+          "conservative_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conservative Bid"
+          },
+          "aggressive_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aggressive Bid"
+          },
+          "no_bid": {
+            "type": "boolean",
+            "title": "No Bid"
+          },
+          "no_bid_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Bid Reason"
+          },
+          "explanation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Explanation"
+          },
+          "actual_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Bid"
+          },
+          "actual_bid_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Bid At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "landed_cost_per_unit",
+          "landed_breakdown",
+          "provisional",
+          "recommended_bid",
+          "p_win_at_recommended",
+          "expected_profit",
+          "conservative_bid",
+          "aggressive_bid",
+          "no_bid",
+          "no_bid_reason",
+          "explanation",
+          "actual_bid",
+          "actual_bid_at",
+          "updated_at"
+        ],
+        "title": "RecommendationOut"
       },
       "ResetPasswordIn": {
         "properties": {
@@ -1072,6 +4222,104 @@
           "password"
         ],
         "title": "ResetPasswordIn"
+      },
+      "ReviewDecision": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "pattern": "^(approve|reject)$",
+            "title": "Action"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ReviewDecision"
+      },
+      "ReviewItem": {
+        "properties": {
+          "quote": {
+            "$ref": "#/components/schemas/SupplierQuoteOut"
+          },
+          "organization_id": {
+            "type": "integer",
+            "title": "Organization Id"
+          },
+          "organization_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organization Name"
+          },
+          "cage_code": {
+            "type": "string",
+            "title": "Cage Code"
+          },
+          "solicitation_number": {
+            "type": "string",
+            "title": "Solicitation Number"
+          },
+          "nsn": {
+            "type": "string",
+            "title": "Nsn"
+          },
+          "nomenclature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomenclature"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "history_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History Median"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quote",
+          "organization_id",
+          "cage_code",
+          "solicitation_number",
+          "nsn",
+          "nomenclature",
+          "quantity",
+          "history_median"
+        ],
+        "title": "ReviewItem"
       },
       "SettingsIn": {
         "properties": {
@@ -1473,6 +4721,259 @@
         ],
         "title": "SignupIn"
       },
+      "SimulatedReplyIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "SimulatedReplyIn"
+      },
+      "SolicitationDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "solicitation_number": {
+            "type": "string",
+            "title": "Solicitation Number"
+          },
+          "type_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Code"
+          },
+          "type_label": {
+            "type": "string",
+            "title": "Type Label"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "return_by_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return By Date"
+          },
+          "days_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Left"
+          },
+          "buyer_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Code"
+          },
+          "buyer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Name"
+          },
+          "buyer_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Email"
+          },
+          "buyer_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Phone"
+          },
+          "set_aside": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set Aside"
+          },
+          "fast_award": {
+            "type": "boolean",
+            "title": "Fast Award"
+          },
+          "aidc": {
+            "type": "boolean",
+            "title": "Aidc"
+          },
+          "tech_docs": {
+            "type": "boolean",
+            "title": "Tech Docs"
+          },
+          "inspection_point": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inspection Point"
+          },
+          "fob": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fob"
+          },
+          "first_article": {
+            "type": "boolean",
+            "title": "First Article"
+          },
+          "naics": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naics"
+          },
+          "packaging": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packaging"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "pdf_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Url"
+          },
+          "dibbs_url": {
+            "type": "string",
+            "title": "Dibbs Url"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineDetail"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "solicitation_number",
+          "type_code",
+          "type_label",
+          "issue_date",
+          "return_by_date",
+          "days_left",
+          "buyer_code",
+          "buyer_name",
+          "buyer_email",
+          "buyer_phone",
+          "set_aside",
+          "fast_award",
+          "aidc",
+          "tech_docs",
+          "inspection_point",
+          "fob",
+          "first_article",
+          "naics",
+          "packaging",
+          "status",
+          "pdf_url",
+          "dibbs_url",
+          "lines"
+        ],
+        "title": "SolicitationDetail"
+      },
       "SupplierIn": {
         "properties": {
           "cage_code": {
@@ -1830,6 +5331,190 @@
         },
         "type": "object",
         "title": "SupplierPatch"
+      },
+      "SupplierQuoteOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "quote_request_id": {
+            "type": "integer",
+            "title": "Quote Request Id"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "quoted_part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quoted Part Number"
+          },
+          "min_order_qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Order Qty"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          },
+          "quote_valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Valid Until"
+          },
+          "freight_terms": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Terms"
+          },
+          "freight_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freight Cost"
+          },
+          "certs_offered": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Certs Offered"
+          },
+          "conforms_to_part_number": {
+            "type": "boolean",
+            "title": "Conforms To Part Number"
+          },
+          "declined": {
+            "type": "boolean",
+            "title": "Declined"
+          },
+          "extraction_confidence": {
+            "type": "number",
+            "title": "Extraction Confidence"
+          },
+          "needs_review": {
+            "type": "boolean",
+            "title": "Needs Review"
+          },
+          "review_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Reason"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "raw_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Text"
+          },
+          "parsed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Parsed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "quote_request_id",
+          "unit_price",
+          "currency",
+          "quoted_part_number",
+          "min_order_qty",
+          "lead_time_days",
+          "quote_valid_until",
+          "freight_terms",
+          "freight_cost",
+          "certs_offered",
+          "conforms_to_part_number",
+          "declined",
+          "extraction_confidence",
+          "needs_review",
+          "review_reason",
+          "reviewed_at",
+          "source",
+          "raw_text",
+          "parsed_at"
+        ],
+        "title": "SupplierQuoteOut"
       },
       "UserOut": {
         "properties": {

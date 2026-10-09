@@ -127,3 +127,8 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
 - Synthetic solicitations use the fictional issuing offices `SPEZZ1..7`, so they can never collide with real
   DIBBS numbers. They are excluded from the FSC report, and the UI marks them as demo. Demo org CAGE codes
   are 9ZDM1/9ZDM2. Synthetic set-aside mix and quantities follow the real index files.
+- Every row in an RFQ PDF's procurement-history table is stored, even rows older than the backfill
+  START date (some go back to 1988). They're free, improve NSN features, and START only bounds the
+  walk over award listings and searches. PPI adjustment before 2015 uses the first available index value.
+- The backfill has run-size limits (`--max-pdfs`, `--max-award-dates`, `--max-award-pages`,
+  `--max-nsn-searches`). DIBBS award listing pages take about 30 s each to serve, so unbounded walks run for hours.

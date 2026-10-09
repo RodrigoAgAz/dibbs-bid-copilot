@@ -338,8 +338,18 @@ Postgres 16, otherwise SQLite. Migrations are applied by Alembic, so they're tes
   acceptable offer wins, and ignores past-performance scoring, ties, price-reasonableness rejections and
   buyers who don't award at all.
 - **Demo metrics come from synthetic data.** `make seed` trains on synthetic history so the demo works
-  offline. Its report shows the pipeline works, not how accurate real predictions are. Run a backfill
-  and `make train` for real metrics.
+  offline. Its report shows the pipeline works, not how accurate real predictions are. For real metrics,
+  see [`ml/reports/live_snapshot_2026-10-09/`](ml/reports/live_snapshot_2026-10-09/): a bounded live
+  backfill (400 NSNs, about 6k real award rows). Results on the last 3 months:
+
+  | Metric | LightGBM + conformal | Baseline |
+  |---|---|---|
+  | Mean pinball loss | 0.268 | 0.296 |
+  | Median absolute error | 15% | 17% |
+  | 80% / 90% coverage | 78% / 87% | 77% / 84% |
+
+  Cold-start NSNs (no prior award, 31% of test rows) are much harder: MAPE of the median is 157% there,
+  versus 21% for NSNs with history. More backfill coverage helps directly.
 - **Backtest assumption.** The spec's landed-cost assumption (W × U(0.6, 0.95)) gives "cost + 15%" nearly
   oracle information. The report explains this; `last_minus_2pct` is the fairer naive benchmark.
 - **DIBBS coverage.** There's no public procurement-history page. History comes from automated-RFQ PDFs

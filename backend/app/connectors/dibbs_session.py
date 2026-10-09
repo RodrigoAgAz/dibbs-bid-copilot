@@ -100,6 +100,8 @@ class DibbsSession:
                 banner = self.http.get(banner_url)
                 self._accept_form(banner_url, banner.text)
                 continue
+            if resp.status_code in (301, 302, 303) and "filenotfound" in loc.lower():
+                raise FileNotFoundError(url)  # dibbs2 redirects missing files to an (http) error page
             if resp.status_code in (301, 302, 303):
                 url = urljoin(url, loc)
                 method, data = "GET", None

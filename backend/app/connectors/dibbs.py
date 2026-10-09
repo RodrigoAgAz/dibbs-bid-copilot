@@ -49,7 +49,8 @@ class DibbsSource:
     def nsn_page(self, nsn: str) -> bytes | None:
         raise NotImplementedError
 
-    def award_search(self, category: str, values: list[str], scope: str = "recent") -> list[bytes]:
+    def award_search(self, category: str, values: list[str], scope: str = "recent",
+                     max_pages: int = MAX_AWARD_PAGES) -> list[bytes]:
         raise NotImplementedError
 
     def awards_by_post_date(self, d: date, max_pages: int = MAX_AWARD_PAGES) -> list[bytes]:
@@ -135,13 +136,14 @@ class LiveDibbsSource(DibbsSource):
             n += 1
         return pages
 
-    def award_search(self, category: str, values: list[str], scope: str = "recent") -> list[bytes]:
+    def award_search(self, category: str, values: list[str], scope: str = "recent",
+                     max_pages: int = MAX_AWARD_PAGES) -> list[bytes]:
         out: list[bytes] = []
         for i in range(0, len(values), 40):
             chunk = ",".join(values[i : i + 40])
             url = f"{WWW}/Awards/AwdRecs.aspx?Category={category}&TypeSrch=cq&Value={quote(chunk)}&Scope={scope}"
             first = self._get(url, f"awd_{category}_{scope}_{i}.html")
-            out.extend(self._paged(url, first, MAX_AWARD_PAGES, f"awd_{category}_{scope}_{i}"))
+            out.extend(self._paged(url, first, max_pages, f"awd_{category}_{scope}_{i}"))
         return out
 
     def award_dates(self) -> list[date]:
@@ -202,7 +204,8 @@ class FixtureDibbsSource(DibbsSource):
     def nsn_page(self, nsn: str) -> bytes | None:
         return self._read(self.d / "nsn" / f"rfqnsn_{nsn}.html")
 
-    def award_search(self, category: str, values: list[str], scope: str = "recent") -> list[bytes]:
+    def award_search(self, category: str, values: list[str], scope: str = "recent",
+                     max_pages: int = MAX_AWARD_PAGES) -> list[bytes]:
         # The fixture NSN searches cover whatever NSNs were captured; callers filter rows by value.
         if category != "nsn":
             return []

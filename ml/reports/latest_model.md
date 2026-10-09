@@ -1,8 +1,8 @@
 # Latest pricing model
 
-Model run **#5**: **promoted** to active (pinball 0.0571 < active 0.0576).
+Model run **#1**: **promoted** to active (forced (no comparable active model)).
 
-_Trained on 5,590 award rows, of which 5,590 are the synthetic demo history from `make seed`. Metrics on synthetic data show the pipeline works; they are not evidence about real DIBBS prices._
+_Trained on 5,960 real award rows from the database._
 
 ## Data and time windows
 
@@ -10,12 +10,12 @@ Time-based split, never random: train on everything up to T-6 months, conformal 
 
 | Window | Dates | Rows |
 |---|---|---|
-| Train | 2023-01-01 .. 2026-04-09 | 4,886 |
-| Calibrate | 2026-04-09 .. 2026-07-09 | 344 |
-| Test | 2026-07-09 .. 2026-10-09 | 360 |
+| Train | 1994-09-12 .. 2026-04-09 | 5,507 |
+| Calibrate | 2026-04-09 .. 2026-07-09 | 207 |
+| Test | 2026-07-09 .. 2026-10-09 | 235 |
 
 
-Cold-start share of test rows (no prior award for the NSN): 0.0%.
+Cold-start share of test rows (no prior award for the NSN): 30.6%.
 
 ## Accuracy on the test window
 
@@ -23,13 +23,16 @@ Target: log(winning unit price / reference price). Pinball loss is averaged over
 
 | Metric | LightGBM + conformal | LightGBM (uncalibrated) | Baseline |
 |---|---|---|---|
-| Mean pinball loss | **0.0571** | 0.0575 | 0.0802 |
-| MAPE of median | 17.3% | 17.7% | 23.6% |
-| Median abs. % error | 14.2% | 14.2% | 17.6% |
-| 80% interval coverage | 79.2% | 76.1% | 83.3% |
-| 90% interval coverage | 89.7% | 85.3% | 91.1% |
+| Mean pinball loss | **0.2677** | 0.2730 | 0.2958 |
+| MAPE of median | 62.8% | 61.3% | 85.6% |
+| Median abs. % error | 14.9% | 15.6% | 17.3% |
+| 80% interval coverage | 77.9% | 72.3% | 77.0% |
+| 90% interval coverage | 86.8% | 83.0% | 84.3% |
 
-Previously active model on the same test window: pinball 0.0576, 80% coverage 78.1%.
+| Segment | Rows | Pinball | MAPE median | 80% cov. | 90% cov. |
+|---|---|---|---|---|---|
+| NSN has history | 163 | 0.1218 | 21.3% | 78.5% | 87.7% |
+| Cold start | 72 | 0.5980 | 156.6% | 76.4% | 84.7% |
 
 ![Pinball loss by quantile](pinball.png)
 
@@ -37,9 +40,9 @@ Previously active model on the same test window: pinball 0.0576, 80% coverage 78
 
 | Level | 0.05 | 0.10 | 0.20 | 0.30 | 0.40 | 0.50 | 0.60 | 0.70 | 0.80 | 0.90 | 0.95 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Model | 0.05 | 0.10 | 0.19 | 0.30 | 0.40 | 0.51 | 0.58 | 0.67 | 0.78 | 0.89 | 0.95 |
-| Before conformal | 0.08 | 0.13 | 0.25 | 0.35 | 0.46 | 0.53 | 0.60 | 0.68 | 0.78 | 0.89 | 0.94 |
-| Baseline | 0.04 | 0.09 | 0.19 | 0.28 | 0.38 | 0.47 | 0.61 | 0.72 | 0.83 | 0.92 | 0.96 |
+| Model | 0.04 | 0.09 | 0.18 | 0.26 | 0.32 | 0.44 | 0.56 | 0.66 | 0.77 | 0.86 | 0.91 |
+| Before conformal | 0.05 | 0.11 | 0.20 | 0.31 | 0.40 | 0.51 | 0.59 | 0.69 | 0.77 | 0.83 | 0.88 |
+| Baseline | 0.06 | 0.07 | 0.17 | 0.35 | 0.46 | 0.63 | 0.66 | 0.71 | 0.77 | 0.84 | 0.90 |
 
 ![Coverage](coverage.png)
 
@@ -49,18 +52,18 @@ For every test line, 5 bids are sampled around the reference price (b = ref x ex
 
 | Predicted bucket | Mean predicted | Observed | Count |
 |---|---|---|---|
-| 0.0-0.1 | 0.036 | 0.029 | 377 |
-| 0.1-0.2 | 0.148 | 0.132 | 174 |
-| 0.2-0.3 | 0.249 | 0.281 | 121 |
-| 0.3-0.4 | 0.348 | 0.443 | 106 |
-| 0.4-0.5 | 0.449 | 0.435 | 108 |
-| 0.5-0.6 | 0.552 | 0.491 | 106 |
-| 0.6-0.7 | 0.648 | 0.631 | 111 |
-| 0.7-0.8 | 0.756 | 0.846 | 169 |
-| 0.8-0.9 | 0.851 | 0.863 | 153 |
-| 0.9-1.0 | 0.961 | 0.979 | 375 |
+| 0.0-0.1 | 0.065 | 0.048 | 146 |
+| 0.1-0.2 | 0.143 | 0.199 | 161 |
+| 0.2-0.3 | 0.248 | 0.382 | 68 |
+| 0.3-0.4 | 0.354 | 0.421 | 107 |
+| 0.4-0.5 | 0.448 | 0.569 | 102 |
+| 0.5-0.6 | 0.552 | 0.576 | 85 |
+| 0.6-0.7 | 0.650 | 0.530 | 83 |
+| 0.7-0.8 | 0.748 | 0.735 | 83 |
+| 0.8-0.9 | 0.858 | 0.893 | 103 |
+| 0.9-1.0 | 0.965 | 0.954 | 237 |
 
-Brier score 0.1162, expected calibration error 0.0294 (baseline: Brier 0.1699, ECE 0.0424).
+Brier score 0.1537, expected calibration error 0.0506 (baseline: Brier 0.1740, ECE 0.0345).
 
 ![P(win) calibration](calibration.png)
 
@@ -70,9 +73,9 @@ Assumption: landed cost = winning price x U(0.6, 0.95); bid wins iff bid < winni
 
 | Policy | Bids | Wins | Win rate | Total profit | Profit per bid | Wins below cost |
 |---|---|---|---|---|---|---|
-| model | 356 | 116 | 32.6% | $44,637 | $125.38 | 0 |
-| last_minus_2pct | 360 | 207 | 57.5% | $16,163 | $44.90 | 78 |
-| cost_plus_15pct | 360 | 275 | 76.4% | $82,077 | $227.99 | 0 |
+| model | 215 | 91 | 42.3% | $464,061 | $2,158.42 | 0 |
+| last_minus_2pct | 163 | 136 | 83.4% | $-615,488 | $-3,776.00 | 26 |
+| cost_plus_15pct | 235 | 182 | 77.4% | $870,157 | $3,702.80 | 0 |
 
 ![Backtest](backtest.png)
 
@@ -80,21 +83,21 @@ Assumption: landed cost = winning price x U(0.6, 0.95); bid wins iff bid < winni
 
 | Feature | Importance |
 |---|---|
-| log_last_to_dod | 14.6% |
-| qty_rel_median | 11.0% |
-| log_qty_vs_last | 10.9% |
-| f_min | 10.7% |
-| f_max | 9.1% |
-| f_last3_median | 6.4% |
-| trend_per_year | 4.9% |
-| log_ref_price | 4.2% |
-| volatility | 4.1% |
-| log_quantity | 3.5% |
-| days_since_last_award | 3.2% |
-| first_article | 2.8% |
-| inflation_change | 2.5% |
-| fsc | 2.2% |
-| type_code | 2.2% |
+| inflation_change | 17.8% |
+| days_since_last_award | 13.8% |
+| log_qty_vs_last | 13.5% |
+| qty_rel_median | 9.6% |
+| volatility | 8.5% |
+| trend_per_year | 5.1% |
+| f_last3_median | 4.4% |
+| log_ref_price | 4.4% |
+| log_quantity | 4.0% |
+| incumbent_share | 3.9% |
+| f_min | 3.1% |
+| f_max | 3.0% |
+| n_prior_awards | 2.8% |
+| fsc | 2.7% |
+| n_approved_sources | 2.5% |
 
 ## Caveats
 

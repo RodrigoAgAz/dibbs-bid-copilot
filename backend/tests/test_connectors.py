@@ -121,3 +121,12 @@ def test_fixture_source_serves_samples():
     assert src.rfq_pdf("SPE4A627T0486")[:4] == b"%PDF"
     assert src.record_page("NOPE") is None
     assert len(src.awards_by_post_date(dates[-1])) == 2
+
+
+def test_missing_file_redirect_is_not_found():
+    def handler(request):
+        return httpx.Response(302, headers={"location": "http://dibbs2.bsm.dla.mil/FileNotFound.aspx", "set-cookie": "dw=1"})
+
+    session = DibbsSession(_http(handler), mode="form")
+    with pytest.raises(FileNotFoundError):
+        session.fetch("https://dibbs2.bsm.dla.mil/Downloads/Awards/07OCT26/NOPE.PDF")

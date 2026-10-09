@@ -35,7 +35,8 @@ MAX_AWARD_PDFS = 300
 
 
 def run_backfill(db: Session, fscs: list[str], start: date, end: date, mode: str | None = None,
-                 max_pdfs: int = MAX_PDFS_PER_RUN, max_award_dates: int = 10, max_award_pages: int = 20) -> dict:
+                 max_pdfs: int = MAX_PDFS_PER_RUN, max_award_dates: int = 10, max_award_pages: int = 20,
+                 max_nsn_searches: int = 50) -> dict:
     src = get_dibbs_source(mode)
     run = IngestionRun(source=f"backfill:{src.mode}", status="running", errors=[], details={"fscs": fscs})
     db.add(run)
@@ -113,11 +114,11 @@ def run_backfill(db: Session, fscs: list[str], start: date, end: date, mode: str
         # 4. NSN award search for NSNs still without history.
         have = {n for (n,) in db.execute(select(AwardHistory.nsn).distinct()).all()}
         missing = [n for n in best if n not in have and not checkpoint_done(db, "backfill_nsn_search", n)]
-        for i in range(0, len(missing), 40):
+        for i in range(0, min(len(missing), 40 * max_nsn_searches), 40):
             chunk = missing[i : i + 40]
             try:
                 lrows = []
-                for page in src.award_search("nsn", chunk, scope="all"):
+                for page in src.award_search("nsn", chunk, scope="all", max_pages=max_award_pages):
                     lrows.extend(r for r in parse_award_listing(page).rows if r.nsn in set(chunk))
                 lrows = [r for r in lrows if r.award_date and start <= r.award_date <= end]
                 s["award_rows"] += upsert_awards(db, award_rows_from_listing(db, src, lrows, fset, pdf_budget))

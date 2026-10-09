@@ -65,6 +65,9 @@ def backfill(
     start: str = typer.Option("2023-01-01"),
     end: str = typer.Option("today"),
     mode: str = typer.Option("", help="fixture | live | apify (default: CONNECTOR_MODE)"),
+    max_pdfs: int = typer.Option(2000, help="Max RFQ PDFs (one per NSN) fetched this run"),
+    max_award_dates: int = typer.Option(10, help="Most recent award posting dates to walk"),
+    max_award_pages: int = typer.Option(20, help="Max listing pages per award posting date"),
 ) -> None:
     """Resumable historical backfill of awards and procurement history."""
     _setup_logging()
@@ -73,7 +76,8 @@ def backfill(
 
     fscs = [f.strip() for f in fsc.split(",") if f.strip()] or get_settings().default_fsc_watchlist
     with session_scope() as db:
-        summary = run_backfill(db, fscs, _parse_date(start), _parse_date(end), mode=mode or None)
+        summary = run_backfill(db, fscs, _parse_date(start), _parse_date(end), mode=mode or None, max_pdfs=max_pdfs,
+                               max_award_dates=max_award_dates, max_award_pages=max_award_pages)
     typer.echo(json.dumps(summary, indent=2, default=str))
 
 

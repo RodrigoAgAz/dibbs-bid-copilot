@@ -1,0 +1,248 @@
+{
+ "primary": [
+  {
+   "mode": "browser",
+   "start_url": "https://www.dibbs.bsm.dla.mil/RFQ/RfqDates.aspx?category=recent",
+   "landed_url": "https://www.dibbs.bsm.dla.mil/dodwarning.aspx?goto=/rfq/rfqdates.aspx?category=recent",
+   "landed_status": 200,
+   "cookies_before": [
+    "SessionId",
+    "TS01523db3",
+    "di"
+   ],
+   "after_click_url": "https://www.dibbs.bsm.dla.mil//rfq/rfqdates.aspx?category=recent",
+   "cookies_after": [
+    {
+     "name": "TS01523db3",
+     "domain": ".www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "SessionId",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "dw",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "di",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    }
+   ]
+  },
+  {
+   "mode": "browser",
+   "start_url": "https://dibbs2.bsm.dla.mil/dodwarning.aspx?goto=%2f",
+   "landed_url": "https://dibbs2.bsm.dla.mil/dodwarning.aspx?goto=%2f",
+   "landed_status": 200,
+   "cookies_before": [
+    "SessionId",
+    "TS01391f55",
+    "TS01523db3",
+    "di",
+    "dw"
+   ],
+   "after_click_url": "https://dibbs2.bsm.dla.mil/dodwarning.aspx?goto=%2f",
+   "cookies_after": [
+    {
+     "name": "TS01523db3",
+     "domain": ".www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "SessionId",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "dw",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "di",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "TS01391f55",
+     "domain": ".dibbs2.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    },
+    {
+     "name": "dw",
+     "domain": "dibbs2.bsm.dla.mil",
+     "httpOnly": true,
+     "secure": true,
+     "sameSite": "Strict",
+     "expires": -1
+    }
+   ]
+  }
+ ],
+ "uncookied_observations": [
+  {
+   "url": "https://www.dibbs.bsm.dla.mil/RFQ/RfqDates.aspx?category=recent",
+   "status": 302,
+   "location": "/dodwarning.aspx?goto=/rfq/rfqdates.aspx?category=recent",
+   "content_type": "text/html; charset=utf-8",
+   "is_banner": true
+  },
+  {
+   "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261008.txt",
+   "status": 200,
+   "location": null,
+   "content_type": "text/html; charset=utf-8",
+   "is_banner": true
+  }
+ ],
+ "form_fallback_test": [
+  {
+   "mode": "form",
+   "start_url": "https://www.dibbs.bsm.dla.mil/RFQ/RfqDates.aspx?category=recent",
+   "first_status": 302,
+   "first_location": "/dodwarning.aspx?goto=/rfq/rfqdates.aspx?category=recent",
+   "hidden_fields": [
+    "__EVENTVALIDATION",
+    "__VIEWSTATE",
+    "__VIEWSTATE1",
+    "__VIEWSTATE10",
+    "__VIEWSTATE11",
+    "__VIEWSTATE12",
+    "__VIEWSTATE13",
+    "__VIEWSTATE14",
+    "__VIEWSTATE15",
+    "__VIEWSTATE16",
+    "__VIEWSTATE17",
+    "__VIEWSTATE18",
+    "__VIEWSTATE19",
+    "__VIEWSTATE2",
+    "__VIEWSTATE20",
+    "__VIEWSTATE21",
+    "__VIEWSTATE22",
+    "__VIEWSTATE23",
+    "__VIEWSTATE3",
+    "__VIEWSTATE4",
+    "__VIEWSTATE5",
+    "__VIEWSTATE6",
+    "__VIEWSTATE7",
+    "__VIEWSTATE8",
+    "__VIEWSTATE9",
+    "__VIEWSTATEENCRYPTED",
+    "__VIEWSTATEFIELDCOUNT",
+    "__VIEWSTATEGENERATOR"
+   ],
+   "post_url": "https://www.dibbs.bsm.dla.mil/dodwarning.aspx?goto=%2frfq%2frfqdates.aspx%3fcategory%3drecent",
+   "post_status": 302,
+   "post_location": "https://www.dibbs.bsm.dla.mil//rfq/rfqdates.aspx?category=recent",
+   "cookies": [
+    {
+     "name": "TS01523db3",
+     "domain": ".www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "SessionId",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "di",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "dw",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "path": "/"
+    }
+   ]
+  },
+  {
+   "mode": "form",
+   "start_url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261008.txt",
+   "first_status": 200,
+   "first_location": null,
+   "hidden_fields": [
+    "__EVENTVALIDATION",
+    "__VIEWSTATE",
+    "__VIEWSTATEGENERATOR"
+   ],
+   "post_url": "https://dibbs2.bsm.dla.mil/dodwarning.aspx?goto=%2fdownloads%2frfq%2farchive%2fin261008.txt",
+   "post_status": 200,
+   "post_location": null,
+   "cookies": [
+    {
+     "name": "TS01523db3",
+     "domain": ".www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "SessionId",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "di",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "dw",
+     "domain": "www.dibbs.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "TS01391f55",
+     "domain": ".dibbs2.bsm.dla.mil",
+     "path": "/"
+    },
+    {
+     "name": "dw",
+     "domain": "dibbs2.bsm.dla.mil",
+     "path": "/"
+    }
+   ]
+  },
+  {
+   "verify_www_after_form": 200,
+   "banner": false
+  },
+  {
+   "verify_dibbs2_after_form": 200,
+   "banner": false,
+   "content_type": "text/plain; charset=ISO-8859-1"
+  }
+ ]
+}

@@ -1,0 +1,155 @@
+{
+ "request": {
+  "method": "POST",
+  "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+  "body": {
+   "filters": {
+    "keywords": [
+     "SPE4A626PL037",
+     "SPE4A626PU582",
+     "SPE4A626PX272"
+    ],
+    "award_type_codes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ],
+    "time_period": [
+     {
+      "start_date": "2025-10-09",
+      "end_date": "2026-10-09"
+     }
+    ]
+   },
+   "fields": [
+    "Award ID",
+    "Recipient Name",
+    "Recipient UEI",
+    "recipient_id",
+    "Award Amount",
+    "Total Outlays",
+    "Description",
+    "Start Date",
+    "End Date",
+    "Awarding Agency",
+    "Awarding Sub Agency",
+    "Funding Sub Agency",
+    "Contract Award Type",
+    "NAICS",
+    "PSC",
+    "Place of Performance State Code",
+    "Last Modified Date",
+    "generated_internal_id"
+   ],
+   "limit": 25,
+   "page": 1,
+   "sort": "Award Amount",
+   "order": "desc",
+   "subawards": false
+  }
+ },
+ "status": 200,
+ "response": {
+  "spending_level": "awards",
+  "limit": 25,
+  "results": [
+   {
+    "internal_id": 359759379,
+    "Award ID": "SPE4A626PL037",
+    "Recipient Name": "SARGENT AEROSPACE & DEFENSE, LLC",
+    "Recipient UEI": "F8M5LJA6LJL4",
+    "recipient_id": "cb8dbcd3-9419-ee7c-a27e-862716822f5e-C",
+    "Award Amount": 25232.0,
+    "Total Outlays": null,
+    "Description": "8512004854!SCREW,CAP,SOCKET HE",
+    "Start Date": "2026-03-30",
+    "End Date": "2027-04-12",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332722",
+     "description": "BOLT, NUT, SCREW, RIVET, AND WASHER MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5305",
+     "description": "SCREWS"
+    },
+    "Place of Performance State Code": "AZ",
+    "Last Modified Date": "2026-03-30 10:54:47",
+    "generated_internal_id": "CONT_AWD_SPE4A626PL037_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 362156573,
+    "Award ID": "SPE4A626PU582",
+    "Recipient Name": "BOEING DISTRIBUTION SERVICES X, INC.",
+    "Recipient UEI": "X3K6MA9ZLTW6",
+    "recipient_id": "e7360887-4da9-617b-357b-1c3446728140-C",
+    "Award Amount": 6497.4,
+    "Total Outlays": null,
+    "Description": "8512174381!NUT,SELF-LOCKING, HE",
+    "Start Date": "2026-06-11",
+    "End Date": "2026-11-04",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332722",
+     "description": "BOLT, NUT, SCREW, RIVET, AND WASHER MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5310",
+     "description": "NUTS AND WASHERS"
+    },
+    "Place of Performance State Code": "FL",
+    "Last Modified Date": "2026-06-11 10:52:16",
+    "generated_internal_id": "CONT_AWD_SPE4A626PU582_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363273944,
+    "Award ID": "SPE4A626PX272",
+    "Recipient Name": "BEK, INC.",
+    "Recipient UEI": "LK9BTBWNLY96",
+    "recipient_id": "75e0cf7e-9b91-0dc6-555a-55a34a214219-C",
+    "Award Amount": 3500.0,
+    "Total Outlays": null,
+    "Description": "8512226378!NUT,PLAIN,HEXAGON",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-10-29",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332722",
+     "description": "BOLT, NUT, SCREW, RIVET, AND WASHER MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5310",
+     "description": "NUTS AND WASHERS"
+    },
+    "Place of Performance State Code": "WV",
+    "Last Modified Date": "2026-07-09 07:20:49",
+    "generated_internal_id": "CONT_AWD_SPE4A626PX272_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   }
+  ],
+  "page_metadata": {
+   "page": 1,
+   "hasNext": false,
+   "last_record_unique_id": null,
+   "last_record_sort_value": "None"
+  },
+  "messages": [
+   "For searches, time period start and end dates are currently limited to an earliest date of 2007-10-01.  For data going back to 2000-10-01, use either the Custom Award Download feature on the website or one of our download or bulk_download API endpoints as listed on https://api.usaspending.gov/docs/endpoints. "
+  ]
+ }
+}

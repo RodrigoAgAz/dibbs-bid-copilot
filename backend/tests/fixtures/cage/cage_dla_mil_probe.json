@@ -1,0 +1,26 @@
+[
+ {
+  "url": "https://cage.dla.mil/Search/Results?q=2N935&page=1",
+  "status": 302,
+  "location": "/Home/UsageAgree"
+ },
+ {
+  "url": "https://cage.dla.mil/Search/Details?id=2N935",
+  "status": 302,
+  "location": "/Home/UsageAgree"
+ },
+ {
+  "url": "https://cage.dla.mil/Search/Results?q=01084&page=1",
+  "status": 302,
+  "location": "/Home/UsageAgree"
+ },
+ {
+  "url": "https://cage.dla.mil/Search/Details?id=01084",
+  "status": 302,
+  "location": "/Home/UsageAgree"
+ },
+ {
+  "url": "https://cage.dla.mil/Home/UsageAgree",
+  "status": 200
+ }
+]

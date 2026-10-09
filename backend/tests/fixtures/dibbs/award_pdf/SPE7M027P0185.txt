@@ -1,0 +1,833 @@
+ORDER FOR SUPPLIES OR SERVICES PAGE 1 OF 14
+1. CONTRACT/PURCH ORDER/AGREEMENT NO. 2. DELIVERY ORDER/CALL NO. 3. DATE OF ORDER/CALL 4. REQUISITION/PURCH REQUEST NO. 5. PRIORITY
+(YYYYMMMDD)
+SPE7M0-27-P-0185 2026 OCT 09 N0025362717D34 DO-C9
+6. ISSUED BY CODE SPE7M0 7. ADMINISTERED BY (If other than 6) CODE SPE7M0 8. DELIVERY FOB
+DLA WEAPONS SUPPORT DLA WEAPONS SUPPORT DESTINATION
+MARITIME SUPPLY CHAIN ESOC BUYS MARITIME SUPPLY CHAIN ESOC BUYS
+P C O O L B U O M X B 3 U 9 S 9 0 O H 43218-3990 P C O O L B U O M X B 3 U 9 S 9 0 O H 43218-3990 X OTHER
+USA USA (See Schedule if
+Local Admin: Nina Gonter Tel: 6146922208 Criticality: A Pre-Award Survey : None other)
+Email: NINA.GONTER@DLA.MIL
+9. CONTRACTOR CODE 1V630 FACILITY 10. DELIVER TO FOB POINT BY (Date) 11. X IF BUSINESS IS
+(YYYYMMMDD)
+150 DAYS ADO X SMALL
+F & R SALES, INC. SMALL DISAD-
+DBA MCCAFFREY ASSOCIATES 12. DISCOUNT TERMS VANTAGED
+N A A N M D E 109 GAUNTT ST Net 30 days WOMEN-OWNED
+ADDRESS BURLINGTON NJ 08016-1938 13. MAIL INVOICES TO THE ADDRESS IN BLOCK
+USA Submit Invoices IAW DFARS 252.232-7003
+14. SHIP TO CODE 15. PAYMENT WILL BE MADE BY CODE SL4701 MARK ALL
+DEF FIN AND ACCOUNTING SVC PACKAGES AND
+BSM PAPERS WITH
+SEE SCHEDULE, DO NOT SHIP TO ADDRESSES ON THIS PAGE P O BOX 182317 IDENTIFICATION
+NUMBERS IN
+COLUMBUS OH 43218-2317 BLOCKS 1 AND 2.
+USA
+DELIVERY/
+16. CALL This delivery order/call is issued on another Government agency or in accordance with and subject to terms and conditions of above numbered contract.
+TYPE
+OF Reference your Offer/Quote dated 2026 OCT 06 furnish the following on terms specified herein.
+PURCHASE X
+ORDER ACCEPTANCE. THE CONTRACTOR HEREBY ACCEPTS THE OFFER REPRESENTED BY THE NUMBERED PURCHASE ORDER AS IT MAY PREVIOUSLY HAVE
+BEEN OR IS NOW MODIFIED, SUBJECT TO ALL OF THE TERMS AND CONDITIONS SET FORTH, AND AGREES TO PERFORM THE SAME.
+NAME OF CONTRACTOR SIGNATURE TYPED NAME AND TITLE DATE SIGNED
+(YYYYMMMDD)
+If this box is marked, supplier must sign Acceptance and return the following number of copies:
+17. ACCOUNTING AND APPROPRIATION DATA/LOCAL USE
+BX: 97X4930 5CBX 001 2620 S33189 $240.58
+20. QUANTITY
+18. ITEM NO. 19. SCHEDULE OF SUPPLIES/SERVICES ORDERED/ ACCEPTED* 21.UNIT 2 2 . P U R N IC IT E 23. AMOUNT
+Award sent EDI, Do not duplicate shipment
+493.000
+This is a Rated Order/Contract under DPAS (15 CFR 700). See Block 5
+* If quantity accepted by the Government is 24. UNITED STATES OF AMERICA 25. TOTAL $240.58
+same as quantity ordered, indicate by X. Abaigael Masterson Abaigael Masterson
+If different, enter actual quantity accepted below Abaigael.Masterson@dla.mil 26.
+DIFFERENCES
+quantity ordered and encircle. 2026 OCT 09 CONTRACTING/ORDERING OFFICER
+27a. QUANTITY IN COLUMN 20 HAS BEEN
+ACCEPTED, AND CONFORMS TO
+INSPECTED RECEIVED THE CONTRACT EXCEPT AS NOTED:
+b. SIGNATURE OF AUTHORIZED GOVERNMENT REPRESENTATIVE c. DATE d. PRINTED NAME AND TITLE OF AUTHORIZED GOVERNMENT REPRESENTATIVE
+(YYYYMMMDD)
+e. MAILING ADDRESS OF AUTHORIZED GOVERNMENT REPRESENTATIVE 28. SHIP. NO. 29. D.O. VOUCHER NO. 30. INITIALS
+PARTIAL 32. PAID BY 33. AMOUNT VERIFIED CORRECT FOR
+f. TELEPHONE NUMBER g. E-MAIL ADDRESS FINAL
+31. PAYMENT 34. CHECK NUMBER
+36. I CERTIFY THIS ACCOUNT IS CORRECT AND PROPER FOR PAYMENT. COMPLETE
+a. DATE b. SIGNATURE AND TITLE OF CERTIFYING OFFICER PARTIAL 35. BILL OF LADING NO.
+(YYYYMMMDD)
+FINAL
+37. RECEIVED 38. RECEIVED BY (Print) 39. DATE RECEIVED 40. TOTAL CON- 41. S/R ACCOUNT NUMBER 42. S/R VOUCHER NO.
+AT (YYYYMMMDD) TAINERS
+DD FORM 1155, DEC 2001 PREVIOUS EDITION IS OBSOLETE. Adobe Professional 8.0
+<<<PAGE 1 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 2 OF 14 PAGES
+SPE7M0-27-P-0185
+THE AWARD CLAUSES ARE APPLICABLE AS INDICATED IN THE DLA MASTER SOLICITATION FOR AUTOMATED SIMPLIFIED ACQUISITIONS
+REVISION 105 WHICH CAN BE FOUND ON THE WEB AT:
+https://www.dla.mil/Portals/104/Documents/J7Acquisition/
+FinalMasterSolicitationForAutomatedSimplifiedAcquisitionsRevision5-20-26.pdf
+********************************************************************************************************************
+* UNUSUAL AND COMPELLING EMERGENCY REQUIREMENT.
+* EXPEDITED DELIVERY IS REQUESTED AT NO ADDITIONAL CHARGE TO THE GOVERNMENT.
+* PLEASE PROVIDE TRACKING INFORMATION TO THE POST AWARD ADMINISTRATOR LISTED
+IN BLOCK 6 ON PAGE 1.
+********************************************************************************************************************
+252.232-7006 WIDE AREA WORKFLOW PAYMENT INSTRUCTIONS (DEC 2018) DFARS
+As prescribed in 232.7004 (b), use the following clause:
+(a) Definitions. As used in this clause-
+“Department of Defense Activity Address Code (DoDAAC)” is a six position code that uniquely identifies a unit,
+activity, or organization. “Document type” means the type of payment request or receiving report available for
+creation in Wide Area WorkFlow (WAWF). “Local processing office (LPO)” is the office responsible for payment
+certification when payment certification is done external to the entitlement system.
+(b) Electronic invoicing. The WAWF system is the method to electronically process vendor payment requests and
+receiving reports, as authorized by DFARS 252.232-7003, Electronic Submission of Payment Requests and Receiving
+Reports.
+(c) WAWF access. To access WAWF, the Contractor shall-
+(1) Have a designated electronic business point of contact in the System for Award Management at https://www.
+acquisition.gov; and
+(2) Be registered to use WAWF at https://wawf.eb.mil/ following the step-by-step procedures for self-registration
+available at this web site.
+(d) WAWF training. The Contractor should follow the training instructions of the WAWF Web-Based Training Course and
+use the Practice Training Site before submitting payment requests through WAWF. Both can be accessed by selecting the
+“Web Based Training” link on the WAWF home page at https:// wawf.eb.mil/
+(e) WAWF methods of document submission. Document submissions may be via web entry, Electronic Data Interchange, or
+File Transfer Protocol.
+(f) WAWF payment instructions. The Contractor must use the following information when submitting payment requests and
+receiving reports in WAWF for this contract/order:
+1) Document type. The Contractor shall use the following document types of reports invoice and WAWF receiving report
+(RR). An invoice and WAWF receiving report (RR) are both required. The invoice and receiving report may be submitted
+separately or together as a combo type document.
+(2) Inspection/acceptance location – See Resulting Award
+(3) Document routing. The Contractor shall use the information in the Routing Data Table below only to fill in
+applicable fields in WAWF when creating payment requests and receiving reports in the system.
+Routing Data Table*
+Field Name in WAWFData to be entered in WAWF
+Pay Official DoDAAC-See Resulting Award
+Issue By DoDAAC-See Resulting Award
+Admin DoDAAC**-See Resulting Award
+Inspect By DoDAAC-See Resulting Award if applicable
+Ship To Code-See Resulting Award if applicable
+Ship From Code-See Resulting Award if applicable
+Mark For Code-See Resulting Award if applicable
+Service Approver (DoDAAC)-See Resulting Award if applicable
+Service Acceptor (DoDAAC)-See Resulting Award if applicable
+Accept at Other DoDAAC-See Resulting Award if applicable
+LPO DoDAAC-See Resulting Award if applicable
+DCAA Auditor DoDAAC-See Resulting Award if applicable
+Other DoDAAC(s)-See Resulting Award if applicable
+(4) Payment request and supporting documentation. The Contractor shall ensure a payment request includes appropriate
+contract line item and subline item descriptions of the work performed or supplies delivered, unit price/cost per
+unit, fee (if applicable), and all relevant back-up documentation, as defined in DFARS Appendix F, (e.g. timesheets)
+in support of each payment request.
+(5) WAWF email notifications. The Contractor shall enter the e-mail address identified below in the “Send Additional
+Email Notifications” field of WAWF once a document is submitted in the system.
+Contact the local contract administrator found in Block 6 of the DD 1155, Block 9 of the SF 1449, or Block 5 of the SF
+26.
+(g) WAWF point of contact.
+(1) The Contractor may obtain clarification regarding invoicing in WAWF from the following contracting activity's WAWF
+point of contact.
+Contact the local contract administrator found in Block 6 of the DD 1155, Block 9 of the SF 1449, or Block 5 of the SF
+26.
+(2) For technical WAWF help, contact the WAWF helpdesk at 866-618-5988.
+*******************************************************************************************************************
+*
+CONTINUED ON NEXT PAGE
+<<<PAGE 2 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 3 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION B
+SUPPLIES/SERVICES: 6145-01-224-9084
+ITEM DESCRIPTION:
+WIRE,ELECTRICAL
+RP001: DLA PACKAGING REQUIREMENTS FOR PROCUREMENT
+RA001: THIS DOCUMENT INCORPORATES TECHNICAL AND/OR QUALITY REQUIREMENTS
+(IDENTIFIED BY AN 'R' OR AN 'I' NUMBER) SET FORTH IN FULL TEXT IN THE
+DLA MASTER LIST OF TECHNICAL AND QUALITY REQUIREMENTS FOUND ON THE WEB
+AT:
+http://www.dla.mil/HQ/Acquisition/Offers/eProcurement.aspx
+FOR SIMPLIFIED ACQUISITIONS, THE REVISION OF THE MASTER IN EFFECT ON THE
+SOLICITATION ISSUE DATE OR THE AWARD DATE CONTROLS. FOR LARGE
+ACQUISITIONS, THE REVISION OF THE MASTER IN EFFECT ON THE RFP ISSUE DATE
+APPLIES UNLESS A SOLICITATION AMENDMENT INCORPORATES A FOLLOW-ON
+REVISION, IN WHICH CASE THE AMENDMENT DATE CONTROLS.
+RQ011: REMOVAL OF GOVERNMENT IDENTIFICATION FROM NON-ACCEPTED SUPPLIES
+500 FT/SPOOL LENGTHS PER SPEC
+FULL AND OPEN COMPETITION APPLIES.
+If Advice code is 2N, 28, or 34, this requirement is
+to provide material in continuous length. Multiple
+unit packs are unacceptable. Only continuous length
+will meet the requirement.
+If Advice code is 2P or 39, this requirement is to
+provide material in continuous length. Multiple unit
+packs are acceptable.
+Advice code (ADV) is located after the "For Government
+Use Only" heading under the Shipping Information.
+If there are inconsistencies between the schedule and
+Advice code, the Advice code takes precedence.
+*****************************************************
+TDP Rev A Gen 5
+IAW BASIC NON GOVT STD SAE AS81044/12
+(R Jul 2022)
+REVISION NR A DTD 12/01/2011
+PART PIECE NUMBER: M81044/12-16-93
+TDP Rev A Gen 5
+IAW REFERENCE NON GOVT STD SAE AS81044
+REVISION NR B DTD 07/01/2019
+PART PIECE NUMBER:
+DLA issues this document using the DoD authorized unit of issue, please refer to the following URL to determine the
+corresponding ANSI X12 unit of issue.
+https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.dla.mil%2FPortals%2F104%2FDocuments%2FDLMS%
+2FeApplications%2FLogDataAdmin%2FUnit_of_Issue_and_Purchase_Unit.xlsx&wdOrigin=BROWSELINK
+ITEM NO. SUPPLIES/SERVICES QUANTITY UNIT UNIT PRICE AMOUNT
+0001 6145-01-224-9084 493.000 FT $ 0.48800 $ 240.58 .
+WIRE,ELECTRICAL
+PRICING TERMS: Firm Fixed Price
+QTY VARIANCE: PLUS 10% MINUS 0%
+INSPECTION POINT: DESTINATION
+CONTINUED ON NEXT PAGE
+<<<PAGE 3 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 4 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION B
+SUPPLY/SERVICE: 6145-01-224-9084 CONT'D
+ACCEPTANCE POINT: DESTINATION
+FOB: ORIGIN DELIVERY DATE: 2027 MAR 08
+FOB PAYMENT METHOD: GOVERNMENT
+PREP FOR DELIVERY:
+PKGING DATA - MIL-STD-2073-1E
+QUP:500 PRES MTHD:ZZ CLNG/DRY:1 PRESV MAT:ZZ
+WRAP MAT:ZZ CUSH/DUNN MAT:ZZ CUSH/DUNN THKNESS:C
+UNIT CONT:ZZ OPI:M
+PACK CODE:U
+MARKING SHALL BE IN ACCORDANCE WITH MIL-STD-129.
+SPECIAL MARKING CODE:ZZ -ZZ Special Requirements
+PRESERVATION AND PACKAGING SHALL BE IAW THE
+LATEST REVISION OF MILITARY SPECIFICATION:
+MIL-DTL-12000, FOR CABLE, CORD AND WIRE.
+. .
+PARCEL POST ADDRESS:
+N00253
+NAVAL UNDERSEA WARFARE CENTER
+DIVISION KEYPORT NWCF
+610 DOWELL STREET
+KEYPORT WA 98345-7610
+US
+SHIP BY FASTEST TRACEABLE MEANS. DO NOT USE PARCEL POST.
+FREIGHT SHIPPING ADDRESS:
+N00253
+NUWC DIVISION KEYPORT
+NAVAL SEA LOGISTICS CENTER
+610 DOWELL STREET, BLDG 893
+KEYPORT WA 98345-7610
+US
+M/F: (TCN) N0025362717D34
+RDD: 296
+PROJ: 3AD TP 1
+SUPP ADD: N00253 SIG: A
+FOR GOVERNMENT USE ONLY: (IPD) 03
+DIC: A4A DIST: 9B ADV: 2G FC: EJ
+GOVT USE
+External External External Customer RDD/
+ITEM PR PRLI PR PRLI Material Need Ship Date
+0001 7018564183 0001 N/A N/A N/A N/A .
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+CONTINUED ON NEXT PAGE
+<<<PAGE 4 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 5 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION C - SPECIFICATIONS/SOW/SOO/ORD
+C03 CONTRACTOR RETENTION OF SUPPLY CHAIN TRACEABILITY DOCUMENTATION (JUN 2023)
+SECTION E - INSPECTION AND ACCEPTANCE
+52.246-2 INSPECTION OF SUPPLIES FIXED PRICE (AUG 1996) FAR
+E05 PRODUCT VERIFICATION TESTING (MAY 2020)
+(1) Product verification testing (PVT) under this procurement note will only apply when the contracting officer specifically invokes it in writing. The
+contracting officer may invoke PVT at or after contract award. If the contracting officer invokes PVT at contract award, the contract will explicitly state this
+testing requirement. If the contracting officer invokes PVT after contract award, the contracting officer shall notify the contractor and the cognizant DCMA
+ACO. The Government will perform PVT testing at a Government-designated testing laboratory.
+(2) The contractor shall not ship or deliver any material until it receives notification of the acceptable PVT results, unless the contracting officer directs it to
+do so in writing The Government will provide the PVT results to the contractor within 20 business days after receipt at the Government testing facility,
+unless the Government specifies otherwise in writing.
+(3) The contractor shall provide and maintain an inspection system acceptable to the Government in accordance with FAR Clause 52.246-2 or 52.246-3; and
+maintain and make available all records evidencing those details if requested by the Government. When the Government finds evidence of risk associated
+with the contractor's sampling process, the Government may witness and evaluate the contractors sampling process. The contractor shall randomly select
+samples from the production lot(s), unless the contracting officer specifies otherwise in writing. The contractor shall ship the selected PVT samples with a
+copy of the system of record receiving report (i.e., WAWF, DD Form 250, or commercial shipping document) and the contractor's signed DD Form 1222.
+The contractor shall prepare the shipping container(s) by marking the external packages in bold letters, “Product Verification Test Samples - Do Not Post to
+Stock," Contract Number [ ] and Lot/Item Number [ ]” adjacent to the MIL-STD-129 (latest revision) identification markings. The contractor shall use a
+hard copy of the system of record receiving report as a packing list, in accordance with DFARS Appendix F. The contractor shall mark the exterior of the
+shipping container in accordance with MIL-STD129 (latest revision), paragraph 5.11. The contractor shall send samples by traceable means (e.g., certified or
+registered mail, United Parcel Service, Federal Express). The contractor shall include the following in the interior package:
+(a) Hard copies of the contract;
+(b) Material certifications/process operation sheets; and
+(c) Drawings used to manufacture the units and return shipping information.
+(4) The Government will return samples that pass testing and are not destroyed during evaluation to the contractor at the Government's expense for the
+contractor to include as part of the total contract quantity to be delivered under the contract. The contractor and Government may agree to dispose of samples
+not destroyed when the cost of the item does not justify the shipping expense. If the Government does not return approved samples that pass testing to the
+contractor, the Government will consider those samples as part of the contract quantity for payment and delivery.
+(5) If samples fail testing, the Government may reject the entire contract lot from which the contractor took the samples. The Government may, at its
+discretion, retain samples that fail testing without obligation to the contractor.
+SECTION F - DELIVERIES OR PERFORMANCE
+52.242-17 GOVERNMENT DELAY OF WORK (APR 1984) FAR
+52.247-29 F.O.B. ORIGIN (FEB 2006) FAR
+SECTION G - CONTRACT ADMINISTRATION DATA
+252.232-7006 WIDE AREA WORKFLOW PAYMENT INSTRUCTIONS (PRE-FILLED) (JAN 2023) DFARS
+As prescribed in 232.7004 (b), use the following clause:
+(a) Definitions. As used in this clause -
+Department of Defense Activity Address Code (DoDAAC) is a six position code that uniquely identifies a unit, activity, or organization.
+Document type means the type of payment request or receiving report available for creation in Wide Area WorkFlow (WAWF).
+Local processing office (LPO) is the office responsible for payment certification when payment certification is done external to the entitlement system.
+Payment request and receiving report are defined in the clause at 252.232-7003, Electronic Submission of Payment Requests and Receiving Reports.
+(b) Electronic invoicing. The WAWF system provides the method to electronically process vendor payment requests and receiving reports, as authorized by
+Defense Federal Acquisition Regulation System (DFARS) 252.232-7003, Electronic Submission of Payment Requests and Receiving Reports.
+(c) WAWF access. To access WAWF, the Contractor shall -
+(1) Have a designated electronic business point of contact in the System for Award Management at https://www.sam.gov and
+(2) Be registered to use WAWF at https://wawf.eb.mil/ following the step-by-step procedures for self-registration available at this Web site.
+(d) WAWF training. The Contractor should follow the training instructions of the WAWF Web-Based Training Course and use the Practice Training Site
+before submitting payment requests through WAWF. Both can be accessed by selecting the “Web Based Training” link on the WAWF home page at https://
+CONTINUED ON NEXT PAGE
+<<<PAGE 5 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 6 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION G - CONTRACT ADMINISTRATION DATA (CONTINUED)
+wawf.eb.mil/.
+(e) WAWF methods of document submission. Document submissions may be via Web entry, Electronic Data Interchange, or File Transfer Protocol.
+(f) WAWF payment instructions. The Contractor shall use the following information when submitting payment requests and receiving reports in WAWF for
+this contract or task or delivery order:
+(1) Document type. The Contractor shall submit payment requests using the following document type(s):
+(i) For cost-type line items, including labor-hour or time-and-materials, submit a cost voucher.
+(ii) For fixed price line items -
+(A) That require shipment of a deliverable, submit the invoice and receiving report specified by the Contracting Officer.
+(Contracting Officer: Insert applicable invoice and receiving report document type(s) for fixed price line items that require shipment of a deliverable.)
+Invoice (stand-alone) and Receiving Report (stand-alone) or Invoice and Receiving Report (combination)
+(B) For services that do not require shipment of a deliverable, submit either the Invoice 2in1, which meets the requirements for the invoice and receiving
+report, or the applicable invoice and receiving report, as specified by the Contracting Officer.
+(Contracting Officer: Insert either “Invoice 2in1” or the applicable invoice and receiving report document type(s) for fixed price line items for services.)
+(iii) For customary progress payments based on costs incurred, submit a progress payment request.
+(iv) For performance based payments, submit a performance based payment request.
+(v) For commercial financing, submit a commercial financing request.
+(2) Fast Pay requests are only permitted when Federal Acquisition Regulation (FAR) 52.213-1 is included in the contract.
+[Note: The Contractor may use a WAWF “combo” document type to create some combinations of invoice and receiving report in one step.]
+(3) Document routing. The Contractor shall use the information in the Routing Data Table below only to fill in applicable fields in WAWF when creating
+payment requests and receiving reports in the system.
+Routing Data Table *
+Data to be entered in
+Field Name in WAWF Guidance
+WAWF
+Pay Official DoDAAC See Block 12 (SF26), 15 (If blank, see resulting
+(DD 1155), or 18a award)
+(SF1449)
+Issue By DoDAAC See Block 5 (SF26), 6 (DD (If blank, see resulting
+1155), or 9 (SF1449) award)
+Admin DoDAAC See Block 6 (SF26), 7 (DD (If blank, see resulting
+1155), or 16 (SF1449) award)
+Inspect By DoDAAC SEE SECTION B (If blank, see resulting
+award)
+Ship To Code SEE SECTION B (If blank, see resulting
+award)
+Ship From Code SEE SECTION B (If blank, see resulting
+award)
+Mark For Code SEE SECTION B (If blank, see resulting
+award)
+Service Approver (If blank, see resulting
+(DoDAAC) award)
+Service Acceptor (If blank, see resulting
+(DoDAAC) award)
+Accept at Other DoDAAC (If blank, see resulting
+award)
+LPO DoDAAC (If blank, see resulting
+award)
+DCAA Auditor DoDAAC (If blank, see resulting
+award)
+Other DoDAAC(s) (If blank, see resulting
+award)
+(* Contracting Officer: Insert applicable DoDAAC information. If multiple ship to/acceptance locations apply, insert “See Schedule” or “Not applicable.”)
+(** Contracting Officer: If the contract provides for progress payments or performance-based payments, insert the DoDAAC for the contract administration
+office assigned the functions under FAR 42.302(a)(13).)
+(4) Payment request. The Contractor shall ensure a payment request includes documentation appropriate to the type of payment request in accordance with
+the payment clause, contract financing clause, or Federal Acquisition Regulation 52.216-7, Allowable Cost and Payment, as applicable.
+(5) Receiving report. The Contractor shall ensure a receiving report meets the requirements of DFARS Appendix F.
+CONTINUED ON NEXT PAGE
+<<<PAGE 6 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 7 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION G - CONTRACT ADMINISTRATION DATA (CONTINUED)
+(g) WAWF point of contact. (1) The Contractor may obtain clarification regarding invoicing in WAWF from the following contracting activity's WAWF
+point of contact.
+See administer listed on page 1
+(Contracting Officer: Insert applicable information or “Not applicable.”)
+(2) Contact the WAWF helpdesk at 866-618-5988, if assistance is needed.
+(End of Clause)
+SECTION H - SPECIAL CONTRACT REQUIREMENTS
+H18 DEFENSE PRIORITIES AND ALLOCATIONS SYSTEM (DPAS) (JUL 2026)
+252.223-7001 HAZARD WARNING LABELS (DEC 1991) DFARS
+(a) “Hazardous material,” as used in this clause, is defined in the Hazardous Material Identification and Material Safety Data clause of this contract.
+(b) The Contractor shall label the item package (unit container) of any hazardous material to be delivered under this contract in accordance with the Hazard
+Communication Standard (29 CFR 1910.1200 et seq). The Standard requires that the hazard warning label conform to the requirements of the standard
+unless the material is otherwise subject to the labelling requirements of one of the following statutes:
+(1) Federal Insecticide, Fungicide and Rodenticide Act;
+(2) Federal Food, Drug and Cosmetics Act;
+(3) Consumer Product Safety Act;
+(4) Federal Hazardous Substances Act; or
+(5) Federal Alcohol Administration Act.
+(c) The Offeror shall list which hazardous material listed in the Hazardous Material Identification and Material Safety Data clause of this contract will be
+labelled in accordance with one of the Acts in paragraphs (b)(1) through (5) of this clause instead of the Hazard Communication Standard. Any hazardous
+material not listed will be interpreted to mean that a label is required in accordance with the Hazard Communication Standard.
+MATERIAL
+ACT
+(If None, Insert “None.”)
+(d) The apparently successful Offeror agrees to submit, before award, a copy of the hazard warning label for all hazardous materials not listed in paragraph
+(c) of this clause. The Offeror shall submit the label with the Material Safety Data Sheet being furnished under the Hazardous Material Identification and
+Material Safety Data clause of this contract.
+(e) The Contractor shall also comply with MIL-STD-129, Marking for Shipment and Storage (including revisions adopted during the term of this contract).
+(End of clause)
+SECTION I - CONTRACT CLAUSES
+252.203-7000 REQUIREMENTS RELATING TO COMPENSATION OF FORMER DOD OFFICIALS (SEP 2011) DFARS
+252.203-7002 REQUIREMENT TO INFORM EMPLOYEES OF WHISTLEBLOWER RIGHTS (DEC 2022) DFARS
+52.204-13 SYSTEM FOR AWARD MANAGEMENT -- MAINTENANCE (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.204-13 SYSTEM FOR AWARD MANAGEMENT -- MAINTENANCE, ALT I (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.204-19 INCORPORATION BY REFERENCE OF REPRESENTATIONS AND CERTIFICATIONS (DEVIATION 2026-O0038) (FEB
+2026) FAR
+252.204-7004 ANTITERRORISM AWARENESS TRAINING FOR CONTRACTORS (JAN 2023) DFARS
+252.204-7014 LIMITATIONS ON THE USE OR DISCLOSURE OF INFORMATION BY LITIGATION SUPPORT CONTRACTORS (JAN
+2023) DFARS
+252.204-7015 NOTICE OF AUTHORIZED DISCLOSURE OF INFORMATION FOR LITIGATION SUPPORT (JAN 2023) DFARS
+52.209-1 QUALIFICATION REQUIREMENTS (DEVIATION 2026-O0038) (FEB 2026) FAR
+As prescribed in 9.206-2 , insert the following clause:
+(a) Definition. As used in this clause --
+Qualification requirement means a Government requirement for testing or other quality assurance demonstration that must be completed before award.
+CONTINUED ON NEXT PAGE
+<<<PAGE 7 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 8 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+(b) One or more qualification requirements apply to the supplies or services covered by this contract. For those supplies or services requiring qualification,
+whether the covered product or service is an end item under this contract or simply a component of an end item, the product, manufacturer, or source must
+have demonstrated that it meets the standards prescribed for qualification before award of this contract. The product, manufacturer, or source must be
+qualified at the time of award whether or not the name of the product, manufacturer, or source is actually included on a qualified products list, qualified
+manufacturers list, or qualified bidders list. Offerors should contact the agency activity designated below to obtain all requirements that they or their products
+or services, or their subcontractors or their products or services, must satisfy to become qualified and to arrange for an opportunity to demonstrate their
+abilities to meet the standards specified for qualification.
+(Name)
+(Address)
+(c) If an offeror, manufacturer, source, product or service covered by a qualification requirement has already met the standards specified, the relevant
+information noted below should be provided.
+Offeror's Name
+Manufacturer's Name
+Source's Name
+Item Name
+Service Identification
+Test Number (to the extent known)
+(d) Even though a product or service subject to a qualification requirement is not itself an end item under this contract, the product, manufacturer, or source
+must nevertheless be qualified at the time of award of this contract. This is necessary whether the Contractor or a subcontractor will ultimately provide the
+product or service in question. If, after award, the Contracting Officer discovers that an applicable qualification requirement was not in fact met at the time of
+award, the Contracting Officer may either terminate this contract for default or allow performance to continue if adequate consideration is offered and the
+action is determined to be otherwise in the Government's best interests.
+(e) If an offeror, manufacturer, source, product or service has met the qualification requirement but is not yet on a qualified products list, qualified
+manufacturers list, or qualified bidders list, the offeror must submit evidence of qualification prior to award of this contract. Unless determined to be in the
+Government's interest, award of this contract will not be delayed to permit an offeror to submit evidence of qualification.
+(f) Any change in location or ownership of the plant where a previously qualified product or service was manufactured or performed requires reevaluation of
+the qualification. Similarly, any change in location or ownership of a previously qualified manufacturer or source requires reevaluation of the qualification.
+The reevaluation must be accomplished before the date of award.
+(End of clause)
+52.211-5 MATERIAL REQUIREMENTS (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.211-15 DEFENSE PRIORITY AND ALLOCATION REQUIREMENTS (APR 2008) FAR
+52.215-8 ORDER OF PRECEDENCE - UNIFORM CONTRACT FORMAT (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.219-28 POSTAWARD SMALL BUSINESS PROGRAM REREPRESENTATION (DEVIATION 2026-O0038) (FEB 2026) FAR
+As prescribed in 19.101(a)(2)(iii)(A), insert the following clause:
+(a) Definitions. As used in this clause --
+Long-term contract means a contract of more than five years in duration, including options. However, the term does not include contracts that exceed five
+years in duration because the period of performance has been extended for a cumulative period not to exceed six months under the clause at 52.217-8, Option
+to Extend Services, or other appropriate authority.
+Small business concern --
+(1) Means a concern, including its affiliates, that is independently owned and operated, not dominant in its field of operation, and qualified as a small
+business under the criteria in 13 CFR part 121 and the size standard in paragraph (c) of this clause.
+(2) Affiliates, as used in this definition, means business concerns, one of whom directly or indirectly controls or has the power to control the others, or a third
+party or parties control or have the power to control the others. In determining whether affiliation exists, consideration is given to all appropriate factors
+including common ownership, common management, and contractual relationships. SBA determines affiliation based on the factors set forth at 13 CFR
+121.103.
+(b) If the Contractor represented that it was a small business concern, a small disadvantaged business concern, or a joint venture that was any of the small
+business concerns identified in 19.000(a)(3) prior to award of this contract, the Contractor shall rerepresent its size and socioeconomic status according to
+paragraph (e) of this clause or, if applicable, paragraph (g) of this clause, upon occurrence of any of the following:
+(1) Within 30 days after execution of a novation agreement or within 30 days after modification of the contract to include this clause, if the novation
+agreement was executed prior to inclusion of this clause in the contract.
+(2) Within 30 days after a merger or acquisition that does not require a novation or within 30 days after modification of the contract to include this clause, if
+the merger or acquisition occurred prior to inclusion of this clause in the contract.
+(3) For long-term contracts-
+(i) Within 60 to 120 days prior to the end of the fifth year of the contract; and
+(ii) Within 60 to 120 days prior to the date specified in the contract for exercising any option thereafter.
+(c) The Contractor shall rerepresent its size status in accordance with the size standard in effect at the time of this rerepresentation that corresponds to the
+North American Industry Classification System (NAICS) code(s) assigned to this contract. The small business size standard corresponding to this NAICS
+code(s) can be found at https://www.sba.gov/document/support--table-size-standards.
+(d) The small business size standard for a Contractor providing an end item that it does not manufacture, process, or produce itself, for a contract other than a
+construction or service contract, is 500 employees, or 150 employees for information technology value-added resellers under NAICS code 541519, if the
+acquisition --
+(1) Was set aside for small business and has a value above the simplified acquisition threshold;
+CONTINUED ON NEXT PAGE
+<<<PAGE 8 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 9 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+(2) Used the HUBZone price evaluation preference regardless of dollar value, unless the Contractor waived the price evaluation preference; or
+(3) Was an 8(a), HUBZone, service-disabled veteran-owned, economically disadvantaged women-owned, or women-owned small business set-aside or sole-
+source award regardless of dollar value.
+(e) Except as provided in paragraph (g) of this clause, the Contractor shall make the representation(s) required by paragraph (b) of this clause by validating or
+updating all its representations in the Representations and Certifications section of the System for Award Management (SAM) and its other data in SAM, as
+necessary, to ensure that they reflect the Contractor's current status. The Contractor shall notify the contracting officer in writing within the timeframes
+specified in paragraph (b) of this clause, that the data have been validated or updated, and provide the date of the validation or update.
+(f) If the Contractor represented that it was other than a small business concern prior to award of this contract, the Contractor may, but is not required to, take
+the actions required by paragraphs (e) or (g) of this clause.
+(g) If the Contractor does not have representations and certifications in SAM, or does not have a representation in SAM for the NAICS code applicable to
+this contract, the Contractor is required to complete the following rerepresentation and submit it to the contracting office, along with the contract number and
+the date on which the rerepresentation was completed:
+(1) The Contractor represents that it [] is, [] is not a small business concern under NAICS Code assigned to contract number .
+(2) [Complete only if the Contractor represented itself as a small business concern in paragraph (g)(1) of this clause.] The Contractor represents that it [] is,
+[] is not, a small disadvantaged business concern as defined in 13 CFR 124.1001.
+(3) Women-owned small business (WOSB) joint venture eligible under the WOSB Program. The Contractor represents that it [] is, [] is not a joint venture that
+complies with the requirements of 13 CFR 127.506(a) through (c). [ The Contractor shall enter the name and unique entity identifier of each party to the
+joint venture: .]
+(4) Economically disadvantaged women-owned small business (EDWOSB) joint venture. The Contractor represents that it [] is, [] is not a joint venture that
+complies with the requirements of 13 CFR 127.506(a) through (c). [ The Contractor shall enter the name and unique entity identifier of each party to the
+joint venture: .]
+(5) Service-disabled veteran-owned small business (SDVOSB) joint venture eligible under the SDVOSB Program. The Contractor represents that it [] is, [] is
+not an SDVOSB joint venture eligible under the SDVOSB Program that complies with the requirements of 13 CFR 128.402. [ The Contractor shall enter the
+name and unique entity identifier of each party to the joint venture: .]
+(6) HUBZone joint venture eligible under the HUBZone Program.[ Complete only if the offeror is a HUBZone small business concern. ] The offeror
+represents, as part of its offer, that it [] is, [] is not a HUBZone joint venture that complies with the requirements of 13 CFR 126.616(a) through (c). [ The
+Contractor shall enter the name and unique entity identifier of each party to the joint venture: . ] Each HUBZone small business concern participating in the
+HUBZone joint venture must be certified as a HUBZone concern. [ Contractor to sign and date and insert authorized signer's name and title. ]
+(End of clause)
+52.219-28 POST AWARD SMALL BUSINESS PROGRAM REREPRESENTATION, ALT I (DEVIATION 2026-O0038) (FEB 2026) FAR
+Alternate I. As prescribed in 19.101(a)(2)(iii)(B), substitute the following paragraph (g)(1) for paragraph (g)(1) of the basic clause:
+(g)(1) The Contractor represents its small business size status for each one of the NAICS codes assigned to this contract.
+SMALL BUSINESS
+CONCERN
+NAICS CODE
+(YES/NO)
+[Contracting Officer to insert NAICS codes.]
+52.222-19 CHILD LABOR - COOPERATION WITH AUTHORITIES AND REMEDIES (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.222-36 EQUAL OPPORTUNITY FOR WORKERS WITH DISABILITIES (DEVIATION 2026-O0038) (FEB 2026), ALT I (JUL 2014)
+FAR
+Alternate I. As prescribed in 22.1401-2(a)(2), add the following as a preamble to the clause:
+Notice: The following term(s) of this clause are waived for this contract: [List term(s)].
+52.222-37 EMPLOYMENT REPORTS ON VETERANS (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.222-50 COMBATING TRAFFICKING IN PERSONS (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.222-62 PAID SICK LEAVE UNDER EXECUTIVE ORDER 13706 (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.223-3 HAZARDOUS MATERIAL IDENTIFICATION AND SAFETY DATA (DEVIATION 2026-O0038) (FEB 2026) FAR
+As prescribed in 23.304(a)(1), insert the following clause:
+(a) Hazardous material, as used in this clause, includes any material defined as hazardous under the latest version of Federal Standard No. 313 (including
+revisions adopted during the term of the contract).
+(b) The Offeror must list any hazardous material, as defined in paragraph (a) of this clause, to be delivered under this contract. The hazardous material shall
+be properly identified and include any applicable identification number, such as National Stock Number or Special Item Number. This information shall also
+be included on the Safety Data Sheet submitted under this contract.
+Material (If none, insert
+Identification No.
+None)
+CONTINUED ON NEXT PAGE
+<<<PAGE 9 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 10 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+Material (If none, insert
+Identification No.
+None)
+(c) This list must be updated during performance of the contract whenever the Contractor determines that any other material to be delivered under this
+contract is hazardous.
+(d) The apparently successful offeror agrees to submit, for each item as required prior to award, a Safety Data Sheet, meeting the requirements of 29 CFR
+1910.1200(g) and the latest version of Federal Standard No. 313, for all hazardous material identified in paragraph (b) of this clause. Data shall be submitted
+in accordance with Federal Standard No. 313, whether or not the apparently successful offeror is the actual manufacturer of these items. Failure to submit the
+Safety Data Sheet prior to award may result in the apparently successful offeror being considered nonresponsible and ineligible for award.
+(e) If, after award, there is a change in the composition of the item(s) or a revision to Federal Standard No. 313, which renders incomplete or inaccurate the
+data submitted under paragraph (d) of this clause, the Contractor shall promptly notify the Contracting Officer and resubmit the data.
+(f) Neither the requirements of this clause nor any act or failure to act by the Government shall relieve the Contractor of any responsibility or liability for the
+safety of Government, Contractor, or subcontractor personnel or property.
+(g) Nothing contained in this clause shall relieve the Contractor from complying with applicable Federal, State, and local laws, codes, ordinances, and
+regulations (including the obtaining of licenses and permits) in connection with hazardous material.
+(h) The Government's rights in data furnished under this contract with respect to hazardous material are as follows:
+(1) To use, duplicate and disclose any data to which this clause is applicable. The purposes of this right are to --
+(i) Apprise personnel of the hazards to which they may be exposed in using, handling, packaging, transporting, or disposing of hazardous materials;
+(ii) Obtain medical treatment for those affected by the material; and
+(iii) Have others use, duplicate, and disclose the data for the Government for these purposes.
+(2) To use, duplicate, and disclose data furnished under this clause, in accordance with subparagraph (h)(1) of this clause, in precedence over any other
+clause of this contract providing for rights in data.
+(3) The Government is not precluded from using similar or identical data acquired from other sources.
+(End of Clause)
+52.223-7 NOTICE OF RADIOACTIVE MATERIALS (DEVIATION 2026-O0038) (FEB 2026) FAR
+As prescribed in 23.304(b), insert the following clause:
+(a) The Contractor shall notify the Contracting Officer or designee, in writing, *days prior to the delivery of, or prior to completion of any servicing required
+by this contract of, items containing either (1) radioactive material requiring specific licensing under the regulations issued pursuant to the Atomic Energy
+Act of 1954, as amended, as set forth in title 10 of the Code of Federal Regulations, in effect on the date of this contract, or (2) other radioactive material not
+requiring specific licensing in which the specific activity is greater than 0.002 microcuries per gram or the activity per item equals or exceeds 0.01
+microcuries. Such notice shall specify the part or parts of the items which contain radioactive materials, a description of the materials, the name and activity
+of the isotope, the manufacturer of the materials, and any other information known to the Contractor which will put users of the items on notice as to the
+hazards involved.
+(b) If there has been no change affecting the quantity of activity, or the characteristics and composition of the radioactive material from deliveries under this
+contract or prior contracts, the Contractor may request that the Contracting Officer or designee waive the notice requirement in paragraph (a) of this clause.
+Any such request shall --
+(1) Be submitted in writing;
+(2) State that the quantity of activity, characteristics, and composition of the radioactive material have not changed; and
+(3) Cite the contract number on which the prior notification was submitted and the contracting office to which it was submitted.
+(c) All items, parts, or subassemblies which contain radioactive materials in which the specific activity is greater than 0.002 microcuries per gram or activity
+per item equals or exceeds 0.01 microcuries, and all containers in which such items, parts or subassemblies are delivered to the Government shall be clearly
+marked and labeled as required by the latest revision of MIL-STD 129 in effect on the date of the contract.
+(d) This clause, including this paragraph (d), shall be inserted in all subcontracts for radioactive materials meeting the criteria in paragraph (a) of this clause.
+* The Contracting Officer shall insert the number of days required in advance of delivery of the item or completion of the servicing to assure that required
+licenses are obtained and appropriate personnel are notified to institute any necessary safety and health precautions.
+(End of clause)
+52.223-23 SUSTAINABLE PRODUCTS (DEVIATION 2026-O0038) (FEB 2026) FAR
+252.223-7006 PROHIBITION ON STORAGE, TREATMENT, AND DISPOSAL OF TOXIC OR HAZARDOUS MATERIALS - BASIC (SEP
+2014) DFARS
+252.223-7006 PROHIBITION ON STORAGE, TREATMENT, AND DISPOSAL OF TOXIC OR HAZARDOUS MATERIALS - ALTERNATE I
+(SEP 2014) DFARS
+252.223-7008 PROHIBITION OF HEXAVALENT CHROMIUM (JAN 2023) DFARS
+252.223-7009 PROHIBITION OF PROCUMENT OF FLOURINATED AQUEOUS FILM-FORMING FOAM FIRE-FIGHTING AGENT FOR
+USE ON MILITARY INSTALLATIONS (MAR 2024) FAR
+252.225-7006 ACQUISITION OF THE AMERICAN FLAG (DEC 2022) DFARS
+252.225-7048 EXPORT-CONTROLLED ITEMS (JUN 2013) DFARS
+52.226-8 ENCOURAGING CONTRACTOR POLICIES TO BAN TEXT MESSAGING WHILE DRIVING (MAY 2024) FAR
+CONTINUED ON NEXT PAGE
+<<<PAGE 10 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 11 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+52.232-1 PAYMENTS (APR 1984) FAR
+52.232-8 DISCOUNTS FOR PROMPT PAYMENT (FEB 2002) FAR
+52.232-11 EXTRAS (APR 1984) FAR
+52.232-25 PROMPT PAYMENT (JAN 2017) FAR
+52.232-33 PAYMENT BY ELECTRONIC FUNDS TRANSFER-SYSTEM FOR AWARD MANAGEMENT (OCT 2018) FAR
+52.232-40 PROVIDING ACCELERATED PAYMENTS TO SMALL BUSINESS SUBCONTRACTORS (MAR 2023) FAR
+252.232-7003 ELECTRONIC SUBMISSION OF PAYMENT REQUESTS AND RECEIVING REPORTS (DEC 2018) DFARS
+252.232-7010 LEVIES ON CONTRACT PAYMENTS (DEC 2006) DFARS
+52.233-1 DISPUTES (MAY 2014) FAR
+52.233-3 PROTEST AFTER AWARD (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.233-4 APPLICABLE LAW FOR BREACH OF CONTRACT CLAIM (OCT 2004) FAR
+52.240-91 SECURITY PROHIBITIONS AND EXCLUSIONS (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.240-91 SECURITY PROHIBITIONS AND EXCLUSIONS, ALT I (DEVIATION 2026-O0038) (FEB 2026) FAR
+Alternate I As prescribed in 40.205(b), substitute the following paragraph (e)(1) for paragraph (e)(1) of the basic clause:
+(e) Governmentwide exclusion and removal orders.
+(1) Contractors are prohibited from providing or using as part of the performance of the contract any covered article, or any products or services produced or
+provided by a source, if the covered article or the source is prohibited by any applicable FASCSA orders identified by the checkbox(es) in this paragraph (e)
+(1). [Contracting Officer must select either “yes” or “no” for each of the following types of FASCSA orders:]
+Yes [] No [] DHS FASCSA Order
+Yes [] No [] DoD FASCSA Order
+Yes [] No [] DNI FASCSA Order
+252.204-7000 DISCLOSURE OF INFORMATION (OCT 2016) DFARS
+252.204-7003 CONTROL OF GOVERNMENT PERSONNEL WORK PRODUCT (APR 1992) DFARS
+252.204-7009 LIMITATIONS ON THE USE OR DISCLOSURE OF THIRD-PARTY CONTRACTOR REPORTED CYBER INCIDENT
+INFORMATION (JAN 2023) DFARS
+252.204-7012 SAFEGUARDING COVERED DEFENSE INFORMATION AND CYBER INCIDENT REPORTING (DEVIATION 2026-O0025)
+(JUN 2026) DFARS
+252.204-7018 PROHIBITION ON THE ACQUISITION OF COVERED DEFENSE TELECOMMUNICATIONS EQUIPMENT OR SERVICES
+(JAN 2023) DFARS
+252.225-7051 PROHIBITION ON ACQUISITION OF CERTAIN FOREIGN COMMERCIAL SATELLITE SERVICES (DEC 2022) DFARS
+252.240-7995 PROHIBITION ON CONTRACT AWARDS WITH ENTITIES THAT CONTRACT WITH LOBBYISTS FOR CHINESE
+MILITARY COMPANIES -- REPRESENTATION (DEVIATION 2026-O0025) (SEP 2026) DFARS
+Standard Element ZB_240_7999 has no Title
+52.243-1 CHANGES - FIXED PRICE (AUG 1987) FAR
+252.243-7001 PRICING OF CONTRACT MODIFICATIONS (DEC 1991) DFARS
+52.244-6 SUBCONTRACTS FOR COMMERCIAL PRODUCTS AND COMMERCIAL SERVICES (DEVIATION 2026-O0038) (FEB 2026)
+FAR
+(a) Definitions. As used in this clause --
+Commercial product, commercial service and nondevelopmental item have the meanings contained in Federal Acquisition Regulation (FAR) 2.101.
+Subcontract has the meaning at FAR 44.401
+(b) Requirements.
+(1) To the maximum extent practicable, the Contractor shall incorporate, and require its subcontractors at all tiers to incorporate, commercial products,
+commercial services, or non-developmental items as components of items to be supplied under this contract.
+(2) If a clause in the following table is included in the contract, the Contractor shall insert the clause in subcontracts for commercial products or commercial
+services and must flow down the requirements of the clause to subcontracts as indicated in the specific clause:
+Number Title Date
+52.203-13 Contractor Code of NOV 2021
+Business Ethics and
+Conduct
+52.203-17 Contractor Employee NOV 2023
+Whistleblower Rights
+52.203-19 Prohibition on Requiring JAN 2017
+Certain Internal
+Confidentiality Agreements
+or Statements
+CONTINUED ON NEXT PAGE
+<<<PAGE 11 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 12 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+Number Title Date
+52.204-9 Personal Identity JAN 2011
+Verification of Contractor
+Personnel
+52.219-8* Utilization of Small JAN 2025
+Business Concerns
+52.222-35 Equal Opportunity for JUN 2020
+Veterans
+52.222-36 Equal Oppurtunity for JUN 2020
+Workers with Disabilities
+52.222-37 Employment Reports for JUN 2020
+Veterans
+52.222-40 Notification of Employee DEC 2010
+Rights Under the National
+Labor Relations Act
+52.222-41 Service Contract Labor AUG 2018
+Standards
+52.222-50 Combating Trafficking in NOV 2021
+Persons
+52.222-50 with Alt I Combating Trafficking in MAR 2015
+Persons, with its Alternate I
+52.222-51 Exemption from Application MAY 2014
+of the Service Contract
+Labor Standards to
+Contracts for Maintenance,
+Calibration, or Repair of
+Certain Equipment -
+Requirements
+52.222-53 Exemption from Application MAY 2014
+of the Service Contract
+Labor Standards to
+Contracts for Certain
+Services - Requirements
+52.222-54 Employment Eligibility JAN 2025
+Verification
+52.222-62 Paid Sick Leave Under JAN 2022
+Executive Order 13706
+52.224-3 Privacy Training JAN 2017
+52.224-3 with Alt I Privacy Training, with JAN 2017
+Alternate I
+52.225-26 Contractors Performing OCT 2016
+Private Security Functions
+Outside the United States
+52.232-40 Providing Accelerated MAR 2023
+Payments to Small
+Business Subcontractors
+52.240-91 Security Prohibitions and DATE
+Exclusions
+52.240-91 with Alt I Security Requirements, DATE
+with its Alternate I
+52.240-92 Security Requirements DATE
+52.240-92 with Alt II Security Requirements, DATE
+with its Alternate II
+52.247-64 Preference for Privately NOV 2021
+Owned U.S.-Flag
+Commercial Vessels
+* Include only if the subcontract offers further subcontracting opportunities. If the subcontract (except subcontracts to small business concerns) exceeds the
+applicable threshold specified in FAR 19.109(a) on the date of subcontract award, the subcontractor must include 52.219-8 in lower tier subcontracts that
+offer subcontracting opportunities.
+CONTINUED ON NEXT PAGE
+<<<PAGE 12 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 13 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+(c) Subcontracts. The Contractor shall include the terms of this clause, including this paragraph (c), in subcontracts awarded under this contract.
+(End of clause)
+252.244-7000 SUBCONTRACTS FOR COMMERCIAL PRODUCTS OR COMMERCIAL SERVICES (NOV 2023) DFARS
+252.246-7003 NOTIFICATION OF POTENTIAL SAFETY ISSUES (JAN 2023) DFARS
+252.246-7007 CONTRACTOR COUNTERFEIT ELECTRONIC PART DETECTION AND AVOIDANCE SYSTEM (JAN 2023) DFARS
+252.246-7008 SOURCES OF ELECTRONIC PARTS (JAN 2023) DFARS
+252.247-7023 TRANSPORATION OF SUPPLIES BY SEA --- BASIC (OCT 2024) DFARS
+Basic. As prescribed in 247.574(b) and (b)(1), use the following clause:
+(a) Definitions. As used in this clause --
+“Foreign-flag vessel” means any vessel that is not a U.S.-flag vessel.
+“Ocean transportation” means any water-borne transportation aboard a ship, vessel, boat, barge, ferry, or the like outside the internal waters of the United
+States as defined in 33 CFR 2.24.
+“Subcontractor” means a supplier, materialman, distributor, or vendor at any level below the prime contractor whose contractual obligation to perform results
+from, or is conditioned upon, award of the prime contract and who is performing any part of the work or other requirement of the prime contract.
+“Supplies” means supplies that are clearly identifiable for eventual use by or owned by DoD at the time of transportation by sea, or are otherwise transported
+by DoD, regardless of ownership or use by DoD. An item is clearly identifiable for eventual use by DoD if, for example, the contract documentation
+contains a reference to a DoD contract number or a military destination.
+“U.S.-flag vessel” means either a vessel belonging to the United States or a vessel of the United States as that term is defined in 46 U.S.C. 116..
+(b)(1) The Contractor shall use U.S.-flag vessels when transporting any supplies by sea under this contract.
+(2) A subcontractor transporting supplies by sea under this contract shall use U.S.-flag vessels if --
+(i) This contract is a construction contract; or
+(ii) The supplies being transported are --
+(A) Other than commercial products; or
+(B) Commercial products that --
+(1) The Contractor is reselling or distributing to the Government without adding value (generally, the Contractor does not add value to items that it
+subcontracts for f.o.b. destination shipment);
+(2) Are shipped in direct support of U.S. military contingency operations, exercises, or forces deployed in humanitarian or peacekeeping operations; or
+(3) Are commissary or exchange cargoes transported outside of the Defense Transportation System in accordance with 10 U.S.C. 2643.
+(c) The Contractor and its subcontractors may request, via the Contracting Officer, a waiver of the requirement to use a U.S.-flag vessel, or identification of
+any available U.S.-flag vessels, if the Contractor or a subcontractor sufficiently explains that --
+(1) U.S.-flag vessels are not available at a fair and reasonable rate for commercial vessels of the United States; or
+(2) U.S.-flag vessels are otherwise not available.
+(d) The Contractor must submit any request for use of foreign-flag vessels in writing to the Contracting Officer at least 45 days prior to the sailing date
+necessary to meet its delivery schedules. The Contracting Officer will process requests submitted after such date(s) as expeditiously as possible, however, if
+a DoD waiver is not approved prior to shipper's sailing date, this will not of itself constitute a compensable delay under this or any other clause of this
+contract. Requests shall contain at a minimum --
+(1) Type, weight, and cube of cargo;
+(2) Required shipping date;
+(3) Special handling and discharge requirements;
+(4) Loading and discharge points;
+(5) Name of shipper and consignee;
+(6) Prime contract number; and
+(7) A documented description of current, diligent efforts made to secure U.S.-flag vessels, including points of contact (with names and telephone numbers)
+with at least two U.S.-flag carriers contacted. Copies of quotes will suffice for this purpose. Copies of telephone notes, emails, and other relevant
+communications will otherwise be considered for this purpose.
+(e) The Contractor shall, within 30 days after each shipment covered by this clause, provide the Contracting Officer and the Maritime Administration, Office
+of Cargo Preference, U.S. Department of Transportation, 400 Seventh Street SW, Washington, DC 20590, one copy of the rated on board vessel operating
+carrier's ocean bill of lading, which shall contain the following information:
+(1) Prime contract number;
+(2) Name of vessel;
+(3) Vessel flag of registry;
+(4) Date of loading;
+(5) Port of loading;
+(6) Port of final discharge;
+(7) Description of commodity;
+(8) Gross weight in pounds and cubic feet if available;
+(9) Total ocean freight in U.S. dollars; and
+(10) Name of the carrier.
+(f) If this contract exceeds the simplified acquisition threshold, the Contractor shall provide with its final invoice under this contract a representation that to
+the best of its knowledge and belief --
+(1) No ocean transportation was used in the performance of this contract;
+(2) Ocean transportation was used and only U.S.-flag vessels were used for all ocean shipments under the contract;
+(3) Ocean transportation was used, and the Contractor had received a prior-approved waiver for U.S.-flag vessels for all foreign-flag ocean transportation; or
+CONTINUED ON NEXT PAGE
+<<<PAGE 13 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 14 OF 14 PAGES
+SPE7M0-27-P-0185
+SECTION I - CONTRACT CLAUSES (CONTINUED)
+(4) Ocean transportation was used and some or all of the shipments were made on foreign-flag vessels without the written consent of DoD. The Contractor
+shall describe these shipments in the following format:
+CONTRACT LINE
+* ITEM DESCRIPTION QUANTITY
+ITEMS
+TOTAL
+(g) If this contract exceeds the simplified acquisition threshold and the final invoice does not include the required representation, the Government will reject
+and return it to the Contractor as an improper invoice for the purposes of the Prompt Payment clause of this contract. In the event there has been
+unauthorized use of foreign-flag vessels in the performance of this contract, the Contracting Officer is entitled to equitably adjust the contract, based on the
+unauthorized use.
+(h) If the Contractor indicated in response to the solicitation provision, Representation of Extent of Transportation by Sea, that it did not anticipate
+transporting by sea any supplies; however, after the award of this contract, the Contractor learns that supplies will be transported by sea, the Contractor --
+(1) Shall notify the Contracting Officer of that fact; and
+(2) Hereby agrees to comply with all the terms and conditions of this clause.
+(i) Subcontracts. In the award of subcontracts, for the types of supplies described in paragraph (b)(2) of this clause, including subcontracts for commercial
+products, the Contractor shall flow down the requirements of this clause as follows:
+(1) The Contractor shall insert the substance of this clause, including this paragraph (i), in subcontracts that exceed the simplified acquisition threshold in
+part 2 of the Federal Acquisition Regulation.
+(2) The Contractor shall insert the substance of paragraphs (a) through (e) of this clause, and this paragraph (i), in subcontracts that are at or below the
+simplified acquisition threshold in part 2 of the Federal Acquisition Regulation.
+(End of clause)
+52.249-1 TERMINATION FOR CONVENIENCE OF THE GOVERNMENT (FIXED-PRICE) (SHORT FORM) (APR 1984) FAR
+52.249-8 DEFAULT (FIXED-PRICE SUPPLY AND SERVICE) (APR 1984) FAR
+52.252-2 CLAUSES INCORPORATED BY REFERENCE (FEB 1998) FAR
+As prescribed in 52.107(b), insert the following clause:
+This contract incorporates one or more clauses by reference, with the same force and effect as if they were given in full text. Upon request, the Contracting
+Officer will make their full text available. Also, the full text of a clause may be accessed electronically at this/these address(es):
+FAR: https://www.acquisition.gov/far-overhaul/far-part-deviation-guide
+DFARS: https://www.acq.osd.mil/dpap/dars/dfarspgi/current/index.html
+DLAD: https://www.dla.mil/Acquisition/Policy-and-Directives/
+52.253-1 COMPUTER GENERATED FORMS (DEVIATION 2026-O0038) (FEB 2026) FAR
+252.204-7024 NOTICE ON THE USE OF THE SUPPLIER PERFORMANCE RISK SYSTEM (MAR 2023) DFARS
+252.239-7098 PROHIBITION ON CONTRACTING TO MAINTAIN OR ESTABLISH A COMPUTER NETWORK UNLESS SUCH NETWORK
+IS DESIGNED TO BLOCK ACCESS TO CERTAIN WEBSITES---REPRESENTATION (DEVIATION 2021-O0003) (APR 2021)
+Include the following provision in all solicitations, including solicitations for the acquisition of commercial items under FAR part 12, that will use funds
+made available by the Consolidated Appropriations Act, 2021 (Pub. L. 116-260), or any other Act that extends to fiscal year 2021 funds the same
+prohibitions as contained in section 8116, division C, title VIII, of the Consolidated Appropriations Act, 2021 (Pub. L. 116-260).
+(a) In accordance with section 8116 of Division C of the Consolidated Appropriations Act, 2021 (Pub. L. 116-260), or any other Act that extends to fiscal
+year 2021 funds the same prohibitions, none of the funds appropriated (or otherwise made available) by this or any other Act for DoD may be used to enter
+into a contract to maintain or establish a computer network unless such network is designed to block access to pornography websites. This prohibition does
+not limit the use of funds necessary for any Federal, State, tribal, or local law enforcement agency or any other entity carrying out criminal investigations,
+prosecution, or adjudication activities, or for any activity necessary for the national defense, including intelligence activities.
+(b) Representation. By submission of its offer, the Offeror represents that it is not providing as part of its offer a proposal to maintain or establish a
+computer network unless such network is designed to block access to pornography websites.
+(End of provision)
+52.232-39 UNENFORCEABILITY OF UNAUTHORIZED OBLIGATIONS (JUN 2013) FAR
+<<<PAGE 14 END>>>

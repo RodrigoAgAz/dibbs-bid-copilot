@@ -1,0 +1,714 @@
+[
+ {
+  "path": "cage/cage_dla_mil_probe.json",
+  "url": null,
+  "bytes": 542,
+  "sha256": "dcc61d33f1f43b691bc568eb6a490e8bd1bd6fe2032f44ef6fc8f7abc4fe20c4",
+  "note": "cage.dla.mil redirects every search to /Home/UsageAgree; not accepted",
+  "fetched_at": "2026-10-09T18:13:00+00:00"
+ },
+ {
+  "path": "cage/cage_dla_mil_usage_agree.html",
+  "url": "https://cage.dla.mil/Home/UsageAgree",
+  "bytes": 7719,
+  "sha256": "5f2dae383709ed41e53f427ed52bd20a8b3c5b37314f09de939b87b163c47306",
+  "note": "Usage agreement gate (NOT accepted)",
+  "fetched_at": "2026-10-09T18:13:00+00:00"
+ },
+ {
+  "path": "cage/dibbs_cage_01084.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Refs/cage.aspx?Cage=01084",
+  "bytes": 10701,
+  "sha256": "7e718e0d8843eccc97a8e8e38577c9444eac292312a58638f492efd00a892b8c",
+  "note": "DIBBS public CAGE pop-up (SAM CAGE info)",
+  "fetched_at": "2026-10-09T18:12:54+00:00"
+ },
+ {
+  "path": "cage/dibbs_cage_2N935.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Refs/cage.aspx?Cage=2N935",
+  "bytes": 10704,
+  "sha256": "6caede0f92488f322d17d183728989d2f779256f5fe93e75bde1f2bb34c89fcb",
+  "note": "DIBBS public CAGE pop-up (SAM CAGE info)",
+  "fetched_at": "2026-10-09T18:12:53+00:00"
+ },
+ {
+  "path": "cage/dibbs_cage_3WGD1.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Refs/cage.aspx?Cage=3WGD1",
+  "bytes": 10573,
+  "sha256": "8484c238c36bc575b9e32c507a259694001818ebdcd6bd26ece602c936f6641d",
+  "note": "DIBBS public CAGE pop-up (SAM CAGE info)",
+  "fetched_at": "2026-10-09T18:12:55+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE4A527V0074.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/08OCT26/SPE4A527V0074.PDF",
+  "bytes": 489643,
+  "sha256": "78a0ab64bf742e7c02f0e536c15608182b23654b4f341612ad61b35596878bb9",
+  "note": "Award/order PDF",
+  "fetched_at": "2026-10-09T18:12:46+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE4A527V0074.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/08OCT26/SPE4A527V0074.PDF",
+  "bytes": 46595,
+  "sha256": "3008651ebad28fe0af3d00bc6e42d9c8d3d545d41868631162d681d1f21198fc",
+  "note": "pdfplumber text",
+  "fetched_at": "2026-10-09T18:12:47+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE4AX20D9412SPE4A226F1602.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/11JUN26/SPE4AX20D9412SPE4A226F1602.PDF",
+  "bytes": 263616,
+  "sha256": "2c37d7be8b21bf6b4a9957357d32d64da569953d734ae063a631cb3b8fcee8ab",
+  "note": "Award/order PDF",
+  "fetched_at": "2026-10-09T18:12:49+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE4AX20D9412SPE4A226F1602.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/11JUN26/SPE4AX20D9412SPE4A226F1602.PDF",
+  "bytes": 5464,
+  "sha256": "a6fff256e844ff2129a1b19c4173eed5d5d3894c3a296e5b09bb9572949b09fd",
+  "note": "pdfplumber text",
+  "fetched_at": "2026-10-09T18:12:49+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE7L126D60JX.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/30OCT25/SPE7L126D60JX.PDF",
+  "bytes": 532401,
+  "sha256": "4698bbc3baad482c301aa506138d20bf39a72b516f00f92efaa8f1d4b5a2584f",
+  "note": "Award/order PDF",
+  "fetched_at": "2026-10-09T18:12:50+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE7L126D60JX.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/30OCT25/SPE7L126D60JX.PDF",
+  "bytes": 62814,
+  "sha256": "8477ab4faaecc3efbcefdf37a7f0044d56172625ab8cddeec7589a8b158e0300",
+  "note": "pdfplumber text",
+  "fetched_at": "2026-10-09T18:12:51+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE7L126P8608.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/20JUL26/SPE7L126P8608.PDF",
+  "bytes": 51996,
+  "sha256": "df734dd7414787e1667542b87dd299d09a6a07a437d161fc99a07d52668a2788",
+  "note": "Award/order PDF",
+  "fetched_at": "2026-10-09T18:12:47+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE7L126P8608.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/20JUL26/SPE7L126P8608.PDF",
+  "bytes": 22353,
+  "sha256": "d75d7c69524d2fa6fe0acf3d202f06749b6e8cb199dc7d9673971691a553e586",
+  "note": "pdfplumber text",
+  "fetched_at": "2026-10-09T18:12:48+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE7M027P0185.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/09OCT26/SPE7M027P0185.PDF",
+  "bytes": 103257,
+  "sha256": "05864d15d6921729ad69fbe51fc997938c36b96787ebbc1f43b9988ad37803b9",
+  "note": "Award/order PDF",
+  "fetched_at": "2026-10-09T18:12:52+00:00"
+ },
+ {
+  "path": "dibbs/award_pdf/SPE7M027P0185.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/Awards/09OCT26/SPE7M027P0185.PDF",
+  "bytes": 60091,
+  "sha256": "b4b992175ced8a50ac3929d9b45bd0e3d77399c8fbf81fb96c823a401c295949",
+  "note": "pdfplumber text",
+  "fetched_at": "2026-10-09T18:12:53+00:00"
+ },
+ {
+  "path": "dibbs/awards/awards_search_page.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/",
+  "bytes": 73012,
+  "sha256": "bdb7fb1a810edd83cf24c3fb8ead78e5d5343a3466cd82284a1a4698e64f20d6",
+  "note": "Award search form (cross-page postback to AwdRecs.aspx)",
+  "fetched_at": "2026-10-09T18:12:26+00:00"
+ },
+ {
+  "path": "dibbs/awards/awddates_awddt.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdDates.aspx?category=awddt",
+  "bytes": 73449,
+  "sha256": "54873dc33d68596a2494aaea20e7eff5b69c144dc633aea4676261f2876344bc",
+  "note": "Award dates list, category=awddt",
+  "fetched_at": "2026-10-09T18:12:29+00:00"
+ },
+ {
+  "path": "dibbs/awards/awddates_post.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdDates.aspx?category=post",
+  "bytes": 72554,
+  "sha256": "17a37ffa3b1b478238e0f909e784f2ae269e8be42a525421cc1c59245404f75a",
+  "note": "Award dates list, category=post",
+  "fetched_at": "2026-10-09T18:12:28+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrec_SPE4A527V0074.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRec.aspx?contract=SPE4A527V0074&dlv=&cnt=",
+  "bytes": 48995,
+  "sha256": "e627a810657fc9fa0a9467ebb6efcf138de927a02ec6a370ec6d865083be7479",
+  "note": "Award Package View",
+  "fetched_at": "2026-10-09T18:12:47+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrec_SPE4AX20D9412SPE4A226F1602.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRec.aspx?contract=SPE4AX20D9412&dlv=SPE4A226F1602&cnt=6015",
+  "bytes": 48526,
+  "sha256": "aadb0656fdb59eda352a154eff43926db71f13118981f120d49c3a069b3a22f7",
+  "note": "Award Package View",
+  "fetched_at": "2026-10-09T18:12:50+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrec_SPE7L126D60JX.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRec.aspx?contract=SPE7L126D60JX&dlv=&cnt=",
+  "bytes": 48915,
+  "sha256": "2b443b4e5e3ad145d3c8a868655ba290b70dcaa64e4b87bd67f2b151c782119c",
+  "note": "Award Package View",
+  "fetched_at": "2026-10-09T18:12:51+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrec_SPE7L126P8608.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRec.aspx?contract=SPE7L126P8608&dlv=&cnt=",
+  "bytes": 48954,
+  "sha256": "a2b3185d3984f57aa3d29b8ec2119778846f999bbbc113e5c9797cae57c9af9e",
+  "note": "Award Package View",
+  "fetched_at": "2026-10-09T18:12:48+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrec_SPE7M027P0185.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRec.aspx?contract=SPE7M027P0185&dlv=&cnt=",
+  "bytes": 48939,
+  "sha256": "11666771d067154773fc5329b0b2985101d76a2b168737c4428a112b0d4a6197",
+  "note": "Award Package View",
+  "fetched_at": "2026-10-09T18:12:53+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrecs_form_post_nsn.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRecs.aspx",
+  "bytes": 39355,
+  "sha256": "9de16867fe03bee17cb527e13981cdba46b3229ca34b846e8f83cfb91b4dafe6",
+  "note": "Same search via the form's cross-page POST",
+  "fetched_at": "2026-10-09T18:12:43+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrecs_nsn_search_1.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRecs.aspx?Category=nsn&TypeSrch=cq&Value=5305013165771,5306002087006,5310013349970,5330016423579,5340003957467,4730016778921,6145002640818,5305017088874,5306015267953,5310002696830,5330017234104,5340010965572,4730006138557,6145006864952,5305012223170,5306001512467,5310013800046,5330151110432,5340014244285,4730016865938,6145010818585,5305015618979,5306011761988,5310013727596,5330015620952,5340011228870,4730010958786,6145009521735,5305011635794,5306012930932,5310010748015,5330011402817,5340015280009,4730001634639,6145000609078,5305000100936,5306009053847,5310011760815,5330121564524,5340006136858&Scope=all",
+  "bytes": 245479,
+  "sha256": "d37f61a9f626e12034270d50bdf7f62620e0e61255a13e5065a02689273546f7",
+  "note": "Award search Category=nsn, 40 comma-separated NSNs, Scope=all",
+  "fetched_at": "2026-10-09T18:12:39+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrecs_nsn_search_2.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRecs.aspx?Category=nsn&TypeSrch=cq&Value=4730016871036,6145001054219,5305008159411,5306017161170,5310017195729,5330005997075,5340016299561,4730004327205,6145006864916,5305013495019,5306012188278,5310015785433,5330010265115,5340010980491,4730015704175,6145010470540,5305992723056,5306011953733,5310017151763,5330014160888,5340016867818,4730016633959,6145009294205,5305014063058,5306009357673,5310012203388,5330013565039,5340012293826,4730013852214,6145006864954,5305008256761,5306001512312,5310012255680,5330012640228,5340004536287,4730014846103,6145009378201,5305017146027,5306001827315,5310016788359&Scope=all",
+  "bytes": 264049,
+  "sha256": "7c304f2948bdbf18643a18e667e202b615bf01b0d52aadef04b23aa9f267344e",
+  "note": "Award search Category=nsn, 40 comma-separated NSNs, Scope=all",
+  "fetched_at": "2026-10-09T18:12:42+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrecs_post_10-07-2026_page1.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRecs.aspx?Category=post&TypeSrch=cq&Value=10-07-2026",
+  "bytes": 469338,
+  "sha256": "8e18986469b401df4d44729c253d271fa4fe8890facddbf7f8612e44c66a2be6",
+  "note": "Awards posted on date, GridView page 1 (50 rows)",
+  "fetched_at": "2026-10-09T18:12:38+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrecs_post_10-08-2026_page1.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRecs.aspx?Category=post&TypeSrch=cq&Value=10-08-2026",
+  "bytes": 441294,
+  "sha256": "6ccb921af3e12f4a0dd199ebe703797528e9c08817d2a7deb95237a75aaef9ef",
+  "note": "Awards posted on date, GridView page 1 (50 rows)",
+  "fetched_at": "2026-10-09T18:12:32+00:00"
+ },
+ {
+  "path": "dibbs/awards/awdrecs_post_10-08-2026_page2.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Awards/AwdRecs.aspx?Category=post&TypeSrch=cq&Value=10-08-2026",
+  "bytes": 482571,
+  "sha256": "8cfd0b3a5db8d3ce58bf6a6271ad8ea1eb388acfc60315cbb5ebd04e0751ae4e",
+  "note": "Page 2 obtained via __doPostBack replay (POST __EVENTTARGET/ARGUMENT=Page$2)",
+  "fetched_at": "2026-10-09T18:12:35+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_4730010435999.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=4730010435999&category=&Scope=",
+  "bytes": 48159,
+  "sha256": "ae41d8410aff0b5704218088a9f9aa4de8a078a86aeea8333de2fd46a2a66691",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:10:53+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_4730LLQJ07784.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=4730LLQJ07784&category=&Scope=",
+  "bytes": 45849,
+  "sha256": "facc8da2f6b3bfa5c779b1a99d0ab058cca1d2d8034309263327065a2369f9b3",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:11:14+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5305010560169.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5305010560169&category=&Scope=",
+  "bytes": 49627,
+  "sha256": "8d096942f5cd4e49b0fff3a399b4aee82ac99fd8f8f0e57cb1b5ec333decee51",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:10:57+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5305011209897.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5305011209897&category=&Scope=",
+  "bytes": 47859,
+  "sha256": "13dbe41df22c7a2b3d7d7d239c57d7429606dfb1c2390264a6ed36ba1ae0bba9",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:10:39+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5306015642972.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5306015642972&category=&Scope=",
+  "bytes": 57220,
+  "sha256": "d96e9f9acce56fe83fc586e7947b9e92df0cf4f651085b346e4933f5fc165219",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:11:06+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5310015432453.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5310015432453&category=&Scope=",
+  "bytes": 76775,
+  "sha256": "5df1d2e65e7c22b272a6a9699d19561768d2863516736b302c8f8e22039d6f1e",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:10:34+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5330016630871.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5330016630871&category=&Scope=",
+  "bytes": 47618,
+  "sha256": "3463bd47b39655e9bc39c15d8f6a4b767a59bab43fec232dc3b23970795aa037",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:10:42+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5340004290174.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5340004290174&category=&Scope=",
+  "bytes": 49865,
+  "sha256": "7ea4f6f513a1b49b3de233d0973f59197f298260a9cdafd44025e78b36ab7adc",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:10:49+00:00"
+ },
+ {
+  "path": "dibbs/nsn/rfqnsn_5340014073391.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RFQNsn.aspx?value=5340014073391&category=&Scope=",
+  "bytes": 45883,
+  "sha256": "b0e7457d5aeb0e201881247ada02b295c02b23c739f73b487764288975b4f7ca",
+  "note": "Public RFQ NSN view",
+  "fetched_at": "2026-10-09T18:11:10+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/banner_access_trace.json",
+  "url": null,
+  "bytes": 5639,
+  "sha256": "22876186bfae1baad7390bf7629593cf004d79829c30c2a9db2fec55ae2a30f6",
+  "note": "How the DoD banner was accepted; cookie names; form-POST fallback test",
+  "fetched_at": "2026-10-09T18:07:04+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/batch_quote_format.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Refs/help/Quoting/Batch/BatchFormat.aspx",
+  "bytes": 461252,
+  "sha256": "569302f470784598dc7405966f7c4cc3f0d1836a6e22d9433f7ce3c12f3b7a1e",
+  "note": "Batch quote (bq) 121-column layout",
+  "fetched_at": "2026-10-09T18:07:13+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/dodwarning_dibbs2.html",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261008.txt",
+  "bytes": 9032,
+  "sha256": "112acf93894506653a179c2f2c4ecdb7cb46b79adbd59325ac508ee6010c84b3",
+  "note": "DoD banner served in place (HTTP 200) by dibbs2 file host",
+  "fetched_at": "2026-10-09T18:06:57+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/dodwarning_www.html",
+  "url": "https://www.dibbs.bsm.dla.mil/dodwarning.aspx?goto=/rfq/rfqdates.aspx?category=recent",
+  "bytes": 11404,
+  "sha256": "7693872d9b0ed078860b2049244060abe60797e3fb91834ec81a9d3b08a1db10",
+  "note": "DoD Notice and Consent banner form (www host)",
+  "fetched_at": "2026-10-09T18:06:57+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/rfq_file_defs.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Rfq/RfqFileDefs.aspx",
+  "bytes": 44569,
+  "sha256": "91f1a9f6a94a1f83522d403603354c8393e211c9c636646bdaea026bc3000e90",
+  "note": "Official help page with in/ca/bq/as file layouts",
+  "fetched_at": "2026-10-09T18:07:11+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/rfq_fsc.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Rfq/RfqFsc.aspx",
+  "bytes": 195857,
+  "sha256": "d7e4c690a7f634aeb1f1bb5c5b37dcafbc27cae6a7d38b1fa23098c42aa05795",
+  "note": "RFQs by FSC page",
+  "fetched_at": "2026-10-09T18:07:15+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/rfqdates_close.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Rfq/RfqDates.aspx?category=close",
+  "bytes": 76213,
+  "sha256": "25d32ab6108751c3969c8325822e8e5ac74fb7fb622dc3a35878d92623d486f0",
+  "note": "RFQ dates page category=close",
+  "fetched_at": "2026-10-09T18:07:09+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/rfqdates_issue.html",
+  "url": "https://www.dibbs.bsm.dla.mil/Rfq/RfqDates.aspx?category=issue",
+  "bytes": 61427,
+  "sha256": "398c0e35298856dcc19d5156c84d2da268fcbebcf74699bc7d937fc9b9fe3b84",
+  "note": "RFQ dates page category=issue",
+  "fetched_at": "2026-10-09T18:07:07+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/rfqdates_recent.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RfqDates.aspx?category=recent",
+  "bytes": 119633,
+  "sha256": "9731030175e1210b7b13139d4ac121e613c440ef665ae20c5edd84accde27595",
+  "note": "Recent RFQs and Downloads (daily file links)",
+  "fetched_at": "2026-10-09T18:07:05+00:00"
+ },
+ {
+  "path": "dibbs/rfq_dates/rfqrecs_post_261008_page1.html",
+  "url": "https://www.dibbs.bsm.dla.mil/RFQ/RfqRecs.aspx?category=post&TypeSrch=dt&Value=10-08-2026",
+  "bytes": 433397,
+  "sha256": "0fa7ef0a9e8d29084969e6cd14976e60630ecbfd5e040a08cc094d43bdf47ac0",
+  "note": "RFQ listing for one post date, GridView page 1",
+  "fetched_at": "2026-10-09T18:07:18+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/bq261007.zip",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/bq261007.zip",
+  "bytes": 122813,
+  "sha256": "780ca4c5d803de5a026b7db9eab478e10244f39637e7e7156eb8e53dbd1ba1ba",
+  "note": "batch quote zip: bqYYMMDD.txt (121-col CSV) + asYYMMDD.txt (approved sources)",
+  "fetched_at": "2026-10-09T18:07:22+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/bq261008.zip",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/bq261008.zip",
+  "bytes": 67966,
+  "sha256": "59ac7aef6be0d06c104cf3c2418f71020603eafeb7b452701ec8bf1975ff000e",
+  "note": "batch quote zip: bqYYMMDD.txt (121-col CSV) + asYYMMDD.txt (approved sources)",
+  "fetched_at": "2026-10-09T18:07:20+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/in261004.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261004.txt",
+  "bytes": 201072,
+  "sha256": "767095b441e672399673552ffe8934e442a42547d0d128c1ab0d623ea19835a7",
+  "note": "full index, 1416 lines",
+  "fetched_at": "2026-10-09T18:07:27+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/in261005.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261005.txt",
+  "bytes": 355852,
+  "sha256": "6ca913a11780f79d752f7d18d45cf9b5fb17afe1d100498972c7400bd79488fd",
+  "note": "full index, 2506 lines",
+  "fetched_at": "2026-10-09T18:07:25+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/in261006.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261006.txt",
+  "bytes": 354006,
+  "sha256": "486bba5b1954f7cc8f862b29c38b608dd52d5d9f3c9f82b068f6ef887f67ea89",
+  "note": "full index, 2493 lines",
+  "fetched_at": "2026-10-09T18:07:24+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/in261007.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261007.txt",
+  "bytes": 448294,
+  "sha256": "99ea0244ab70dd8b7d273acaee0f5e024ca0657d12d5bc6fd441af1968ea0850",
+  "note": "full index, 3157 lines",
+  "fetched_at": "2026-10-09T18:07:21+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/in261008.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/Archive/in261008.txt",
+  "bytes": 251198,
+  "sha256": "bcf7b916374c5ecfb741d9f8387f16c7cc761994edd1fcfb5497675407d542aa",
+  "note": "full index, 1769 lines",
+  "fetched_at": "2026-10-09T18:07:18+00:00"
+ },
+ {
+  "path": "dibbs/rfq_index/index_stats.json",
+  "url": null,
+  "bytes": 3865,
+  "sha256": "5b43b7a3d79a8ebbe8152a96d9f0c6917111ebaf8841761aed58501e7a210ed7",
+  "note": "Counts by solicitation type (9th char) and FSC across downloaded index files",
+  "fetched_at": "2026-10-09T18:07:27+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A027T0162.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/2/SPE4A027T0162.PDF",
+  "bytes": 718344,
+  "sha256": "db3a55d390646ad8cafbdccc2b27ea250bda8aacd2946b5285716c291ee91919",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:30+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A027T0162.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/2/SPE4A027T0162.PDF",
+  "bytes": 167406,
+  "sha256": "d4b27799ce5de5374ed9f317c37b0e434c21011df4dd0035fa93aa7d28f17a38",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:34+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A627Q0058.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/8/SPE4A627Q0058.PDF",
+  "bytes": 287440,
+  "sha256": "48d12478590736c7a6cafab49e7d9c59d9777c08c2419960b41c91f475b9ef4e",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:59+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A627Q0058.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/8/SPE4A627Q0058.PDF",
+  "bytes": 284604,
+  "sha256": "c7601f2dedeb92eaf99b482153eeebee9ff74c6427f48c1b840281e2dc5e0e7a",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:11:04+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A627Q0061.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/1/SPE4A627Q0061.PDF",
+  "bytes": 151783,
+  "sha256": "6611574bac47ea104a9e5947d50676024a49f116a970b71c46f2fb6c8715d00f",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:55+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A627Q0061.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/1/SPE4A627Q0061.PDF",
+  "bytes": 109501,
+  "sha256": "8c76e044192a825bd69365b7d1d9a8334bd35a985d9a22c3086a385f3dc1e86e",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:57+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A627T0486.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/6/SPE4A627T0486.PDF",
+  "bytes": 413791,
+  "sha256": "9a34ce84555ecc0f7f7bdc20b63c03157bd8983b0ac0dcbc09944d424f0844b2",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:37+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE4A627T0486.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/6/SPE4A627T0486.PDF",
+  "bytes": 65831,
+  "sha256": "1e74bc83a1009e0b788c60e410b2975c14abd0e2b700a4ada3ecf062fb6abf65",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:39+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7L127Q0024.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/4/SPE7L127Q0024.PDF",
+  "bytes": 115810,
+  "sha256": "7daf5fd14f343ef4096bfc97b17a27ee7370e3bbb6fd55097e9d1d98c10353a6",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:11:08+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7L127Q0024.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/4/SPE7L127Q0024.PDF",
+  "bytes": 77163,
+  "sha256": "63f0459f8981993dc35643fdf4463567efdd865ea888bcfc52243e8de738624b",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:11:10+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7L127T0501.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/1/SPE7L127T0501.PDF",
+  "bytes": 423598,
+  "sha256": "36690a1feadeffaf8a826643ce9e5e086f8d13e39073bdfac2ff48ba74c06e89",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:41+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7L127T0501.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/1/SPE7L127T0501.PDF",
+  "bytes": 69178,
+  "sha256": "d55b460c1e9effbb32f88102b5a793d3593b720977ddb2b8a0ccf03d93e79808",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:42+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7L127U0037.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/7/SPE7L127U0037.PDF",
+  "bytes": 434411,
+  "sha256": "2cd05c02867a949a4af03a5bc7476f8b821947faf77090d1a79f9124e5c201b0",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:47+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7L127U0037.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/7/SPE7L127U0037.PDF",
+  "bytes": 75453,
+  "sha256": "f9503f2b464aaa4c61a92a0d9f6a44dfaa61a6e000555a072a6f6651f589bd9b",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:49+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7M027T0003.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/3/SPE7M027T0003.PDF",
+  "bytes": 404940,
+  "sha256": "72aa360307de74ba555ac8f003b8b24cd7a41144f8a30241b66bcf87ba85f9e7",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:44+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7M027T0003.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/3/SPE7M027T0003.PDF",
+  "bytes": 64312,
+  "sha256": "0d66ff546a8b10551ef4edb32260e0ba02664b546036c0026476dfecd827f804",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:46+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7M127U0029.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/9/SPE7M127U0029.PDF",
+  "bytes": 429613,
+  "sha256": "1bebcf5ac2100a7cf59ecfbc38fff95a23e1e8583ed82d4089919705965c6857",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:10:51+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPE7M127U0029.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/9/SPE7M127U0029.PDF",
+  "bytes": 73663,
+  "sha256": "a7d88d94f90e24439fb8279663ff708622bce063894324ac1302459afe6249bd",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:10:53+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPEFA327Q0003.pdf",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/3/SPEFA327Q0003.PDF",
+  "bytes": 127100,
+  "sha256": "b2f6e73b09a7955ae64432e347d28630ec184dfeec37069bedd50855512138c0",
+  "note": "RFQ solicitation PDF",
+  "fetched_at": "2026-10-09T18:11:12+00:00"
+ },
+ {
+  "path": "dibbs/rfq_pdf/SPEFA327Q0003.txt",
+  "url": "https://dibbs2.bsm.dla.mil/Downloads/RFQ/3/SPEFA327Q0003.PDF",
+  "bytes": 89879,
+  "sha256": "873c649a69e194cd25691ddefcb8b26b511724bd95a09cbc25bff141d8bb1a2f",
+  "note": "pdfplumber extract_text(), pages separated by <<<PAGE n END>>>",
+  "fetched_at": "2026-10-09T18:11:14+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE4A027T0162.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE4A027T0162",
+  "bytes": 73333,
+  "sha256": "f1012653436ca7b7c34b56ed034eadba1a40e5d8e9961857a8caf05aff789047",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:28+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE4A627Q0058.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE4A627Q0058",
+  "bytes": 53517,
+  "sha256": "96ede758a5625cc7b386bb5d0325946a2ff95f5d768525f8122ebd5379809ab3",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:59+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE4A627Q0061.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE4A627Q0061",
+  "bytes": 51593,
+  "sha256": "dad5d396ae7a18c6f5491f31aef8dc96685b03d6dd9860a2d33bf2a41bc396f3",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:55+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE4A627T0486.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE4A627T0486",
+  "bytes": 51612,
+  "sha256": "5f2e6876fa42bae92d72a654618a804db157341a01be80728b77fa3fba80f7af",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:36+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE7L127Q0024.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE7L127Q0024",
+  "bytes": 49829,
+  "sha256": "80a53788e5e024a650692b3585051a6d853ca4313a92d7455fd9a35427ac9b9a",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:11:07+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE7L127T0501.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE7L127T0501",
+  "bytes": 51543,
+  "sha256": "236f0d6a0ac969d63ef6f52b5a98219bc43b8b9a7b34d76157b42560abdf63bd",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:40+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE7L127U0037.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE7L127U0037",
+  "bytes": 52154,
+  "sha256": "1ff50ef0b8295b6f4464f42291218846e9391483ac27deae11c8f1e802381b16",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:46+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE7M027T0003.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE7M027T0003",
+  "bytes": 52524,
+  "sha256": "985f3c8439f42b95677dda7f40fba73fa83adc92e7eac2f9c1fc7b365bdd9cc3",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:44+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPE7M127U0029.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPE7M127U0029",
+  "bytes": 52246,
+  "sha256": "4a73afde015b4677803730d909ae03103ddef969ee0b90cbeadc835a848d6408",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:10:51+00:00"
+ },
+ {
+  "path": "dibbs/rfq_record/rfqrec_SPEFA327Q0003.html",
+  "url": "https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn=SPEFA327Q0003",
+  "bytes": 49827,
+  "sha256": "031383add51a86f6814c3823ad9a72f4592a104267764bf92f8377524550c9d7",
+  "note": "RFQ Package View",
+  "fetched_at": "2026-10-09T18:11:12+00:00"
+ },
+ {
+  "path": "usaspending/award_detail.json",
+  "url": "https://api.usaspending.gov/api/v2/awards/CONT_AWD_SPE4A626PX272_9700_-NONE-_-NONE-/",
+  "bytes": 6888,
+  "sha256": "5486ff9b25829d52938f239017063d387dbe6074b640f198cc5b6b7db8898a61",
+  "note": "GET /api/v2/awards/<generated_internal_id>/",
+  "fetched_at": "2026-10-09T18:15:30+00:00"
+ },
+ {
+  "path": "usaspending/spending_by_award_dla_psc.json",
+  "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+  "bytes": 28020,
+  "sha256": "771e6a7d46ad6b7d24a49d70460a4f09d9295fc323e4eb6589b30a08fe93e53b",
+  "note": "",
+  "fetched_at": "2026-10-09T18:15:28+00:00"
+ },
+ {
+  "path": "usaspending/spending_by_award_piid_keyword.json",
+  "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+  "bytes": 4598,
+  "sha256": "ced3d9031124943280602eb9fbff7fc1925b5c4a83e9978f5d7d20174010ec74",
+  "note": "",
+  "fetched_at": "2026-10-09T18:15:29+00:00"
+ }
+]

@@ -1,0 +1,804 @@
+{
+ "request": {
+  "method": "POST",
+  "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+  "body": {
+   "filters": {
+    "agencies": [
+     {
+      "type": "awarding",
+      "tier": "subtier",
+      "name": "Defense Logistics Agency"
+     }
+    ],
+    "psc_codes": [
+     "5305",
+     "5306",
+     "5310",
+     "5330",
+     "5340",
+     "4730",
+     "6145"
+    ],
+    "award_type_codes": [
+     "A",
+     "B",
+     "C",
+     "D"
+    ],
+    "time_period": [
+     {
+      "start_date": "2025-10-09",
+      "end_date": "2026-10-09"
+     }
+    ]
+   },
+   "fields": [
+    "Award ID",
+    "Recipient Name",
+    "Recipient UEI",
+    "recipient_id",
+    "Award Amount",
+    "Total Outlays",
+    "Description",
+    "Start Date",
+    "End Date",
+    "Awarding Agency",
+    "Awarding Sub Agency",
+    "Funding Sub Agency",
+    "Contract Award Type",
+    "NAICS",
+    "PSC",
+    "Place of Performance State Code",
+    "Last Modified Date",
+    "generated_internal_id"
+   ],
+   "limit": 25,
+   "page": 1,
+   "sort": "Start Date",
+   "order": "desc",
+   "subawards": false
+  }
+ },
+ "status": 200,
+ "response": {
+  "spending_level": "awards",
+  "limit": 25,
+  "results": [
+   {
+    "internal_id": 363278771,
+    "Award ID": "SPMYM126P0293",
+    "Recipient Name": "SHARE CORPORATION",
+    "Recipient UEI": "LGEVUSR8SP27",
+    "recipient_id": "83e294cc-52dd-a5ff-e43b-534ad0e4f6ba-C",
+    "Award Amount": 14999.05,
+    "Total Outlays": null,
+    "Description": "MAINTENANCE TOOLING KIT",
+    "Start Date": "2026-07-13",
+    "End Date": "2026-07-13",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332510",
+     "description": "HARDWARE MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5340",
+     "description": "HARDWARE, COMMERCIAL"
+    },
+    "Place of Performance State Code": "VA",
+    "Last Modified Date": "2026-07-09 14:27:49",
+    "generated_internal_id": "CONT_AWD_SPMYM126P0293_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278788,
+    "Award ID": "SPMYM226P7696",
+    "Recipient Name": "WASHINGTON CHAIN & SUPPLY, INC.",
+    "Recipient UEI": "YN8EW4XM28Z1",
+    "recipient_id": "4493fd11-bdb6-0454-cd9d-61312730e1dd-C",
+    "Award Amount": 10030.0,
+    "Total Outlays": null,
+    "Description": "PANAMA CANAL CHOCK",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-10-28",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332999",
+     "description": "ALL OTHER MISCELLANEOUS FABRICATED METAL PRODUCT MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5340",
+     "description": "HARDWARE, COMMERCIAL"
+    },
+    "Place of Performance State Code": "WA",
+    "Last Modified Date": "2026-07-09 13:53:24",
+    "generated_internal_id": "CONT_AWD_SPMYM226P7696_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278786,
+    "Award ID": "SPMYM226P7661",
+    "Recipient Name": "AMERICAN HIGH PERFORMANCE SEALS, INC",
+    "Recipient UEI": "MCUKS46N9JN6",
+    "recipient_id": "59f410d6-7069-89fd-9371-3a6bd6c65b54-C",
+    "Award Amount": 2313.2,
+    "Total Outlays": null,
+    "Description": "PLAIN LIP SEAL",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-08-20",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "339991",
+     "description": "GASKET, PACKING, AND SEALING DEVICE MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5330",
+     "description": "PACKING AND GASKET MATERIALS"
+    },
+    "Place of Performance State Code": null,
+    "Last Modified Date": "2026-07-09 14:07:03",
+    "generated_internal_id": "CONT_AWD_SPMYM226P7661_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278785,
+    "Award ID": "SPMYM226P7652",
+    "Recipient Name": "TACOMA SCREW PRODUCTS, INC.",
+    "Recipient UEI": "TRELF569MRN9",
+    "recipient_id": "122bbafd-9d7c-34ad-d309-30d4b6f5cdb9-C",
+    "Award Amount": 2861.46,
+    "Total Outlays": null,
+    "Description": "HEXAGON SCREW",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-30",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332722",
+     "description": "BOLT, NUT, SCREW, RIVET, AND WASHER MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5305",
+     "description": "SCREWS"
+    },
+    "Place of Performance State Code": "FL",
+    "Last Modified Date": "2026-07-09 09:57:35",
+    "generated_internal_id": "CONT_AWD_SPMYM226P7652_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278784,
+    "Award ID": "SPMYM226P7447",
+    "Recipient Name": "CHAS. D. WEST & CO",
+    "Recipient UEI": "WGHJZAHMKJV8",
+    "recipient_id": "c6159d08-5d46-a99c-4bce-d6b5fdd7f6e2-C",
+    "Award Amount": 1322.4,
+    "Total Outlays": null,
+    "Description": "FME DISC",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-08-24",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "339999",
+     "description": "ALL OTHER MISCELLANEOUS MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5340",
+     "description": "HARDWARE, COMMERCIAL"
+    },
+    "Place of Performance State Code": "PR",
+    "Last Modified Date": "2026-07-09 13:57:05",
+    "generated_internal_id": "CONT_AWD_SPMYM226P7447_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278776,
+    "Award ID": "SPMYM126P0309",
+    "Recipient Name": "HAMPTON RUBBER COMPANY",
+    "Recipient UEI": "QLR1UQAG8L85",
+    "recipient_id": "d8171c99-296f-0d34-7888-d4604d0bcdc7-C",
+    "Award Amount": 114.8,
+    "Total Outlays": null,
+    "Description": "SEAL GARLOCK REF PART NUMBER 37702-1292",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-31",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "339991",
+     "description": "GASKET, PACKING, AND SEALING DEVICE MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5330",
+     "description": "PACKING AND GASKET MATERIALS"
+    },
+    "Place of Performance State Code": "VA",
+    "Last Modified Date": "2026-07-09 11:31:36",
+    "generated_internal_id": "CONT_AWD_SPMYM126P0309_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278772,
+    "Award ID": "SPMYM126P0294",
+    "Recipient Name": "HAMPTON RUBBER COMPANY",
+    "Recipient UEI": "QLR1UQAG8L85",
+    "recipient_id": "d8171c99-296f-0d34-7888-d4604d0bcdc7-C",
+    "Award Amount": 114.8,
+    "Total Outlays": null,
+    "Description": "GASKET, FLANGE - GARLOCK SEAL 1.250 NOM,  0.125 THK, 300 CL P/N: 37702-1292",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-23",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "339991",
+     "description": "GASKET, PACKING, AND SEALING DEVICE MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5330",
+     "description": "PACKING AND GASKET MATERIALS"
+    },
+    "Place of Performance State Code": "VA",
+    "Last Modified Date": "2026-07-09 10:21:28",
+    "generated_internal_id": "CONT_AWD_SPMYM126P0294_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278769,
+    "Award ID": "SPMYM126P0276",
+    "Recipient Name": "W. & O. SUPPLY, INC.",
+    "Recipient UEI": "ZX7MG7QA6LX4",
+    "recipient_id": "619efc53-e9ed-87af-b3c8-122bc8f7452d-C",
+    "Award Amount": 6802.26,
+    "Total Outlays": null,
+    "Description": "PIPE ELBOW 8 NPS",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-21",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332919",
+     "description": "OTHER METAL VALVE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "VA",
+    "Last Modified Date": "2026-07-09 09:27:03",
+    "generated_internal_id": "CONT_AWD_SPMYM126P0276_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278768,
+    "Award ID": "SPMYM126P0273",
+    "Recipient Name": "W.W. GRAINGER, INC.",
+    "Recipient UEI": "DBQGN324ULK3",
+    "recipient_id": "02d96557-827b-7983-b39e-007f84487932-C",
+    "Award Amount": 36.28,
+    "Total Outlays": null,
+    "Description": "N4215861673196 SOCKET SET SCREW (2 CLIN)",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-28",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332722",
+     "description": "BOLT, NUT, SCREW, RIVET, AND WASHER MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5305",
+     "description": "SCREWS"
+    },
+    "Place of Performance State Code": "VA",
+    "Last Modified Date": "2026-07-09 09:22:00",
+    "generated_internal_id": "CONT_AWD_SPMYM126P0273_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278766,
+    "Award ID": "SPMYM126P0211",
+    "Recipient Name": "GULF FASTENER, INC.",
+    "Recipient UEI": "EANJVKFHMSZ8",
+    "recipient_id": "44c7a2cb-c8c4-321b-0617-a2c2a960903f-C",
+    "Award Amount": 2900.0,
+    "Total Outlays": null,
+    "Description": "CAP SCREW, HEX HEAD 1/2 INCH-20-UNJF- 3A X 1-1/2 INCH LONG,ASTM A276 304 STAINLESS STEEL PASSIVATED, PER MIL-DTL-1222J, TY-1,LOT ID MARKING REQUIRED",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-10-30",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Department of the Navy",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332722",
+     "description": "BOLT, NUT, SCREW, RIVET, AND WASHER MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5305",
+     "description": "SCREWS"
+    },
+    "Place of Performance State Code": "VA",
+    "Last Modified Date": "2026-07-09 09:05:18",
+    "generated_internal_id": "CONT_AWD_SPMYM126P0211_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278753,
+    "Award ID": "SPEHA626P0306",
+    "Recipient Name": "LEGACY PRODUCT SUPPORT LLC.",
+    "Recipient UEI": "UKFLTZYHFNV1",
+    "recipient_id": "7df49c5b-23c6-2608-ccbe-c59b21d58737-C",
+    "Award Amount": 18880.0,
+    "Total Outlays": null,
+    "Description": "8512224690!FITTING,OVERBOARD",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-17",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332996",
+     "description": "FABRICATED PIPE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "PA",
+    "Last Modified Date": "2026-08-15 12:17:30",
+    "generated_internal_id": "CONT_AWD_SPEHA626P0306_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363278751,
+    "Award ID": "SPEHA626F1414",
+    "Recipient Name": "ES3 PRIME LOGISTICS GROUP INC",
+    "Recipient UEI": "RRYLZMU7LMN5",
+    "recipient_id": "c8900a23-b855-03b4-8625-7ffc81469325-C",
+    "Award Amount": 3101.4,
+    "Total Outlays": null,
+    "Description": "8512229898!INVERTED NUT,TUBE C",
+    "Start Date": "2026-07-09",
+    "End Date": "2027-06-14",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "336413",
+     "description": "OTHER AIRCRAFT PARTS AND AUXILIARY EQUIPMENT MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "CA",
+    "Last Modified Date": "2026-07-09 10:15:20",
+    "generated_internal_id": "CONT_AWD_SPEHA626F1414_9700_SPE4AX19D9411_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277743,
+    "Award ID": "SPE7MX26F8695",
+    "Recipient Name": "SUPPLYCORE LLC",
+    "Recipient UEI": "HTYJC5P9ZMH5",
+    "recipient_id": "038feb1d-f65f-cb60-0833-9e70db12d7b7-C",
+    "Award Amount": 61.66,
+    "Total Outlays": null,
+    "Description": "8512231904!CAP,FILLER OPENING",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-14",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "333318",
+     "description": "OTHER COMMERCIAL AND SERVICE INDUSTRY MACHINERY MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5340",
+     "description": "HARDWARE, COMMERCIAL"
+    },
+    "Place of Performance State Code": "IL",
+    "Last Modified Date": "2026-07-26 10:16:29",
+    "generated_internal_id": "CONT_AWD_SPE7MX26F8695_9700_SPE7MX21D0016_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277735,
+    "Award ID": "SPE7MX26F8686",
+    "Recipient Name": "SUPPLYCORE LLC",
+    "Recipient UEI": "HTYJC5P9ZMH5",
+    "recipient_id": "038feb1d-f65f-cb60-0833-9e70db12d7b7-C",
+    "Award Amount": 61.66,
+    "Total Outlays": null,
+    "Description": "8512231007!CAP,FILLER OPENING",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-13",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "333318",
+     "description": "OTHER COMMERCIAL AND SERVICE INDUSTRY MACHINERY MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5340",
+     "description": "HARDWARE, COMMERCIAL"
+    },
+    "Place of Performance State Code": "IL",
+    "Last Modified Date": "2026-07-26 05:54:41",
+    "generated_internal_id": "CONT_AWD_SPE7MX26F8686_9700_SPE7MX21D0016_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277730,
+    "Award ID": "SPE7MX26F8679",
+    "Recipient Name": "SUPPLYCORE LLC",
+    "Recipient UEI": "HTYJC5P9ZMH5",
+    "recipient_id": "038feb1d-f65f-cb60-0833-9e70db12d7b7-C",
+    "Award Amount": 12.54,
+    "Total Outlays": null,
+    "Description": "8512230506!PLUG,QUICK DISCONNECT",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-07-15",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "333318",
+     "description": "OTHER COMMERCIAL AND SERVICE INDUSTRY MACHINERY MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "IL",
+    "Last Modified Date": "2026-07-26 05:48:50",
+    "generated_internal_id": "CONT_AWD_SPE7MX26F8679_9700_SPE7MX21D0016_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277706,
+    "Award ID": "SPE7MX26F8655",
+    "Recipient Name": "SUPPLYCORE LLC",
+    "Recipient UEI": "HTYJC5P9ZMH5",
+    "recipient_id": "038feb1d-f65f-cb60-0833-9e70db12d7b7-C",
+    "Award Amount": 15.42,
+    "Total Outlays": null,
+    "Description": "8512229922!RETAINER,SEAL",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-11-16",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "339991",
+     "description": "GASKET, PACKING, AND SEALING DEVICE MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5330",
+     "description": "PACKING AND GASKET MATERIALS"
+    },
+    "Place of Performance State Code": "IL",
+    "Last Modified Date": "2026-07-09 10:12:11",
+    "generated_internal_id": "CONT_AWD_SPE7MX26F8655_9700_SPE7M426D60DQ_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277700,
+    "Award ID": "SPE7MX26F8649",
+    "Recipient Name": "LKR, INC.",
+    "Recipient UEI": "HPGGNZFNY6J7",
+    "recipient_id": "ee7a8124-e38a-3e5b-1dd7-854e121fe9c5-C",
+    "Award Amount": 7490.86,
+    "Total Outlays": null,
+    "Description": "8512229618!ELBOW,QUICK DISCONNECT",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-10-07",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "332999",
+     "description": "ALL OTHER MISCELLANEOUS FABRICATED METAL PRODUCT MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "CA",
+    "Last Modified Date": "2026-08-06 23:09:15",
+    "generated_internal_id": "CONT_AWD_SPE7MX26F8649_9700_SPE7M426D60BU_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277577,
+    "Award ID": "SPE7M526P4093",
+    "Recipient Name": "INNOVATIVE CONTRACTING LLC",
+    "Recipient UEI": "YQ9YWM7RJ395",
+    "recipient_id": "064b1083-6e1b-58b8-9ac8-45d8044808b0-C",
+    "Award Amount": 22148.94,
+    "Total Outlays": null,
+    "Description": "8512226041!REPAIR KIT,STRAINER",
+    "Start Date": "2026-07-09",
+    "End Date": "2027-02-16",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332996",
+     "description": "FABRICATED PIPE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "AZ",
+    "Last Modified Date": "2026-07-09 09:19:59",
+    "generated_internal_id": "CONT_AWD_SPE7M526P4093_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277574,
+    "Award ID": "SPE7M526P4083",
+    "Recipient Name": "APPLIED INDUSTRIAL TECHNOLOGIES, INC.",
+    "Recipient UEI": "EM12FKLBPMM7",
+    "recipient_id": "89520de2-af26-a23e-89ee-b24655f57474-C",
+    "Award Amount": 12116.0,
+    "Total Outlays": null,
+    "Description": "8512224172!TEE,PIPE TO TUBE",
+    "Start Date": "2026-07-09",
+    "End Date": "2027-08-13",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332996",
+     "description": "FABRICATED PIPE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "OH",
+    "Last Modified Date": "2026-07-09 09:19:58",
+    "generated_internal_id": "CONT_AWD_SPE7M526P4083_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277506,
+    "Award ID": "SPE7M426V4623",
+    "Recipient Name": "BECKER AND ASSOCIATES, LLC",
+    "Recipient UEI": "JDW9RNR3MJ95",
+    "recipient_id": "6b5b5ddd-46e6-bb74-c091-781cbd825810-C",
+    "Award Amount": 5400.0,
+    "Total Outlays": null,
+    "Description": "8512231260!HANDLE,MANUAL CONTROL",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-12-21",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "336390",
+     "description": "OTHER MOTOR VEHICLE PARTS MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5340",
+     "description": "HARDWARE, COMMERCIAL"
+    },
+    "Place of Performance State Code": "IL",
+    "Last Modified Date": "2026-07-10 06:24:25",
+    "generated_internal_id": "CONT_AWD_SPE7M426V4623_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277504,
+    "Award ID": "SPE7M426V4615",
+    "Recipient Name": "D. W. INDUSTRIES, INC.",
+    "Recipient UEI": "C1R2JGE5N6Q7",
+    "recipient_id": "b12a3ce1-ef3c-5b74-de9a-3d571bc2e7d6-C",
+    "Award Amount": 2555.12,
+    "Total Outlays": null,
+    "Description": "8512228139!ELBOW,PIPE TO TUBE",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-12-16",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332996",
+     "description": "FABRICATED PIPE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "TX",
+    "Last Modified Date": "2026-07-09 10:12:21",
+    "generated_internal_id": "CONT_AWD_SPE7M426V4615_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277492,
+    "Award ID": "SPE7M426P3989",
+    "Recipient Name": "INLAND MACHINE COMPANY INC.",
+    "Recipient UEI": "NNZAGMG9CBB1",
+    "recipient_id": "c5f08931-3969-b421-a07e-281f08a3ec63-C",
+    "Award Amount": 6909.0,
+    "Total Outlays": null,
+    "Description": "8512226445!REDUCER,BOSS",
+    "Start Date": "2026-07-09",
+    "End Date": "2027-01-05",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "PURCHASE ORDER",
+    "NAICS": {
+     "code": "332996",
+     "description": "FABRICATED PIPE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "CA",
+    "Last Modified Date": "2026-07-09 10:12:20",
+    "generated_internal_id": "CONT_AWD_SPE7M426P3989_9700_-NONE-_-NONE-",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277485,
+    "Award ID": "SPE7M426F1259",
+    "Recipient Name": "GATOR ENTERPRISES LLC",
+    "Recipient UEI": "R6QLJBZZLGN3",
+    "recipient_id": "080a3275-4e03-95c7-4c82-d7c0fc679e64-C",
+    "Award Amount": 309.12,
+    "Total Outlays": null,
+    "Description": "8512229895!ELBOW,PIPE TO TUBE",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-08-14",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "332919",
+     "description": "OTHER METAL VALVE AND PIPE FITTING MANUFACTURING"
+    },
+    "PSC": {
+     "code": "4730",
+     "description": "HOSE, PIPE, TUBE, LUBRICATION, AND RAILING FITTINGS"
+    },
+    "Place of Performance State Code": "MO",
+    "Last Modified Date": "2026-08-12 07:16:39",
+    "generated_internal_id": "CONT_AWD_SPE7M426F1259_9700_SPE7M426D60GJ_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277484,
+    "Award ID": "SPE7M426F1258",
+    "Recipient Name": "SAGINAW PRODUCTS CORPORATION",
+    "Recipient UEI": "JLQEV9MULTF3",
+    "recipient_id": "051b27b1-2523-930a-85e9-a3f5306b0ed5-C",
+    "Award Amount": 5960.64,
+    "Total Outlays": null,
+    "Description": "8512229868!SEAL,PLAIN ENCASED",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-10-07",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "326291",
+     "description": "RUBBER PRODUCT MANUFACTURING FOR MECHANICAL USE"
+    },
+    "PSC": {
+     "code": "5330",
+     "description": "PACKING AND GASKET MATERIALS"
+    },
+    "Place of Performance State Code": "MI",
+    "Last Modified Date": "2026-07-09 10:15:25",
+    "generated_internal_id": "CONT_AWD_SPE7M426F1258_9700_SPE7M425D60GQ_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   },
+   {
+    "internal_id": 363277483,
+    "Award ID": "SPE7M426F1257",
+    "Recipient Name": "AUTO-VALVE, INC",
+    "Recipient UEI": "FNAQFDGE56M6",
+    "recipient_id": "de66daf3-dd2b-2c4c-8e01-502c2b80cad8-C",
+    "Award Amount": 3904.0,
+    "Total Outlays": null,
+    "Description": "8512229855!PACKING,PREFORMED",
+    "Start Date": "2026-07-09",
+    "End Date": "2026-12-31",
+    "Awarding Agency": "Department of Defense",
+    "Awarding Sub Agency": "Defense Logistics Agency",
+    "Funding Sub Agency": "Defense Logistics Agency",
+    "Contract Award Type": "DELIVERY ORDER",
+    "NAICS": {
+     "code": "339991",
+     "description": "GASKET, PACKING, AND SEALING DEVICE MANUFACTURING"
+    },
+    "PSC": {
+     "code": "5330",
+     "description": "PACKING AND GASKET MATERIALS"
+    },
+    "Place of Performance State Code": "OH",
+    "Last Modified Date": "2026-07-09 10:15:21",
+    "generated_internal_id": "CONT_AWD_SPE7M426F1257_9700_SPE7M426D60FZ_9700",
+    "awarding_agency_id": 1173,
+    "agency_slug": "department-of-defense"
+   }
+  ],
+  "page_metadata": {
+   "page": 1,
+   "hasNext": true,
+   "last_record_unique_id": 363277483,
+   "last_record_sort_value": "1783555200000"
+  },
+  "messages": [
+   "For searches, time period start and end dates are currently limited to an earliest date of 2007-10-01.  For data going back to 2000-10-01, use either the Custom Award Download feature on the website or one of our download or bulk_download API endpoints as listed on https://api.usaspending.gov/docs/endpoints. "
+  ]
+ }
+}

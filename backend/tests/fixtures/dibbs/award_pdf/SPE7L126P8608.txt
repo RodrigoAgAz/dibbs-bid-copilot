@@ -1,0 +1,391 @@
+ORDER FOR SUPPLIES OR SERVICES PAGE 1 OF 7
+1. CONTRACT/PURCH ORDER/AGREEMENT NO. 2. DELIVERY ORDER/CALL NO. 3. DATE OF ORDER/CALL 4. REQUISITION/PURCH REQUEST NO. 5. PRIORITY
+(YYYYMMMDD)
+SPE7L1-26-P-8608 2026 JUL 20 7016686116 DO-C9
+6. ISSUED BY CODE SPE7L1 7. ADMINISTERED BY (If other than 6) CODE SPE7L1 8. DELIVERY FOB
+DLA LAND AND MARITIME DLA LAND AND MARITIME DESTINATION
+LAND SUPPLY CHAIN LAND SUPPLY CHAIN
+P C O O L B U O M X B 3 U 9 S 9 0 O H 43218-3990 P C O O L B U O M X B 3 U 9 S 9 0 O H 43218-3990 X OTHER
+USA USA (See Schedule if
+Local Admin: MICHAELA Lupton Tel: 6149085388 Criticality: B Pre-Award Survey : None other)
+Email: Michaela.GrubichLupton@dla.mil
+9. CONTRACTOR CODE 01084 FACILITY 10. DELIVER TO FOB POINT BY (Date) 11. X IF BUSINESS IS
+(YYYYMMMDD)
+120 DAYS ADO X SMALL
+SILVER EAGLE MANUFACTURING CO 12. DISCOUNT TERMS S V M AN AL T L A G D E IS D AD-
+N
+A
+A
+N
+M
+D
+E 5
+P
+8
+O
+2
+R
+5
+T
+N
+L
+E
+A N
+S
+D
+K Y
+O
+P
+R
+O R
+97
+T
+2
+W
+18
+A
+-
+Y
+12 49
+Net 30 days WOMEN-OWNED
+ADDRESS USA 13. MAIL INVOICES TO THE ADDRESS IN BLOCK
+Submit Invoices IAW DFARS 252.232-7003
+14. SHIP TO CODE 15. PAYMENT WILL BE MADE BY CODE SL4701 MARK ALL
+DEF FIN AND ACCOUNTING SVC PACKAGES AND
+BSM PAPERS WITH
+SEE SCHEDULE, DO NOT SHIP TO ADDRESSES ON THIS PAGE P O BOX 182317 IDENTIFICATION
+NUMBERS IN
+COLUMBUS OH 43218-2317 BLOCKS 1 AND 2.
+USA
+DELIVERY/
+16. CALL This delivery order/call is issued on another Government agency or in accordance with and subject to terms and conditions of above numbered contract.
+TYPE
+OF Reference your Offer/Quote dated 2026 MAY 14 furnish the following on terms specified herein.
+PURCHASE X
+ORDER ACCEPTANCE. THE CONTRACTOR HEREBY ACCEPTS THE OFFER REPRESENTED BY THE NUMBERED PURCHASE ORDER AS IT MAY PREVIOUSLY HAVE
+BEEN OR IS NOW MODIFIED, SUBJECT TO ALL OF THE TERMS AND CONDITIONS SET FORTH, AND AGREES TO PERFORM THE SAME.
+NAME OF CONTRACTOR SIGNATURE TYPED NAME AND TITLE DATE SIGNED
+(YYYYMMMDD)
+If this box is marked, supplier must sign Acceptance and return the following number of copies:
+17. ACCOUNTING AND APPROPRIATION DATA/LOCAL USE
+BX: 97X4930 5CBX 001 2620 S33189 $418.60
+20. QUANTITY
+18. ITEM NO. 19. SCHEDULE OF SUPPLIES/SERVICES ORDERED/ ACCEPTED* 21.UNIT 2 2 . P U R N IC IT E 23. AMOUNT
+Award sent EDI, Do not duplicate shipment
+46.000
+This is a Rated Order/Contract under DPAS (15 CFR 700). See Block 5
+* If quantity accepted by the Government is 24. UNITED STATES OF AMERICA 25. TOTAL $418.60
+same as quantity ordered, indicate by X. MARIEL PUGH MARIEL PUGH
+If different, enter actual quantity accepted below MARIEL.PUGH@DLA.MIL 26.
+DIFFERENCES
+quantity ordered and encircle. 2026 JUL 20 CONTRACTING/ORDERING OFFICER
+27a. QUANTITY IN COLUMN 20 HAS BEEN
+ACCEPTED, AND CONFORMS TO
+INSPECTED RECEIVED THE CONTRACT EXCEPT AS NOTED:
+b. SIGNATURE OF AUTHORIZED GOVERNMENT REPRESENTATIVE c. DATE d. PRINTED NAME AND TITLE OF AUTHORIZED GOVERNMENT REPRESENTATIVE
+(YYYYMMMDD)
+e. MAILING ADDRESS OF AUTHORIZED GOVERNMENT REPRESENTATIVE 28. SHIP. NO. 29. D.O. VOUCHER NO. 30. INITIALS
+PARTIAL 32. PAID BY 33. AMOUNT VERIFIED CORRECT FOR
+f. TELEPHONE NUMBER g. E-MAIL ADDRESS FINAL
+31. PAYMENT 34. CHECK NUMBER
+36. I CERTIFY THIS ACCOUNT IS CORRECT AND PROPER FOR PAYMENT. COMPLETE
+a. DATE b. SIGNATURE AND TITLE OF CERTIFYING OFFICER PARTIAL 35. BILL OF LADING NO.
+(YYYYMMMDD)
+FINAL
+37. RECEIVED 38. RECEIVED BY (Print) 39. DATE RECEIVED 40. TOTAL CON- 41. S/R ACCOUNT NUMBER 42. S/R VOUCHER NO.
+AT (YYYYMMMDD) TAINERS
+DD FORM 1155, DEC 2001 PREVIOUS EDITION IS OBSOLETE. Adobe Professional 8.0
+<<<PAGE 1 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 2 OF 7 PAGES
+SPE7L1-26-P-8608
+C20 Vendor Shipment Module (VSM) (JUN 2025)
+**********************************************;
+DFARS 252.204-7016 Covered Defense Telecommunications Equipment or Services- Representation (DEC 2019)
+DFARS 252.204-7017 Prohibition on the Acquisition of Covered Defense Telecommunications Equipment or Services-
+Representation (MAY 2021)
+DFARS 252.204-7018 Prohibition on the Acquisition of Covered Defense Telecommunications Equipment or Services (JAN
+2023)
+52.240-91 Security Prohibitions and Exclusions (FEB 2026)
+**********************************************;
+DLAD PROCUREMENT NOTES
+DLAD Procurement Notes are incorporated by reference, with the same force and effect as if they were in full text. The
+full text of a DLAD Procurement Note may be accessed electronically at http://www.dla.mil/HQ/Acquisition/Offers/
+eProcurement.aspx and via 'References' on the DIBBS homepage.
+**********************************************;
+E05 Product Verification Testing (MAY 2020)
+(1) Product verification testing (PVT) under this procurement note will only apply when the contracting officer
+specifically invokes it in writing. The contracting officer may invoke PVT at or after contract award. If the
+contracting officer invokes PVT at contract award, the contract will explicitly state this testing requirement. If the
+contracting officer invokes PVT after contract award, the contracting officer shall notify the contractor and the
+cognizant DCMA ACO. The Government will perform PVT testing at a Government-designated testing laboratory.
+(2) The contractor shall not ship or deliver any material until it receives notification of the acceptable PVT
+results, unless the contracting officer directs it to do so in writing. The Government will provide the PVT results to
+the contractor within 20 business days after receipt at the Government testing facility, unless the Government
+specifies otherwise in writing.
+(3) The contractor shall provide and maintain an inspection system acceptable to the Government in accordance with FAR
+Clause 52.246-2 or 52.246-3; and maintain and make available all records evidencing those details if requested by the
+Government. When the Government finds evidence of risk associated with the contractor’s sampling process, the
+Government may witness and evaluate the contractors sampling process. The contractor shall randomly select samples
+from the production lot(s), unless the contracting officer specifies otherwise in writing. The contractor shall ship
+the selected PVT samples with a copy of the system of record receiving report (i.e., WAWF, DD Form 250, or commercial
+shipping document) and the contractor’s signed DD Form 1222. The contractor shall prepare the shipping container(s) by
+marking the external packages in bold letters, Product Verification Test Samples Do Not Post to Stock," Contract
+Number: contractor insert and Lot/Item Number: contractor insert adjacent to the MIL-STD-129 (latest revision)
+identification markings. The contractor shall use a hard copy of the system of record receiving report as a packing
+list, in accordance with DFARS Appendix F. The contractor shall mark the exterior of the shipping container in
+accordance with MIL-STD- 129 (latest revision), paragraph 5.11. The contractor shall send samples by traceable means
+(e.g., certified or registered mail, United Parcel Service, Federal Express). The contractor shall include the
+following in the interior package:
+(a) Hard copies of the contract;
+(b) Material certifications/process operation sheets; and
+(c) Drawings used to manufacture the units and return shipping information.
+(4) The Government will return samples that pass testing and are not destroyed during evaluation to the contractor at
+the Government expense for the contractor to include as part of the total contract quantity to be delivered under the
+contract. The contractor and Government may agree to dispose of samples not destroyed when the cost of the item does
+not justify the shipping expense. If the Government does not return approved samples that pass testing to the
+contractor, the Government will consider those samples as part of the contract quantity for payment and delivery.
+(5) If samples fail testing, the Government may reject the entire contract lot from which the contractor took the
+samples. The Government may, at its discretion, retain samples that fail testing without obligation to the contractor.
+**********************************************;
+Delivery shall be offered in terms of a number of days after date of award. There will be no penalty for faster
+delivery and partial deliveries are acceptable at no additional cost to the government.
+**********************************************;
+Expedited or Partial Shipments will be accepted as long as there is no additional charge to the Government.
+**********************************************;
+FAR 52.209-10 PROHIBITION ON CONTRACTING WITH INVERTED DOMESTIC CORPORATIONS (NOV 2015);
+FIRST DESTINATION TRANSPORTATION (FDT) PROGRAM APPLIES
+This purchase order is issued under the First Destination Transportation (FDT) program to reduce the cost of
+transportation through the use of Government-arranged transportation utilizing Government contracts and rates. If this
+award is for FMS, is hazardous for transportation, or has an APO/FPO ship-to address, these instructions do not apply.
+For FDT Program Transportation Requirements, see Procurement Note C16 First Destination Transportation (FDT) Program,
+Government-Arranged Transportation for Manual Awards, C17 First Destination Transportation (FDT) Program Shipments
+Originating from Outside the Contiguous United States, and Procurement Note C20 Vendor Shipment Module (VSM).
+Offers should be submitted based on FOB origin. For offerors whose shipments will originate from outside the
+contiguous United States, the offeror’s f.o.b. origin price shall include transportation to a contiguous United States
+location that the offeror selects based on cost-effectiveness or other variables at the offeror’s discretion.
+Additional information about FDT can be found at http://www.dla.mil/LandandMaritime/Business/Selling/DLA-Land-and-
+Maritime-Procurement-Initiatives/FDTPI/
+ANY CHANGES TO TRANSPORTATION METHOD IDENTIFIED IN THIS DOCUMENT MUST BE AUTHORIZED IN ADVANCE BY THE CONTRACTING
+OFFICER.
+**********************************************;
+PURCHASE ORDER CLAUSES ARE APPLICABLE AS INDICATED IN THE REVISION OF THE DLA MASTER SOLICITATION FOR AUTOMATED
+CONTINUED ON NEXT PAGE
+<<<PAGE 2 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 3 OF 7 PAGES
+SPE7L1-26-P-8608
+SIMPLIFIED ACQUISITIONS IN EFFECT ON THE AWARD DATE. ALL REVISIONS OF THE DLA MASTER SOLICITATION FOR AUTOMATED
+SIMPLIFIED ACQUISITIONS CAN BE FOUND ON THE WEB AT: http://www.dla.mil/HQ/Acquisition/Offers/eProcurement.aspx.
+**********************************************;
+PRODUCTION FACILITY CHANGES
+UCF SECTION F
+UCF SECTION F PRODUCTION FACILITY CHANGES
+(a) The performance of any of the work contracted for in any place other than that named in the contract is prohibited
+unless specifically approved by the Contracting Officer. Written requests for a change in production facilities must
+be submitted in writing to the Contracting Officer. Changes in production facilities may be approved, provided:
+(1) Performance by small business or in labor surplus areas as required by the contract will not be changed;
+(2) The change will not cause a delay in delivery or necessitate a change in the purchase description;
+(3) The free on board (f.o.b.) point is not changed; and
+(4) Each request is supported by a price reduction of 250.00 to cover the Government administrative costs to process
+the change.
+(b) The Government reserves the right to deny approval even if these four elements are met.
+(End of Text)
+**********************************************;
+************
+************
+************
+CONTINUED ON NEXT PAGE
+<<<PAGE 3 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 4 OF 7 PAGES
+SPE7L1-26-P-8608
+SECTION B
+SUPPLIES/SERVICES: 5330-01-723-4104
+ITEM DESCRIPTION:
+SEAL,PLAIN
+RA001: THIS DOCUMENT INCORPORATES TECHNICAL AND/OR QUALITY REQUIREMENTS
+(IDENTIFIED BY AN 'R' OR AN 'I' NUMBER) SET FORTH IN FULL TEXT IN THE
+DLA MASTER LIST OF TECHNICAL AND QUALITY REQUIREMENTS FOUND ON THE WEB
+AT:
+http://www.dla.mil/HQ/Acquisition/Offers/eProcurement.aspx
+FOR SIMPLIFIED ACQUISITIONS, THE REVISION OF THE MASTER IN EFFECT ON THE
+SOLICITATION ISSUE DATE OR THE AWARD DATE CONTROLS. FOR LARGE
+ACQUISITIONS, THE REVISION OF THE MASTER IN EFFECT ON THE RFP ISSUE DATE
+APPLIES UNLESS A SOLICITATION AMENDMENT INCORPORATES A FOLLOW-ON
+REVISION, IN WHICH CASE THE AMENDMENT DATE CONTROLS.
+RP001: DLA PACKAGING REQUIREMENTS FOR PROCUREMENT
+RQ011: REMOVAL OF GOVERNMENT IDENTIFICATION FROM NON-ACCEPTED SUPPLIES
+NO DATA IS AVAILABLE. THE ALTERNATE OFFEROR IS
+REQUIRED TO PROVIDE A COMPLETE DATA PACKAGE
+INCLUDING DATA FOR THE APPROVED AND ALTERNATE
+PART FOR EVALUATION.
+MERCURY OR MERCURY CONTAINING COMPOUNDS SHALL
+NOT BE INTENTIONALLY ADDED TO<(>,<)> OR COME IN DIRECT
+CONTACT WITH<(>,<)> ANY HARDWARE OR SUPPLIES FURNISHED
+UNDER THIS CONTRACT. EXCEPTION: FUNCTIONAL MERCURY
+USED IN BATTERIES, FLUORESCENT LIGHTS, REQUIRED
+INSTRUMENTS; SENSORS OR CONTROLS; WEAPON SYSTEMS;
+AND CHEMICAL ANALYSIS REAGENTS SPECIFIED BY NAVSEA.
+PORTABLE FLUORESCENT LAMPS AND PORTABLE INSTRUMENTS
+CONTAINING MERCURY SHALL BE SHOCK PROOF AND CONTAIN
+A SECOND BOUNDARY OF CONTAINMENT OF THE MERCURY OR
+MERCURY COMPOUND. (IAW NAVSEA 5100-003D).
+"ITEMS SUPPLIED MUST BE FREE OF ASBESTOS.
+LISTED CODE AND PART NUMBERS CONTAINING ASBESTOS
+ARE NO LONGER ACCEPTABLE, AND ANY ALTERNATIVE
+ITEM/MATERIAL MUST BE APPROVED IN ACCORDANCE
+WITH CLAUSE L30 AND PROVISION 4 - CONDITIONS
+FOR EVALUATION AND ACCEPTANCE OF OFFERS FOR
+PART NUMBERED ITEMS."
+THIS ITEM IS IDENTIFIED AS A COMMERCIAL OFF THE SHELF (COTS) ITEM
+CRITICAL APPLICATION ITEM
+FORD MOTOR CO 3LQV7 P/N FL3Z-8590-A
+FORD MOTOR CO 3LQV7 P/N FL3Z-8590-B
+DLA issues this document using the DoD authorized unit of issue, please refer to the following URL to determine the
+corresponding ANSI X12 unit of issue.
+https://view.officeapps.live.com/op/view.aspx?src=https%3A%2F%2Fwww.dla.mil%2FPortals%2F104%2FDocuments%2FDLMS%
+2FeApplications%2FLogDataAdmin%2FUnit_of_Issue_and_Purchase_Unit.xlsx&wdOrigin=BROWSELINK
+ITEM NO. SUPPLIES/SERVICES QUANTITY UNIT UNIT PRICE AMOUNT
+0001 5330-01-723-4104 46.000 EA $ 9.10 $ 418.60 .
+SEAL,PLAIN
+CONTINUED ON NEXT PAGE
+<<<PAGE 4 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 5 OF 7 PAGES
+SPE7L1-26-P-8608
+SECTION B
+SUPPLY/SERVICE: 5330-01-723-4104 CONT'D
+PRICING TERMS: Firm Fixed Price
+QTY VARIANCE: PLUS 0% MINUS 0%
+INSPECTION POINT: DESTINATION
+ACCEPTANCE POINT: DESTINATION
+FOB: ORIGIN DELIVERY DATE: 2026 NOV 17
+FOB PAYMENT METHOD: GOVERNMENT
+PREP FOR DELIVERY:
+PKGING DATA-QUP:001
+IF MATERIAL IS CONSIDERED HAZARDOUS IAW FED-STD-313,
+PACKAGE IN ACCORDANCE WITH TQ REQUIREMENT IP025.
+IF THE MATERIAL IS NOT CONSIDERED HAZARDOUS, IN ACCORDANCE WITH
+FED-STD-313, THE MATERIAL SHALL BE COMMERCIALLY PACKAGED IN ACCORDANCE
+WITH ASTM D3951.
+All DLA Master List of Technical and Quality Requirements take
+precedence over ASTM D3951.
+Mark and label all packaging and packing in accordance with MIL-STD-129.
+The Unit of Issue (U/I) and Quantity per Unit Pack (QUP) will be
+as specified in the contract/purchase order.
+PALLETIZATION SHALL BE IN ACCORDANCE WITH RP001: DLA PACKAGING
+REQUIREMENTS FOR PROCUREMENT
+PARCEL POST ADDRESS:
+W25G1U
+W1A8 DLA DISTRIBUTION
+DDSP NEW CUMBERLAND FACILITY
+2083 NORMANDY DRIVE DOOR 113 TO 134
+NEW CUMBERLAND PA 17070-5002
+US
+FOR TRANSPORTATION SEE DLAD DLAD PROC NOTE C19. FOR FIRST DESTINATION TRANSPORTATION SEE DLAD PROC NOTE C20 AND
+CONTRACT
+FREIGHT SHIPPING ADDRESS:
+W25G1U
+W1A8 DLA DISTRIBUTION
+DDSP NEW CUMBERLAND FACILITY
+2083 NORMANDY DRIVE DOOR 113 TO 134
+NEW CUMBERLAND PA 17070-5002
+US
+GOVT USE
+External External External Customer RDD/
+ITEM PR PRLI PR PRLI Material Need Ship Date
+0001 7016686116 0001 N/A N/A N/A 11/03/2026 .
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+CONTINUED ON NEXT PAGE
+<<<PAGE 5 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 6 OF 7 PAGES
+SPE7L1-26-P-8608
+SECTION G - CONTRACT ADMINISTRATION DATA
+252.232-7006 WIDE AREA WORKFLOW PAYMENT INSTRUCTIONS (PRE-FILLED) (JAN 2023) DFARS
+As prescribed in 232.7004 (b), use the following clause:
+(a) Definitions. As used in this clause -
+Department of Defense Activity Address Code (DoDAAC) is a six position code that uniquely identifies a unit, activity, or organization.
+Document type means the type of payment request or receiving report available for creation in Wide Area WorkFlow (WAWF).
+Local processing office (LPO) is the office responsible for payment certification when payment certification is done external to the entitlement system.
+Payment request and receiving report are defined in the clause at 252.232-7003, Electronic Submission of Payment Requests and Receiving Reports.
+(b) Electronic invoicing. The WAWF system provides the method to electronically process vendor payment requests and receiving reports, as authorized by
+Defense Federal Acquisition Regulation System (DFARS) 252.232-7003, Electronic Submission of Payment Requests and Receiving Reports.
+(c) WAWF access. To access WAWF, the Contractor shall -
+(1) Have a designated electronic business point of contact in the System for Award Management at https://www.sam.gov and
+(2) Be registered to use WAWF at https://wawf.eb.mil/ following the step-by-step procedures for self-registration available at this Web site.
+(d) WAWF training. The Contractor should follow the training instructions of the WAWF Web-Based Training Course and use the Practice Training Site
+before submitting payment requests through WAWF. Both can be accessed by selecting the “Web Based Training” link on the WAWF home page at https://
+wawf.eb.mil/.
+(e) WAWF methods of document submission. Document submissions may be via Web entry, Electronic Data Interchange, or File Transfer Protocol.
+(f) WAWF payment instructions. The Contractor shall use the following information when submitting payment requests and receiving reports in WAWF for
+this contract or task or delivery order:
+(1) Document type. The Contractor shall submit payment requests using the following document type(s):
+(i) For cost-type line items, including labor-hour or time-and-materials, submit a cost voucher.
+(ii) For fixed price line items -
+(A) That require shipment of a deliverable, submit the invoice and receiving report specified by the Contracting Officer.
+(Contracting Officer: Insert applicable invoice and receiving report document type(s) for fixed price line items that require shipment of a deliverable.)
+Invoice (stand-alone) and Receiving Report (stand-alone) or Invoice and Receiving Report (combination)
+(B) For services that do not require shipment of a deliverable, submit either the Invoice 2in1, which meets the requirements for the invoice and receiving
+report, or the applicable invoice and receiving report, as specified by the Contracting Officer.
+(Contracting Officer: Insert either “Invoice 2in1” or the applicable invoice and receiving report document type(s) for fixed price line items for services.)
+(iii) For customary progress payments based on costs incurred, submit a progress payment request.
+(iv) For performance based payments, submit a performance based payment request.
+(v) For commercial financing, submit a commercial financing request.
+(2) Fast Pay requests are only permitted when Federal Acquisition Regulation (FAR) 52.213-1 is included in the contract.
+[Note: The Contractor may use a WAWF “combo” document type to create some combinations of invoice and receiving report in one step.]
+(3) Document routing. The Contractor shall use the information in the Routing Data Table below only to fill in applicable fields in WAWF when creating
+payment requests and receiving reports in the system.
+Routing Data Table *
+Data to be entered in
+Field Name in WAWF Guidance
+WAWF
+Pay Official DoDAAC See Block 12 (SF26), 15 (If blank, see resulting
+(DD 1155), or 18a award)
+(SF1449)
+Issue By DoDAAC See Block 5 (SF26), 6 (DD (If blank, see resulting
+1155), or 9 (SF1449) award)
+Admin DoDAAC See Block 6 (SF26), 7 (DD (If blank, see resulting
+1155), or 16 (SF1449) award)
+Inspect By DoDAAC SEE SECTION B (If blank, see resulting
+award)
+Ship To Code SEE SECTION B (If blank, see resulting
+award)
+Ship From Code SEE SECTION B (If blank, see resulting
+award)
+Mark For Code SEE SECTION B (If blank, see resulting
+award)
+Service Approver (If blank, see resulting
+(DoDAAC) award)
+CONTINUED ON NEXT PAGE
+<<<PAGE 6 END>>>
+CONTINUATION SHEET REFERENCE NO. OF DOCUMENT BEING CONTINUED: PAGE 7 OF 7 PAGES
+SPE7L1-26-P-8608
+SECTION G - CONTRACT ADMINISTRATION DATA (CONTINUED)
+Data to be entered in
+Field Name in WAWF Guidance
+WAWF
+Service Acceptor (If blank, see resulting
+(DoDAAC) award)
+Accept at Other DoDAAC (If blank, see resulting
+award)
+LPO DoDAAC (If blank, see resulting
+award)
+DCAA Auditor DoDAAC (If blank, see resulting
+award)
+Other DoDAAC(s) (If blank, see resulting
+award)
+(* Contracting Officer: Insert applicable DoDAAC information. If multiple ship to/acceptance locations apply, insert “See Schedule” or “Not applicable.”)
+(** Contracting Officer: If the contract provides for progress payments or performance-based payments, insert the DoDAAC for the contract administration
+office assigned the functions under FAR 42.302(a)(13).)
+(4) Payment request. The Contractor shall ensure a payment request includes documentation appropriate to the type of payment request in accordance with
+the payment clause, contract financing clause, or Federal Acquisition Regulation 52.216-7, Allowable Cost and Payment, as applicable.
+(5) Receiving report. The Contractor shall ensure a receiving report meets the requirements of DFARS Appendix F.
+(g) WAWF point of contact. (1) The Contractor may obtain clarification regarding invoicing in WAWF from the following contracting activity's WAWF
+point of contact.
+See administer listed on page 1
+(Contracting Officer: Insert applicable information or “Not applicable.”)
+(2) Contact the WAWF helpdesk at 866-618-5988, if assistance is needed.
+(End of Clause)
+SECTION I - CONTRACT CLAUSES
+52.222-37 EMPLOYMENT REPORTS ON VETERANS (DEVIATION 2026-O0038) (FEB 2026) FAR
+52.223-23 SUSTAINABLE PRODUCTS (DEVIATION 2026-O0038) (FEB 2026) FAR
+252.244-7999 SUBCONTRACTS FOR COMMERCIAL PRODUCTS OR COMMERCIAL SERVICES (DEVIATION 2026-O0015) (FEB
+2026) DFARS
+<<<PAGE 7 END>>>

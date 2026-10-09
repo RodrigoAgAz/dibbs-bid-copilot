@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 [tool.pytest.ini_options]
 testpaths = ["tests", "../ml/tests"]
 pythonpath = [".", "../ml"]
-addopts = "-q -p no:cacheprovider"
+addopts = "-q -p no:cacheprovider -p no:tmpdir"
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
@@ -21,7 +21,7 @@ extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "SIM"]
-ignore = ["B008", "E501", "N818", "B904", "SIM108"]
+ignore = ["B008", "E501", "N818", "B904", "SIM108", "N806", "N803"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "dibbs_ml"]

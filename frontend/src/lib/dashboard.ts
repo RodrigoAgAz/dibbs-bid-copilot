@@ -43,3 +43,21 @@ export function filterLines(lines: DashboardLine[], f: DashboardFilters): Dashbo
 export function splitNoBid(lines: DashboardLine[]): { bid: DashboardLine[]; noBid: DashboardLine[] } {
   return { bid: lines.filter((l) => !l.no_bid), noBid: lines.filter((l) => l.no_bid) };
 }
+
+export type SortKey = "expected_profit" | "due" | "line_value" | "p_win";
+
+export function sortLines(lines: DashboardLine[], key: SortKey): DashboardLine[] {
+  const v = (l: DashboardLine): number => {
+    switch (key) {
+      case "due":
+        return -(l.days_left ?? 9999);
+      case "line_value":
+        return (l.predicted_median ?? 0) * l.quantity;
+      case "p_win":
+        return l.p_win ?? 0;
+      default:
+        return l.expected_profit ?? 0;
+    }
+  };
+  return [...lines].sort((a, b) => v(b) - v(a));
+}

@@ -115,3 +115,17 @@ describe("dashboard filters", () => {
     expect(statusOf(lines[3])).toBe("needs_review");
   });
 });
+
+describe("dashboard sorting", () => {
+  it("sorts by due date, value and expected profit", async () => {
+    const { sortLines } = await import("./dashboard");
+    const ls = [
+      line({ line_id: 1, days_left: 5, expected_profit: 10, predicted_median: 1, quantity: 10 }),
+      line({ line_id: 2, days_left: 1, expected_profit: 5, predicted_median: 100, quantity: 10 }),
+      line({ line_id: 3, days_left: 9, expected_profit: 50, predicted_median: 2, quantity: 10 }),
+    ];
+    expect(sortLines(ls, "expected_profit").map((l) => l.line_id)).toEqual([3, 1, 2]);
+    expect(sortLines(ls, "due").map((l) => l.line_id)).toEqual([2, 1, 3]);
+    expect(sortLines(ls, "line_value").map((l) => l.line_id)).toEqual([2, 3, 1]);
+  });
+});

@@ -71,3 +71,19 @@ After changing API schemas: `python dev.py api-types` (or `make api-types`) to r
   Training and inference share `dibbs_ml.features.compute_features` (no train/serve skew).
 - Money is USD floats rounded to cents at the edges; prices are per unit of issue.
 - Record non-obvious choices in `DECISIONS.md`.
+
+## Frontend notes
+
+- Pages: `src/app/(auth)/{login,signup,forgot-password,reset-password}`, `src/app/(app)/{dashboard,rfq/[solicitationNumber],history,suppliers,settings,admin}`.
+- All data access goes through `api` (openapi-fetch + generated `schema.d.ts`) and TanStack Query; invalidate
+  `["rfq", sn]` / `["dashboard"]` after mutations. Pure logic lives in `src/lib/{format,charts,dashboard}.ts`
+  with Vitest tests.
+- Recharts animations are disabled (`isAnimationActive={false}`): they stall in background tabs and make
+  screenshots/e2e flaky.
+- `src/middleware.ts` gates app routes on the `csrf_token` cookie; the API is the real authority.
+
+## Demo data
+
+`make seed` resets demo orgs (Atlas/Bluewater), synthetic `SPEZZ*` solicitations and `source='synthetic'`
+history, then trains. Synthetic data never collides with real DIBBS numbers, and real data
+(`CONNECTOR_MODE=fixture|live` ingest/backfill) can coexist in the same database.

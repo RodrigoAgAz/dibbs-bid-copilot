@@ -12,7 +12,7 @@ import { Badge, Tip } from "@/components/ui/misc";
 import { Checkbox, NativeSelect } from "@/components/ui/overlay";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, unwrap } from "@/lib/api/client";
-import { DEFAULT_FILTERS, filterLines, splitNoBid, statusOf, type DashboardFilters, type DashboardLine, type FlagKey } from "@/lib/dashboard";
+import { DEFAULT_FILTERS, filterLines, sortLines, splitNoBid, statusOf, type DashboardFilters, type DashboardLine, type FlagKey, type SortKey } from "@/lib/dashboard";
 import { countdown, formatDate, formatDateTime, formatNsn, fscLabel, money, num, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -137,12 +137,13 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
   const [page, setPage] = useState(0);
   const [showNoBid, setShowNoBid] = useState(false);
+  const [sort, setSort] = useState<SortKey>("expected_profit");
   const q = useQuery({ queryKey: ["dashboard"], queryFn: async () => unwrap(await api.GET("/api/dashboard")) });
 
   const allLines = useMemo(() => q.data?.lines ?? [], [q.data]);
   const fscs = useMemo(() => Array.from(new Set(allLines.map((l) => l.fsc))).sort(), [allLines]);
   const filtered = useMemo(() => filterLines(allLines, filters), [allLines, filters]);
-  const { bid, noBid } = useMemo(() => splitNoBid(filtered), [filtered]);
+  const { bid, noBid } = useMemo(() => splitNoBid(sortLines(filtered, sort)), [filtered, sort]);
   const pages = Math.max(1, Math.ceil(bid.length / PAGE));
   const pageLines = bid.slice(page * PAGE, (page + 1) * PAGE);
 
@@ -219,6 +220,12 @@ export default function DashboardPage() {
               {v}
             </option>
           ))}
+        </NativeSelect>
+        <NativeSelect aria-label="Sort" value={sort} onChange={(e) => (setSort(e.target.value as SortKey), setPage(0))}>
+          <option value="expected_profit">Sort: expected profit</option>
+          <option value="due">Sort: due soonest</option>
+          <option value="line_value">Sort: line value</option>
+          <option value="p_win">Sort: P(win)</option>
         </NativeSelect>
         <div className="flex flex-wrap items-center gap-3 px-1">
           {FLAG_OPTIONS.map((f) => (

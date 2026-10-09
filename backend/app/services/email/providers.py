@@ -75,7 +75,8 @@ class ConsoleEmailProvider(EmailProvider):
     def send(self, db: Session, email: OutboundEmail) -> SendResult:
         mid = f"console-{uuid.uuid4().hex[:12]}"
         msg = self._record(db, email, mid)
-        log.info("[console email] to=%s subject=%r reply_to=%s\n%s", email.to, email.subject, email.reply_to, email.body)
+        log.info("[console email] to=%s subject=%r reply_to=%s", email.to, email.subject, email.reply_to)
+        log.debug("[console email body]\n%s", email.body)
         return SendResult(ok=True, provider_message_id=mid, message_id=msg.id)
 
 

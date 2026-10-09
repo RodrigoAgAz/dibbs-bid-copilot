@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     llm_model: str = "claude-sonnet-5-5"
     llm_provider: str = ""
+    llm_refusal_fallback: bool = True
 
     # Email
     email_provider: str = "console"
@@ -48,6 +49,8 @@ class Settings(BaseSettings):
     apify_dibbs_actor: str = ""
     scraper_user_agent: str = "DIBBSBidCopilot/0.1 (+mailto:ops@copilot.example.com)"
     connector_mode: str = "fixture"  # fixture | live | apify
+    dibbs_banner_mode: str = "browser"  # browser (Playwright) | form (plain POST)
+    detail_fetch_limit: int = 600  # max record pages + PDFs fetched per ingest run
     raw_cache_dir: str = str(REPO_ROOT / "data" / "raw")
     fixtures_dir: str = str(BACKEND_ROOT / "tests" / "fixtures")
     default_fsc_watchlist: list[str] = Field(default_factory=lambda: list(DEFAULT_FSC_WATCHLIST))

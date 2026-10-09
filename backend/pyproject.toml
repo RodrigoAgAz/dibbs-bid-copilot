@@ -1,0 +1,27 @@
+[project]
+name = "dibbs-bid-copilot-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "../ml/tests"]
+pythonpath = [".", "../ml"]
+addopts = "-q -p no:cacheprovider"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+markers = [
+    "live: hits real external services (skipped unless RUN_LIVE_TESTS=1)",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM"]
+ignore = ["B008", "E501", "N818", "B904", "SIM108"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "dibbs_ml"]

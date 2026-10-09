@@ -1,0 +1,113 @@
+name: dibbs-bid-copilot
+
+x-backend-env: &backend-env
+  DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://dibbs:dibbs@postgres:5432/dibbs}
+  TEST_DATABASE_URL: postgresql+psycopg://dibbs:dibbs@postgres:5432/dibbs_test
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
+  RAW_CACHE_DIR: /app/data/raw
+  MODEL_ARTIFACT_DIR: /app/ml/artifacts
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: infra/docker/backend.Dockerfile
+  image: dibbs-bid-copilot-backend
+  env_file:
+    - path: .env
+      required: false
+  environment: *backend-env
+  volumes:
+    - ./data:/app/data
+    - ./ml/artifacts:/app/ml/artifacts
+    - ./ml/reports:/app/ml/reports
+    - ./backend/tests/fixtures:/app/backend/tests/fixtures
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dibbs
+      POSTGRES_PASSWORD: dibbs
+      POSTGRES_DB: dibbs
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dibbs -d dibbs"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    <<: *backend
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app.jobs.worker"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  scheduler:
+    <<: *backend
+    command: ["python", "-m", "app.jobs.scheduler"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/frontend.Dockerfile
+      target: runner
+      args:
+        BACKEND_URL: http://backend:8000
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # `make test` runs frontend unit + Playwright e2e tests from this service.
+  frontend-test:
+    profiles: ["test"]
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/frontend.Dockerfile
+      target: test
+    environment:
+      E2E_BASE_URL: http://frontend:3000
+      CI: "1"
+    depends_on:
+      frontend:
+        condition: service_started
+
+volumes:
+  pgdata:

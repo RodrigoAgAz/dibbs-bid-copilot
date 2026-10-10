@@ -1,5 +1,6 @@
 # Backend / worker / scheduler image (FastAPI + RQ + APScheduler + ML)
-FROM python:3.12-slim AS base
+# Debian 12: Playwright 1.52's install-deps does not support Debian 13 (trixie), the current -slim default.
+FROM python:3.12-slim-bookworm AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

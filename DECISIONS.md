@@ -132,3 +132,15 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   walk over award listings and searches. PPI adjustment before 2015 uses the first available index value.
 - The backfill has run-size limits (`--max-pdfs`, `--max-award-dates`, `--max-award-pages`,
   `--max-nsn-searches`). DIBBS award listing pages take about 30 s each to serve, so unbounded walks run for hours.
+
+## Deployment (Railway)
+- Model artifacts are also stored in Postgres (`model_runs.artifact_blob`, migration 0002). Services on
+  Railway don't share a filesystem, so a model trained by the worker must reach the API via the database.
+  The local file is a cache.
+- Hosted Postgres URLs (`postgres://` / `postgresql://`) are rewritten to `postgresql+psycopg://` in settings.
+- The backend binds `::` (dual-stack) on `$PORT` so Railway's private network works. The frontend reaches
+  it through the private domain (`BACKEND_URL`, baked into the Next.js rewrite at build time).
+- `python -m app.cli bootstrap` is the container start step: migrations, plus the demo seed when
+  `AUTO_SEED=true` and the database has no organizations.
+- The frontend Dockerfile moved to `frontend/Dockerfile`, with `runner` as the last stage, because Railway builds
+  the final stage.

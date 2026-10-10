@@ -91,6 +91,7 @@ def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = Fals
     db.flush()
     path = save_artifact(result.model, Path(get_settings().model_artifact_dir), run.id)
     run.artifact_path = str(path)
+    run.artifact_blob = Path(path).read_bytes()
     if promote:
         db.execute(update(ModelRun).where(ModelRun.id != run.id).values(is_active=False))
         run.is_active = True

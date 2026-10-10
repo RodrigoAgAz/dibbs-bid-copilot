@@ -38,6 +38,29 @@ def migrate() -> None:
     typer.echo("migrations applied")
 
 
+@cli.command()
+def bootstrap() -> None:
+    """Container start-up: apply migrations, then seed the demo if AUTO_SEED=true and the DB is empty."""
+    _setup_logging()
+    migrate()
+    if not get_settings().auto_seed:
+        return
+    from sqlalchemy import func, select
+
+    from app.db import session_scope
+    from app.models import Organization
+
+    with session_scope() as db:
+        n = db.execute(select(func.count()).select_from(Organization)).scalar_one()
+    if n == 0:
+        typer.echo("AUTO_SEED: empty database, seeding the demo ...")
+        from app.seed.demo import run_seed
+
+        run_seed()
+    else:
+        typer.echo(f"AUTO_SEED: {n} organization(s) present, skipping seed")
+
+
 @cli.command("export-openapi")
 def export_openapi(out: str = typer.Option("openapi.json")) -> None:
     """Write the FastAPI OpenAPI schema to a file (input for openapi-typescript)."""

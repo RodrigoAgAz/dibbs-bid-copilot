@@ -1,6 +1,6 @@
 # FSC volume report
 
-Generated 2026-10-09 from the database (real DIBBS data only; synthetic SPEZZ* demo rows excluded).
+Generated 2026-10-10 from the database (real DIBBS data only; synthetic SPEZZ* demo rows excluded).
 
 Ranked by number of solicitations. `*` marks the current default watchlist.
 

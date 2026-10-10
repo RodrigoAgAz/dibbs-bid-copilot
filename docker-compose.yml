@@ -83,7 +83,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../infra/docker/frontend.Dockerfile
+      dockerfile: Dockerfile
       target: runner
       args:
         BACKEND_URL: http://backend:8000
@@ -100,7 +100,7 @@ services:
     profiles: ["test"]
     build:
       context: ./frontend
-      dockerfile: ../infra/docker/frontend.Dockerfile
+      dockerfile: Dockerfile
       target: test
     environment:
       E2E_BASE_URL: http://frontend:3000

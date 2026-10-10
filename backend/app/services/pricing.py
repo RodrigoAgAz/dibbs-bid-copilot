@@ -13,6 +13,7 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.models import ApprovedSource, AwardHistory, ModelRun, PricePrediction, Solicitation, SolicitationLine
 from dibbs_ml.cdf import QUANTILE_LEVELS, PriceDistribution
 from dibbs_ml.features import FscMedianIndex, PriorAwards, cold_reference, compute_features, similar_awards
@@ -31,16 +32,25 @@ def get_active_model(db: Session) -> tuple[ModelRun | None, PricingModel | None]
     run = db.execute(
         select(ModelRun).where(ModelRun.is_active.is_(True)).order_by(ModelRun.created_at.desc())
     ).scalars().first()
-    if run is None or not run.artifact_path or not Path(run.artifact_path).exists():
-        return run, None
+    if run is None:
+        return None, None
     with _lock:
         cached = _cache.get("active")
         if cached and cached[0] == run.id:
             return run, cached[1]
+        path = Path(run.artifact_path) if run.artifact_path else None
         try:
-            model = PricingModel.load(run.artifact_path)
+            if path is None or not path.exists():
+                blob = db.execute(select(ModelRun.artifact_blob).where(ModelRun.id == run.id)).scalar_one_or_none()
+                if not blob:
+                    return run, None
+                # Materialize the stored artifact locally (another service trained it).
+                path = Path(get_settings().model_artifact_dir) / f"model_run_{run.id}.joblib"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(blob)
+            model = PricingModel.load(path)
         except Exception:
-            log.exception("could not load model artifact %s", run.artifact_path)
+            log.exception("could not load model artifact for run %s", run.id)
             return run, None
         _cache["active"] = (run.id, model)
         return run, model

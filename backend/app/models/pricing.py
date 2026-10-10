@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TenantOwned
@@ -21,6 +21,9 @@ class ModelRun(Base):
     test_window: Mapped[str] = mapped_column(String(64))
     metrics: Mapped[dict] = mapped_column(JSONType, default=dict)
     artifact_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # The joblib artifact itself, so every service (API, worker, scheduler) can load the model
+    # without a shared filesystem (e.g. on Railway). The file at artifact_path is a local cache.
+    artifact_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 

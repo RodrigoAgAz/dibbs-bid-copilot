@@ -53,6 +53,11 @@ python dev.py web      # Next.js on :3000 (terminal 2)
 
 Redis is optional locally: without it, background jobs run in-process.
 
+### Railway
+
+The repo ships Railway config-as-code (`railway.json`, `infra/railway/*.json`, `frontend/railway.json`).
+See [`docs/deploy_railway.md`](docs/deploy_railway.md) for the six services and their variables.
+
 ---
 
 ## Architecture

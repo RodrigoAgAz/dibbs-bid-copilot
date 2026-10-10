@@ -127,7 +127,9 @@ def activate_model(run_id: int, _: User = Depends(require_superadmin), db: Sessi
     from app.services.pricing import clear_model_cache
 
     run = db.get(ModelRun, run_id)
-    if run is None or not run.artifact_path or not Path(run.artifact_path).exists():
+    has_file = bool(run and run.artifact_path and Path(run.artifact_path).exists())
+    has_blob = bool(run and db.execute(select(ModelRun.artifact_blob.is_not(None)).where(ModelRun.id == run_id)).scalar())
+    if run is None or not (has_file or has_blob):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Model run (or its artifact) not found")
     for r in db.execute(select(ModelRun).where(ModelRun.is_active.is_(True))).scalars():
         r.is_active = False

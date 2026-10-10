@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -70,6 +70,18 @@ class Settings(BaseSettings):
 
     # ML
     model_artifact_dir: str = str(REPO_ROOT / "ml" / "artifacts")
+
+    # Deployment: seed the demo on first boot when the database has no organizations.
+    auto_seed: bool = False
+
+    @field_validator("database_url")
+    @classmethod
+    def _psycopg_driver(cls, v: str) -> str:
+        """Hosted Postgres URLs (Railway, Heroku, ...) come as postgres:// or postgresql://; use psycopg 3."""
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix):]
+        return v
 
     @property
     def is_sqlite(self) -> bool:

@@ -19,21 +19,33 @@ from dibbs_ml.train import save_artifact, should_promote, train_from_awards
 log = logging.getLogger(__name__)
 
 
+REAL_ONLY_THRESHOLD = 500
+
+
 def load_awards_frame(db: Session) -> pd.DataFrame:
-    """award_history joined to solicitation context (by solicitation number + NSN) where available."""
+    """award_history joined to solicitation context (by solicitation number + NSN) where available.
+
+    Once there are >= REAL_ONLY_THRESHOLD real (non-synthetic) award rows, synthetic demo rows are excluded,
+    so a live deployment that started from the demo seed trains on real DIBBS data only.
+    """
+    n_real = db.execute(
+        select(func.count()).select_from(AwardHistory).where(AwardHistory.source != "synthetic")
+    ).scalar_one()
+    real_only = n_real >= REAL_ONLY_THRESHOLD
+    stmt = select(
+        AwardHistory.nsn,
+        AwardHistory.award_date,
+        AwardHistory.unit_price,
+        AwardHistory.quantity,
+        AwardHistory.unit_of_issue,
+        AwardHistory.awardee_cage,
+        AwardHistory.contract_number,
+        AwardHistory.solicitation_number,
+    )
+    if real_only:
+        stmt = stmt.where(AwardHistory.source != "synthetic")
     awards = pd.DataFrame(
-        db.execute(
-            select(
-                AwardHistory.nsn,
-                AwardHistory.award_date,
-                AwardHistory.unit_price,
-                AwardHistory.quantity,
-                AwardHistory.unit_of_issue,
-                AwardHistory.awardee_cage,
-                AwardHistory.contract_number,
-                AwardHistory.solicitation_number,
-            )
-        ).all(),
+        db.execute(stmt).all(),
         columns=["nsn", "award_date", "unit_price", "quantity", "unit_of_issue", "awardee_cage",
                  "contract_number", "solicitation_number"],
     )

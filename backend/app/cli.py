@@ -43,6 +43,7 @@ def bootstrap() -> None:
     """Container start-up: apply migrations, then seed the demo if AUTO_SEED=true and the DB is empty."""
     _setup_logging()
     migrate()
+    _maybe_queue_initial_live_load()
     if not get_settings().auto_seed:
         return
     from sqlalchemy import func, select
@@ -59,6 +60,33 @@ def bootstrap() -> None:
         run_seed()
     else:
         typer.echo(f"AUTO_SEED: {n} organization(s) present, skipping seed")
+
+
+def _maybe_queue_initial_live_load() -> None:
+    """AUTO_BACKFILL=true + CONNECTOR_MODE=live: queue the initial live load once (until real history exists)."""
+    s = get_settings()
+    if not (s.auto_backfill and s.connector_mode == "live"):
+        return
+    from sqlalchemy import func, select
+
+    from app.db import session_scope
+    from app.jobs.queue import enqueue
+    from app.jobs.tasks import initial_live_load_job
+    from app.models import AwardHistory, IngestCheckpoint
+
+    with session_scope() as db:
+        real = db.execute(
+            select(func.count()).select_from(AwardHistory).where(AwardHistory.source != "synthetic")
+        ).scalar_one()
+        queued = db.execute(
+            select(IngestCheckpoint).where(IngestCheckpoint.source == "initial_live_load")
+        ).scalar_one_or_none()
+        if real >= 500 or queued is not None:
+            typer.echo(f"AUTO_BACKFILL: skipping ({real} real award rows, previously queued={queued is not None})")
+            return
+        db.add(IngestCheckpoint(source="initial_live_load", key="queued", status="done"))
+    job = enqueue(initial_live_load_job, job_timeout=8 * 3600)
+    typer.echo(f"AUTO_BACKFILL: queued initial live load (job {job})")
 
 
 @cli.command("export-openapi")

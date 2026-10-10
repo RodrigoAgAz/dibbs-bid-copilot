@@ -28,11 +28,11 @@ def get_queue():
         return None
 
 
-def enqueue(func: Callable, *args, **kwargs) -> str:
+def enqueue(func: Callable, *args, job_timeout: int | None = None, **kwargs) -> str:
     """Returns a job id ('inline-...' when run in a local thread)."""
     q = get_queue()
     if q is not None:
-        job = q.enqueue(func, *args, **kwargs)
+        job = q.enqueue(func, *args, job_timeout=job_timeout or q._default_timeout, **kwargs)
         return job.id
 
     def _run() -> None:

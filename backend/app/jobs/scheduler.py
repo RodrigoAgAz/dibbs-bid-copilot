@@ -1,7 +1,8 @@
 """APScheduler process: enqueues the recurring jobs. `python -m app.jobs.scheduler`.
 
 Schedules (America/New_York):
-  * 06:00 daily      - DIBBS RFQ ingest
+  * every 2 h, 06-20 - DIBBS RFQ ingest (DIBBS posts each day's files the next day, at varying times;
+                       checkpoints make repeat runs cheap: only new files are processed)
   * 07:30 daily      - award labeling (newly posted awards)
   * every hour (:15) - email follow-ups / no_response marking
   * Sunday 03:00     - retrain, evaluate, promote if better
@@ -21,7 +22,7 @@ from app.jobs.queue import enqueue
 TZ = "America/New_York"
 
 SCHEDULE = [
-    ("daily_ingest", tasks.daily_ingest_job, CronTrigger(hour=6, minute=0, timezone=TZ)),
+    ("daily_ingest", tasks.daily_ingest_job, CronTrigger(hour="6-20/2", minute=0, timezone=TZ)),
     ("award_labeling", tasks.award_labeling_job, CronTrigger(hour=7, minute=30, timezone=TZ)),
     ("followups", tasks.followups_job, CronTrigger(minute=15, timezone=TZ)),
     ("retrain", tasks.retrain_job, CronTrigger(day_of_week="sun", hour=3, minute=0, timezone=TZ)),

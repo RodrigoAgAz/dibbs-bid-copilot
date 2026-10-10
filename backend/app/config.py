@@ -73,6 +73,8 @@ class Settings(BaseSettings):
 
     # Deployment: seed the demo on first boot when the database has no organizations.
     auto_seed: bool = False
+    # Live mode: on first boot, queue an initial load (recent RFQs + PDF history + train) on the worker.
+    auto_backfill: bool = False
 
     @field_validator("database_url")
     @classmethod

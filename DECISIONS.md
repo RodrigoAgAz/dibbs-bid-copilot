@@ -138,7 +138,9 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   Railway don't share a filesystem, so a model trained by the worker must reach the API via the database.
   The local file is a cache.
 - Hosted Postgres URLs (`postgres://` / `postgresql://`) are rewritten to `postgresql+psycopg://` in settings.
-- The backend binds `::` (dual-stack) on `$PORT` so Railway's private network works. The frontend reaches
+- The backend serves via `python -m app.serve`, which binds one dual-stack socket on `$PORT` and passes it to
+  uvicorn. `uvicorn --host ::` is IPv6-only, because asyncio sets IPV6_V6ONLY, so Railway's IPv4 health check
+  never reached it. The frontend reaches
   it through the private domain (`BACKEND_URL`, baked into the Next.js rewrite at build time).
 - `python -m app.cli bootstrap` is the container start step: migrations, plus the demo seed when
   `AUTO_SEED=true` and the database has no organizations.

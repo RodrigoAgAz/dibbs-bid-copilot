@@ -24,5 +24,5 @@ COPY backend /app/backend
 COPY ml /app/ml
 
 EXPOSE 8000
-# Binds "::" (dual-stack) so platform private networks over IPv6 work (e.g. Railway); PORT is set by the host.
-CMD ["sh", "-c", "python -m app.cli bootstrap && uvicorn app.main:app --host :: --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# app.serve binds one dual-stack socket on $PORT (IPv4 + IPv6), e.g. for Railway health checks + private network.
+CMD ["sh", "-c", "python -m app.cli bootstrap && python -m app.serve"]

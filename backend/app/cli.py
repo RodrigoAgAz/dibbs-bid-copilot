@@ -78,15 +78,40 @@ def _maybe_queue_initial_live_load() -> None:
         real = db.execute(
             select(func.count()).select_from(AwardHistory).where(AwardHistory.source != "synthetic")
         ).scalar_one()
-        queued = db.execute(
+        marker = db.execute(
             select(IngestCheckpoint).where(IngestCheckpoint.source == "initial_live_load")
         ).scalar_one_or_none()
-        if real >= 500 or queued is not None:
-            typer.echo(f"AUTO_BACKFILL: skipping ({real} real award rows, previously queued={queued is not None})")
+        if real >= 500:
+            typer.echo(f"AUTO_BACKFILL: skipping ({real} real award rows already)")
             return
-        db.add(IngestCheckpoint(source="initial_live_load", key="queued", status="done"))
-    job = enqueue(initial_live_load_job, job_timeout=8 * 3600)
+        if marker is not None and _job_alive(marker.detail):
+            typer.echo(f"AUTO_BACKFILL: initial live load already {_job_alive(marker.detail)} (job {marker.detail})")
+            return
+        job = enqueue(initial_live_load_job, job_timeout=8 * 3600)
+        if marker is None:
+            db.add(IngestCheckpoint(source="initial_live_load", key="queued", status="done", detail=job))
+        else:
+            marker.detail = job
     typer.echo(f"AUTO_BACKFILL: queued initial live load (job {job})")
+
+
+def _job_alive(job_id: str | None) -> str | None:
+    """'queued'/'started'/'deferred'/'scheduled' if the RQ job is still pending or running, else None."""
+    if not job_id:
+        return None
+    from app.jobs.queue import get_queue
+
+    q = get_queue()
+    if q is None:
+        return None
+    try:
+        from rq.job import Job
+
+        status = Job.fetch(job_id, connection=q.connection).get_status(refresh=True)
+    except Exception:  # job expired or unknown
+        return None
+    value = getattr(status, "value", status)
+    return value if value in ("queued", "started", "deferred", "scheduled") else None
 
 
 @cli.command("export-openapi")

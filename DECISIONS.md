@@ -142,5 +142,10 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   it through the private domain (`BACKEND_URL`, baked into the Next.js rewrite at build time).
 - `python -m app.cli bootstrap` is the container start step: migrations, plus the demo seed when
   `AUTO_SEED=true` and the database has no organizations.
+- No `railway.json` in the repo: Railway deprecated config-as-code (the API rejects config-file paths), and a
+  root `railway.json` would also apply its HTTP health check to the worker and scheduler. Build and start
+  settings are per-service instead (see docs/deploy_railway.md).
+- The backend image is pinned to `python:3.12-slim-bookworm`: on Debian 13 (the current `-slim`), Playwright
+  1.52's `install-deps` fails. Railway sets `INSTALL_PLAYWRIGHT=0` anyway (form-POST banner).
 - The frontend Dockerfile moved to `frontend/Dockerfile`, with `runner` as the last stage, because Railway builds
   the final stage.

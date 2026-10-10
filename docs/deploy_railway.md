@@ -2,14 +2,18 @@
 
 Six Railway services from one GitHub repo:
 
-| Service | Source | Config file | Public domain |
-|---|---|---|---|
-| **backend** | repo root | `/railway.json` (picked up automatically) | not needed |
-| **worker** | repo root | `/infra/railway/worker.json` | no |
-| **scheduler** | repo root | `/infra/railway/scheduler.json` | no |
-| **frontend** | root directory `/frontend` | `/frontend/railway.json` (picked up automatically) | **yes** |
-| **Postgres** | Railway database | | no |
-| **Redis** | Railway database | | no |
+| Service | Root directory | Dockerfile path | Start command | Healthcheck | Public domain |
+|---|---|---|---|---|---|
+| **backend** | `/` | `infra/docker/backend.Dockerfile` | (image default: migrate + uvicorn) | `/api/health`, 600 s | not needed |
+| **worker** | `/` | `infra/docker/backend.Dockerfile` | `python -m app.jobs.worker` | none | no |
+| **scheduler** | `/` | `infra/docker/backend.Dockerfile` | `python -m app.jobs.scheduler` | none | no |
+| **frontend** | `/frontend` | `Dockerfile` | (image default) | `/login` | **yes** |
+| **Postgres** | Railway database | | | | no |
+| **Redis** | Railway database | | | | no |
+
+These are per-service settings (dashboard → service → Settings, or the GraphQL `serviceInstanceUpdate`
+mutation). The repo deliberately has no `railway.json`: Railway has deprecated config-as-code, and its API
+now rejects pointing services at config files.
 
 The browser only ever talks to the frontend domain. Next.js proxies `/api/*` to the backend over Railway's
 private network, so auth cookies stay first-party. Webhooks (inbound email, ElevenLabs, Twilio) also go through
@@ -17,15 +21,16 @@ the frontend domain: `https://<frontend-domain>/api/webhooks/...`.
 
 ## 1. Create the project
 
-1. Railway → **New Project → Deploy from GitHub repo** → `RodrigoAgAz/dibbs-bid-copilot`.
-   This creates one service from the repo root. Rename it to **`backend`**. It builds from
-   `infra/docker/backend.Dockerfile` (via `/railway.json`).
+1. Railway → **New Project → Deploy from GitHub repo** → `RodrigoAgAz/dibbs-bid-copilot`. Rename the
+   service to **`backend`** and set its settings from the table above.
 2. **New → Database → PostgreSQL**, then **New → Database → Redis**.
-3. **New → GitHub Repo** (same repo) three more times:
-   - **`worker`**: Settings → *Config-as-code* → path `/infra/railway/worker.json`
-   - **`scheduler`**: Settings → *Config-as-code* → path `/infra/railway/scheduler.json`
-   - **`frontend`**: Settings → *Source* → **Root Directory** `/frontend`
+3. Add the same GitHub repo three more times as **`worker`**, **`scheduler`** and **`frontend`**, each with the
+   settings from the table.
 4. **frontend** → Settings → Networking → **Generate Domain**.
+
+With the CLI (`railway add -d postgres`, `railway add -s worker -r <owner>/<repo>`, `railway variable set`,
+`railway domain -s frontend`) everything except the per-service settings can be scripted. Those settings
+go through `railway api 'mutation { serviceInstanceUpdate(...) }'`.
 
 The service names matter: the variables below reference `backend`, `frontend`, `Postgres` and `Redis`.
 If yours differ, adjust the `${{...}}` references.

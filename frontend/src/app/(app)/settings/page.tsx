@@ -167,6 +167,16 @@ export default function SettingsPage() {
         }
       />
       <FormError message={save.error ? errorMessage(save.error) : null} />
+      {save.data && (save.data.loading_fscs?.length || save.data.recomputing_lines) ? (
+        <p className="mb-3 rounded-md border bg-muted/50 px-3 py-2 text-xs" data-testid="settings-notice">
+          {save.data.loading_fscs?.length
+            ? `Loading the last 10 days of RFQs for FSC ${save.data.loading_fscs.join(", ")}: they appear on Today within a few minutes. `
+            : ""}
+          {save.data.recomputing_lines
+            ? `The most urgent lines are already updated; ${save.data.recomputing_lines.toLocaleString()} more are being recomputed in the background.`
+            : ""}
+        </p>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>

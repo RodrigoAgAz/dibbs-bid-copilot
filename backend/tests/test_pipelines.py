@@ -102,3 +102,26 @@ def date_(y, m, d):
     from datetime import date
 
     return date(y, m, d)
+
+
+def test_adding_an_fsc_loads_its_recent_rfqs_right_away(client, db, monkeypatch):
+    from datetime import date
+
+    from app.jobs import queue
+    from app.pipelines.ingest import ingest_new_fscs
+    from tests.conftest import csrf, signup
+
+    monkeypatch.setattr("app.pipelines.ingest.today_et", lambda: date(2026, 10, 9))
+    monkeypatch.setattr("app.services.recommendations.today_et", lambda: date(2026, 10, 9))
+    calls = []
+    monkeypatch.setattr(queue, "enqueue", lambda func, *a, **k: calls.append((func.__name__, a)) or "job")
+    signup(client, "fsc@broker.example.com", org="FSC Org")
+    r = client.put("/api/settings", json={"fsc_watchlist": ["5305"]}, headers=csrf(client))
+    assert r.status_code == 200 and r.json()["loading_fscs"] == []  # 5305 was already watched (defaults)
+    r = client.put("/api/settings", json={"fsc_watchlist": ["5305", "6145"]}, headers=csrf(client))
+    assert r.json()["loading_fscs"] == ["6145"]
+    assert ("expand_watchlist_job", (["6145"],)) in calls
+    out = ingest_new_fscs(db, {"6145"}, mode="fixture")
+    assert out["new_lines"] > 0 and out["recommendations"] > 0
+    assert count(db, SolicitationLine, SolicitationLine.fsc == "6145") == out["new_lines"]
+    assert count(db, SolicitationLine, SolicitationLine.fsc == "5330") == 0  # only the new FSC was loaded

@@ -115,6 +115,10 @@ class SettingsOut(BaseModel):
     voice_enabled: bool
     email_sender_name: str | None
     email_signature: str | None
+    # FSCs no organization watched before this save: their last 10 days of RFQs are being loaded now.
+    loading_fscs: list[str] = []
+    # Open lines whose recommendations are still being recomputed in the background after this save.
+    recomputing_lines: int = 0
 
 
 class SettingsIn(BaseModel):
@@ -155,11 +159,14 @@ def get_org_settings(ctx: TenantContext = Depends(get_tenant)) -> OrgSettings:
 
 
 @router.put("/settings", response_model=SettingsOut)
-def update_org_settings(body: SettingsIn, ctx: TenantContext = Depends(get_tenant)) -> OrgSettings:
+def update_org_settings(body: SettingsIn, ctx: TenantContext = Depends(get_tenant)) -> SettingsOut:
     import re
+
+    from app.pipelines.ingest import watched_fscs
 
     row = _get_settings_row(ctx)
     data = body.model_dump(exclude_unset=True)
+    watched_before = watched_fscs(ctx.db)
     if "fsc_watchlist" in data and data["fsc_watchlist"] is not None:
         fscs = sorted({f.strip() for f in data["fsc_watchlist"] if f.strip()})
         bad = [f for f in fscs if not re.match(FSC_PATTERN, f)]
@@ -172,9 +179,16 @@ def update_org_settings(body: SettingsIn, ctx: TenantContext = Depends(get_tenan
         if v is not None or k in ("email_sender_name", "email_signature"):
             setattr(row, k, v)
     ctx.db.commit()
-    # Settings change landed costs and margins: refresh this org's recommendations.
-    from app.services.recommendations import refresh_org_recommendations
+    # Settings change landed costs and margins: refresh this org's recommendations (urgent lines now).
+    from app.services.org_bootstrap import refresh_org_soon
 
-    refresh_org_recommendations(ctx.db, ctx.org_id, create_quote_drafts=False)
-    ctx.db.commit()
-    return row
+    queued = refresh_org_soon(ctx.db, ctx.org_id)
+    new_fscs = sorted(set(row.fsc_watchlist or []) - watched_before)
+    if new_fscs:
+        from app.jobs.queue import enqueue
+        from app.jobs.tasks import expand_watchlist_job
+
+        enqueue(expand_watchlist_job, new_fscs)
+    out = SettingsOut.model_validate(row)
+    out.loading_fscs, out.recomputing_lines = new_fscs, queued
+    return out

@@ -1861,6 +1861,16 @@ export interface components {
             email_sender_name: string | null;
             /** Email Signature */
             email_signature: string | null;
+            /**
+             * Loading Fscs
+             * @default []
+             */
+            loading_fscs: string[];
+            /**
+             * Recomputing Lines
+             * @default 0
+             */
+            recomputing_lines: number;
         };
         /** SignupIn */
         SignupIn: {

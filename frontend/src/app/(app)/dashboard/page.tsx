@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, RefreshCw, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, RefreshCw, Search } from "lucide-react";
 import { Empty, ErrorState, FlagBadges, Loading, PageHeader, Stat } from "@/components/common";
 import { DemoGuide } from "@/components/demo-guide";
 import { OnboardingChecklist } from "@/components/onboarding";
@@ -16,6 +16,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, unwrap } from "@/lib/api/client";
 import { DEFAULT_FILTERS, filterLines, sortLines, splitNoBid, statusOf, type DashboardFilters, type DashboardLine, type FlagKey, type SortKey } from "@/lib/dashboard";
 import { countdown, formatDate, formatDateTime, formatNsn, fscLabel, money, num, pct } from "@/lib/format";
+import { downloadCsv, linesToCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 
 const PAGE = 100;
@@ -192,9 +193,20 @@ export default function DashboardPage() {
           )
         }
         actions={
-          <Button variant="outline" size="sm" onClick={() => q.refetch()} disabled={q.isFetching}>
-            <RefreshCw className={cn(q.isFetching && "animate-spin")} /> Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!bid.length}
+              onClick={() => downloadCsv(`dibbs-lines-${s?.as_of ?? "today"}.csv`, linesToCsv([...bid, ...noBid], window.location.origin))}
+              data-testid="export-csv"
+            >
+              <Download /> Export CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => q.refetch()} disabled={q.isFetching}>
+              <RefreshCw className={cn(q.isFetching && "animate-spin")} /> Refresh
+            </Button>
+          </div>
         }
       />
       <OnboardingChecklist />

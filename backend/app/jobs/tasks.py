@@ -56,6 +56,14 @@ def nightly_backfill_job() -> dict:
     return out
 
 
+def expand_watchlist_job(fscs: list[str]) -> dict:
+    """Default queue (serialized with the ingest): it upserts the same tables."""
+    from app.pipelines.ingest import ingest_new_fscs
+
+    with session_scope() as db:
+        return ingest_new_fscs(db, set(fscs))
+
+
 def followups_job() -> dict:
     from app.services.sourcing import run_followups
 

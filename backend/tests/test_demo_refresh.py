@@ -13,9 +13,11 @@ from tests.helpers import build_world
 
 
 def test_demo_refresh_quotes_real_lines_with_fictional_suppliers(client, db):
-    build_world(db, n_nsns=60, n_open=10)
-    # Make the open lines look like real DIBBS solicitations (the refresher skips SPEZZ demo numbers).
-    for i, sol in enumerate(db.execute(select(Solicitation).where(Solicitation.return_by_date >= date.today())).scalars()):
+    build_world(db, n_nsns=60, n_open=16)
+    # Make most open lines look like real DIBBS solicitations (the refresher skips SPEZZ demo numbers); a few
+    # SPEZZ practice lines with seeded quotes must not count toward the demo's quoted-line target.
+    open_sols = db.execute(select(Solicitation).where(Solicitation.return_by_date >= date.today())).scalars().all()
+    for i, sol in enumerate(open_sols[2:]):
         sol.solicitation_number = f"SPE7M026T{9000 + i}"
     db.commit()
     demo = signup(client, "demo-owner@atlas-demo.example.com", org="Atlas Federal Supply (demo)")
@@ -24,10 +26,20 @@ def test_demo_refresh_quotes_real_lines_with_fictional_suppliers(client, db):
     org = db.get(Organization, demo["organization"]["id"])
     org.plan = "demo"
     db.commit()
+    from app.services.demo_refresh import TARGET_QUOTED_LINES
+
+    practice = [x for x in open_sols[:2]]
+    for sol in practice:  # seeded quotes on practice lines, as on the live demo org
+        for ln in sol.lines:
+            for k in range(TARGET_QUOTED_LINES):
+                db.add(QuoteRequest(organization_id=org.id, solicitation_line_id=ln.id, cage_code=f"P{k:04d}",
+                                    channel="email", status="sent", reply_token=f"practice-{sol.id}-{ln.id}-{k}"))
+    db.commit()
 
     out = refresh_demo_orgs(db)
     assert len(out) == 1 and out[0]["lines"] > 0 and out[0]["replies"] > 0
-    qrs = db.execute(select(QuoteRequest).where(QuoteRequest.organization_id == org.id)).scalars().all()
+    qrs = [q for q in db.execute(select(QuoteRequest).where(QuoteRequest.organization_id == org.id)).scalars()
+           if not q.reply_token.startswith("practice-")]
     fictional = {c for c, _, _ in DEMO_SUPPLIERS}
     assert qrs and {q.cage_code for q in qrs} <= fictional
     assert all(q.email_to.endswith(".example.com") for q in qrs)

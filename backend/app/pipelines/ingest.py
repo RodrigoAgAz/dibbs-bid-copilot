@@ -219,6 +219,47 @@ def resolve_new_companies(db: Session, src: DibbsSource, errors: list) -> int:
     return n
 
 
+def ingest_new_fscs(db: Session, fscs: set[str], mode: str | None = None, max_details: int = 150) -> dict:
+    """Someone started watching FSCs no organization watched: load their recent RFQs now.
+
+    The regular ingest only reads new posting dates, and the nightly backfill would add these lines hours
+    later. This re-reads the last LOOKBACK_DAYS index files for just these FSCs, fetches details (procurement
+    history) for the most urgent open solicitations, then prices them for every org watching them.
+    """
+    src = get_dibbs_source(mode)
+    out = {"fscs": sorted(fscs), "dates": 0, "new_lines": 0, "details_fetched": 0, "errors": 0}
+    cutoff = today_et() - timedelta(days=LOOKBACK_DAYS)
+    dates = [d for d in src.rfq_index_dates() if src.mode == "fixture" or d >= cutoff]
+    new_ids: list[int] = []
+    errors: list[dict] = []
+    for d in dates:
+        try:
+            added, _ = ingest_index_date(db, src, d, set(fscs))
+            db.commit()
+            new_ids += [ln.id for ln in added]
+            out["dates"] += 1
+        except Exception as exc:
+            db.rollback()
+            errors.append({"date": d.isoformat(), "error": str(exc)[:300]})
+    out["new_lines"] = len(new_ids)
+    today = today_et()
+    sols = db.execute(
+        select(Solicitation).join(SolicitationLine).where(
+            SolicitationLine.id.in_(new_ids), Solicitation.details_fetched_at.is_(None),
+            Solicitation.return_by_date >= today,
+        ).order_by(Solicitation.return_by_date)
+    ).scalars().unique().all() if new_ids else []
+    for sol in sols[:max_details]:
+        res = fetch_details(db, src, sol, errors)
+        out["details_fetched"] += int(res["record"] or res["pdf"])
+        db.commit()
+    if new_ids:
+        out.update(_predict_and_recommend(db, new_ids))
+    out["errors"] = len(errors)
+    log.info("new FSCs %s loaded: %s", sorted(fscs), out)
+    return out
+
+
 def _predict_and_recommend(db: Session, line_ids: list[int]) -> dict:
     from app.services.pricing import fsc_median_index, predict_line
     from app.services.recommendations import refresh_org_recommendations

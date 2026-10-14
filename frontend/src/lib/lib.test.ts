@@ -149,3 +149,18 @@ describe("dashboard sorting", () => {
     expect(sortLines(ls, "best").map((l) => l.line_id)).toEqual([3, 1, 4, 2]);
   });
 });
+
+describe("csv export", () => {
+  it("quotes awkward cells and keeps one row per line", async () => {
+    const { linesToCsv } = await import("./csv");
+    const csv = linesToCsv(
+      [line({ line_id: 1, solicitation_number: "SPE4A627T0486", nomenclature: 'SCREW, CAP, 1/4" HEX', recommended_bid: 0.44, p_win: 0.6234 })],
+      "https://app.example.com",
+    );
+    const [head, row] = csv.trim().split("\r\n");
+    expect(head.startsWith("Return by,Solicitation,Line,NSN")).toBe(true);
+    expect(row).toContain('"SCREW, CAP, 1/4"" HEX"');
+    expect(row).toContain(",0.44,0.623,");
+    expect(row.endsWith("https://app.example.com/rfq/SPE4A627T0486")).toBe(true);
+  });
+});

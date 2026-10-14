@@ -107,7 +107,8 @@ def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None =
             select(QuoteRequest.solicitation_line_id)
             .join(SolicitationLine, QuoteRequest.solicitation_line_id == SolicitationLine.id)
             .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
-            .where(QuoteRequest.organization_id == org.id, Solicitation.return_by_date >= today)
+            .where(QuoteRequest.organization_id == org.id, Solicitation.return_by_date >= today,
+                   ~Solicitation.solicitation_number.startswith("SPEZZ"))  # seeded practice lines don't count
         ).all()
     }
     need = TARGET_QUOTED_LINES - len(open_quoted)

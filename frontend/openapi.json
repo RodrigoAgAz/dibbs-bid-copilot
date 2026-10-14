@@ -5174,6 +5174,19 @@
               }
             ],
             "title": "Email Signature"
+          },
+          "loading_fscs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Loading Fscs",
+            "default": []
+          },
+          "recomputing_lines": {
+            "type": "integer",
+            "title": "Recomputing Lines",
+            "default": 0
           }
         },
         "type": "object",

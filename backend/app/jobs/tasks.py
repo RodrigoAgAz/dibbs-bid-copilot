@@ -87,9 +87,33 @@ def refresh_all_recommendations_job(version: str) -> dict:
     return out
 
 
+def queue_engine_refresh_if_needed() -> str | None:
+    """Queue refresh_all_recommendations_job when the stored engine version is behind (not a job itself).
+
+    Called at boot and by the hourly ops check, so a refresh killed by a redeploy is picked up again.
+    """
+    from sqlalchemy import select
+
+    from app.jobs.queue import enqueue_unique
+    from app.models import IngestCheckpoint, Recommendation
+    from app.services.recommendations import ENGINE_VERSION
+
+    with session_scope() as db:
+        if db.execute(select(Recommendation.id).limit(1)).first() is None:
+            return None  # nothing to recompute (fresh database; the seed computes with the current engine)
+        row = db.execute(
+            select(IngestCheckpoint).where(IngestCheckpoint.source == "recommendation_engine",
+                                           IngestCheckpoint.key == "version")
+        ).scalar_one_or_none()
+        if row is not None and row.detail == ENGINE_VERSION:
+            return None
+    return enqueue_unique(refresh_all_recommendations_job, ENGINE_VERSION, job_timeout=2 * 3600)
+
+
 def ops_check_job() -> dict:
     from app.services.ops import run_ops_check
 
+    queue_engine_refresh_if_needed()
     with session_scope() as db:
         return run_ops_check(db)
 

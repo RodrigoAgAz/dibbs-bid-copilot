@@ -269,6 +269,7 @@ def test_rules_change_queues_one_full_refresh(client, db, monkeypatch):
 
     calls = []
     monkeypatch.setattr(queue, "enqueue_unique", lambda func, *a, **k: calls.append((func.__name__, a)) or "job-1")
+    assert tasks  # the check lives in app.jobs.tasks (bootstrap + hourly ops check)
     cli._maybe_queue_engine_refresh()
     assert calls == []  # no recommendations yet: nothing to recompute
     build_world(db, n_open=6)
@@ -280,3 +281,33 @@ def test_rules_change_queues_one_full_refresh(client, db, monkeypatch):
     calls.clear()
     cli._maybe_queue_engine_refresh()
     assert calls == []  # marker now matches the engine version
+
+
+def test_pending_job_check_ignores_jobs_abandoned_by_a_killed_worker(monkeypatch):
+    import time
+
+    import fakeredis
+    from rq import Queue
+    from rq.registry import StartedJobRegistry
+
+    from app.jobs import queue as jq
+    from app.jobs.tasks import ops_check_job
+
+    conn = fakeredis.FakeStrictRedis()
+    q = Queue(jq.QUEUE_NAME, connection=conn)
+    monkeypatch.setattr(jq, "get_queue", lambda name=jq.QUEUE_NAME: q)
+    assert jq.pending_job_id(ops_check_job) is None
+    job = q.enqueue(ops_check_job)
+    assert jq.pending_job_id(ops_check_job) == job.id  # queued
+    # Picked up by a worker that was then killed: still in the started registry, heartbeat goes stale.
+    q.remove(job.id)
+    started = datetime.now(UTC) - timedelta(minutes=10)
+    job.started_at, job.last_heartbeat = started, started
+    job.save()
+    # RQ 2.x tracks started jobs as "<job id>:<execution id>" members of the registry sorted set.
+    conn.zadd(StartedJobRegistry(queue=q).key, {f"{job.id}:exec-1": time.time() + 7200})
+    assert jq.pending_job_id(ops_check_job) is None
+    # A job with a fresh heartbeat is really running.
+    job.last_heartbeat = datetime.now(UTC)
+    job.save()
+    assert jq.pending_job_id(ops_check_job) == job.id

@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, RefreshCw, Search } from "lucide-react";
 import { Empty, ErrorState, FlagBadges, Loading, PageHeader, Stat } from "@/components/common";
+import { OnboardingChecklist } from "@/components/onboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge, Tip } from "@/components/ui/misc";
@@ -173,6 +174,7 @@ export default function DashboardPage() {
           </Button>
         }
       />
+      <OnboardingChecklist />
       {s && (
         <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
           <Stat label="Matched lines" value={num(s.lines)} hint={`${num(s.bid_lines)} worth bidding`} />

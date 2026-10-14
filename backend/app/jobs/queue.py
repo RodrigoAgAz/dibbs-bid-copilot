@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import threading
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 
 from app.config import get_settings
 
@@ -57,19 +58,34 @@ def get_queue(name: str = QUEUE_NAME):
     return Queue(name, connection=conn, default_timeout=DEFAULT_TIMEOUT)
 
 
-def pending_job_id(func: Callable) -> str | None:
-    """Id of a queued or running job for `func`, if any (scheduled runs skip instead of piling up)."""
+# A running job's heartbeat is refreshed every 30 s (RQ job_monitoring_interval); a "started" job without one
+# for this long belonged to a worker that was killed (e.g. replaced by a deploy) and will never finish.
+STALE_HEARTBEAT = timedelta(minutes=2)
+
+
+def pending_job_id(func: Callable, now: datetime | None = None) -> str | None:
+    """Id of a queued or genuinely running job for `func`, if any (scheduled runs skip instead of piling up)."""
     q = get_queue(queue_for(func))
     if q is None:
         return None
     from rq.job import Job
     from rq.registry import StartedJobRegistry
 
+    now = now or datetime.now(UTC)
     name = f"{func.__module__}.{func.__name__}"
-    ids = list(q.job_ids) + list(StartedJobRegistry(queue=q).get_job_ids())
-    for job in Job.fetch_many(ids, connection=q.connection):
-        if job is not None and job.func_name == name:
-            return job.id
+    queued = list(q.job_ids)
+    started = list(StartedJobRegistry(queue=q).get_job_ids())
+    for job in Job.fetch_many(queued + started, connection=q.connection):
+        if job is None or job.func_name != name:
+            continue
+        if job.id in started:
+            beat = job.last_heartbeat or job.started_at
+            if beat is not None and beat.tzinfo is None:
+                beat = beat.replace(tzinfo=UTC)
+            if beat is None or now - beat > STALE_HEARTBEAT:
+                log.warning("ignoring abandoned job %s (%s): no heartbeat since %s", job.id, name, beat)
+                continue
+        return job.id
     return None
 
 

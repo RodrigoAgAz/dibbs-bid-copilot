@@ -35,6 +35,12 @@ ALERT_EVERY = timedelta(hours=12)
 SYNTHETIC_PREFIX = "SPEZZ"  # demo solicitations (app/seed/demo.py)
 
 
+def hide_synthetic() -> bool:
+    """Live deployments show real DIBBS data only: the seeded SPEZZ practice lines and their synthetic outcomes
+    stay in the database (offline demo, tests) but never appear next to real solicitations."""
+    return get_settings().connector_mode != "fixture"
+
+
 def _last_run(db: Session, prefix: str, ok_only: bool) -> IngestionRun | None:
     stmt = select(IngestionRun).where(IngestionRun.source.like(f"{prefix}%"), IngestionRun.finished_at.is_not(None))
     if ok_only:

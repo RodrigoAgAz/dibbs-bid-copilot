@@ -10,6 +10,7 @@ from app.core.tenancy import TenantContext
 from app.core.timeutil import today_et
 from app.models import AwardHistory, Organization, Recommendation, Solicitation, SolicitationLine
 from app.schemas.rfq import HistoryOut, HistoryRow, HistoryStats
+from app.services.ops import SYNTHETIC_PREFIX, hide_synthetic
 
 router = APIRouter(prefix="/api", tags=["history"])
 
@@ -23,6 +24,7 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
         .join(SolicitationLine, Recommendation.solicitation_line_id == SolicitationLine.id)
         .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
         .where((Solicitation.return_by_date < today) | Recommendation.actual_bid.is_not(None))
+        .where(*([~Solicitation.solicitation_number.startswith(SYNTHETIC_PREFIX)] if hide_synthetic() else []))
         .order_by(Solicitation.return_by_date.desc())
     ).all()
     sols = {sol.solicitation_number for _, _, sol in rows}

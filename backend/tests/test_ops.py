@@ -345,3 +345,16 @@ def test_live_track_record_uses_only_predictions_made_before_close(db):
     tr = live_track_record(db)
     assert tr["n"] == 1 and tr["coverage_80"] == 1.0
     assert tr["median_abs_pct_error"] == pytest.approx(abs(1.0 - 1.1) / 1.1, abs=1e-4)
+
+
+def test_live_deployments_hide_the_synthetic_practice_lines(client, db, settings):
+    from tests.helpers import build_world
+
+    build_world(db, n_open=6)
+    signup(client, "live@broker.example.com", org="Live Org")
+    assert client.get("/api/dashboard").json()["summary"]["lines"] > 0  # fixture mode: the SPEZZ lines show
+    settings(connector_mode="live")
+    d = client.get("/api/dashboard").json()
+    assert d["summary"]["lines"] == 0 and not any(x["solicitation_number"].startswith("SPEZZ") for x in d["lines"])
+    h = client.get("/api/history").json()
+    assert not any(r["solicitation_number"].startswith("SPEZZ") for r in h["rows"])

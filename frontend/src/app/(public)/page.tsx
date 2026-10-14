@@ -6,7 +6,7 @@ import { useState } from "react";
 import { BadgeDollarSign, BarChart3, FileSearch, Inbox, Lock, MailCheck, ShieldCheck, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, errorMessage } from "@/lib/api/client";
-import { formatDate, num } from "@/lib/format";
+import { formatDate, num, pct } from "@/lib/format";
 import { useAuthOptions, useDataHealth } from "@/lib/hooks";
 
 const STEPS = [
@@ -133,6 +133,13 @@ export default function LandingPage() {
                 }
               />
             </dl>
+            {health.data.live_track_record && health.data.live_track_record.n >= 20 ? (
+              <p className="text-xs text-muted-foreground sm:col-span-2" data-testid="live-track-record">
+                Live: of {num(health.data.live_track_record.n)} solicitations priced before they closed and since awarded, the winning price
+                fell inside the predicted 80% range {pct(health.data.live_track_record.coverage_80)} of the time (median error{" "}
+                {pct(health.data.live_track_record.median_abs_pct_error)}).
+              </p>
+            ) : null}
           </div>
         </section>
       ) : null}

@@ -1112,6 +1112,7 @@ export interface components {
             /** Nsns With History */
             nsns_with_history: number;
             model: components["schemas"]["ActiveModelOut"] | null;
+            live_track_record?: components["schemas"]["TrackRecordOut"] | null;
             /** Runs */
             runs: {
                 [key: string]: components["schemas"]["PipelineRunOut"];
@@ -2062,6 +2063,17 @@ export interface components {
              * Format: date-time
              */
             parsed_at: string;
+        };
+        /** TrackRecordOut */
+        TrackRecordOut: {
+            /** N */
+            n: number;
+            /** Coverage 80 */
+            coverage_80: number | null;
+            /** Median Abs Pct Error */
+            median_abs_pct_error: number | null;
+            /** Since Days */
+            since_days: number;
         };
         /** UserOut */
         UserOut: {

@@ -15,7 +15,15 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.core.timeutil import today_et
-from app.models import AwardHistory, IngestCheckpoint, IngestionRun, ModelRun, Solicitation, SolicitationLine
+from app.models import (
+    AwardHistory,
+    IngestCheckpoint,
+    IngestionRun,
+    ModelRun,
+    PricePrediction,
+    Solicitation,
+    SolicitationLine,
+)
 
 log = logging.getLogger(__name__)
 
@@ -109,8 +117,71 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
         "award_rows_last_30_days": int(recent_awards),
         "nsns_with_history": int(nsns),
         "model": _model_info(model, real_awards) if model else None,
+        "live_track_record": live_track_record(db),
         "runs": runs,
         "checks": checks,
+    }
+
+
+def live_track_record(db: Session, since_days: int = 180) -> dict:
+    """How the live predictions did once DLA posted the award (out of sample by construction).
+
+    For real solicitations that closed and have since been awarded, take the last prediction made BEFORE the
+    return-by date (end of day, ET-agnostic +1 day margin) and compare it with the winning unit price.
+    """
+    today = today_et()
+    rows = db.execute(
+        select(SolicitationLine.id, Solicitation.return_by_date, AwardHistory.unit_price)
+        .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
+        .join(AwardHistory, (AwardHistory.solicitation_number == Solicitation.solicitation_number)
+              & (AwardHistory.nsn == SolicitationLine.nsn))
+        .where(
+            Solicitation.return_by_date < today,
+            Solicitation.return_by_date >= today - timedelta(days=since_days),
+            ~Solicitation.solicitation_number.startswith(SYNTHETIC_PREFIX),
+            AwardHistory.source != "synthetic",
+            AwardHistory.unit_price > 0,
+        )
+    ).all()
+    winners: dict[int, tuple[date, float]] = {}
+    for line_id, due, price in rows:
+        winners.setdefault(line_id, (due, float(price)))
+    inside = 0
+    errors: list[float] = []
+    ids = list(winners)
+    for i in range(0, len(ids), 500):
+        chunk = ids[i:i + 500]
+        preds: dict[int, list[PricePrediction]] = {}
+        for p in db.execute(
+            select(PricePrediction).where(PricePrediction.solicitation_line_id.in_(chunk))
+            .order_by(PricePrediction.created_at)
+        ).scalars():
+            preds.setdefault(p.solicitation_line_id, []).append(p)
+        for line_id in chunk:
+            due, price = winners[line_id]
+            cutoff = datetime.combine(due + timedelta(days=1), datetime.min.time(), tzinfo=UTC)
+            before = [p for p in preds.get(line_id, []) if p.created_at and p.created_at <= cutoff]
+            if not before:
+                continue
+            q = before[-1].quantiles or {}
+            levels, prices = list(q.get("levels") or []), list(q.get("prices") or [])
+            try:
+                lo, hi = prices[levels.index(0.1)], prices[levels.index(0.9)]
+            except (ValueError, IndexError):
+                continue
+            med = float(q.get("median") or 0)
+            if med <= 0:
+                continue
+            inside += int(lo <= price <= hi)
+            errors.append(abs(med - price) / price)
+    n = len(errors)
+    errors.sort()
+    return {
+        "n": n,
+        "coverage_80": round(inside / n, 4) if n else None,
+        "median_abs_pct_error": round(errors[n // 2] if n % 2 else (errors[n // 2 - 1] + errors[n // 2]) / 2, 4)
+        if n else None,
+        "since_days": since_days,
     }
 
 

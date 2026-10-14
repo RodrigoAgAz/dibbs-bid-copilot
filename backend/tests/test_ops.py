@@ -318,3 +318,30 @@ def test_engine_refresh_refuses_to_run_on_older_worker_code():
 
     out = tasks.refresh_all_recommendations_job("999")
     assert "skipped" in out
+
+
+def test_live_track_record_uses_only_predictions_made_before_close(db):
+    from app.models import PricePrediction
+    from app.services.ops import live_track_record
+
+    org = Organization(name="O")
+    db.add(org)
+    db.flush()
+    today = date.today()
+    sol = _sol(db, org.id, 1, closed_days_ago=10)
+    sol.return_by_date = today - timedelta(days=10)  # relative to the real date (the module's TODAY is fixed)
+    line = db.query(SolicitationLine).filter_by(solicitation_id=sol.id).one()
+    levels = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+    before = datetime.combine(today - timedelta(days=15), datetime.min.time(), tzinfo=UTC)
+    after = datetime.combine(today - timedelta(days=2), datetime.min.time(), tzinfo=UTC)
+    db.add(PricePrediction(solicitation_line_id=line.id, created_at=before, quantiles={
+        "levels": levels, "prices": [0.8, 0.9, 0.95, 0.97, 0.99, 1.0, 1.02, 1.05, 1.08, 1.2, 1.3], "median": 1.0}))
+    # A later (post-close) prediction must be ignored even though it would be perfect.
+    db.add(PricePrediction(solicitation_line_id=line.id, created_at=after, quantiles={
+        "levels": levels, "prices": [1.4] * 11, "median": 1.5}))
+    db.add(AwardHistory(nsn=line.nsn, award_date=today - timedelta(days=3), unit_price=1.1, quantity=10,
+                        contract_number="SPE-TR-1", solicitation_number=sol.solicitation_number, source="award_listing"))
+    db.commit()
+    tr = live_track_record(db)
+    assert tr["n"] == 1 and tr["coverage_80"] == 1.0
+    assert tr["median_abs_pct_error"] == pytest.approx(abs(1.0 - 1.1) / 1.1, abs=1e-4)

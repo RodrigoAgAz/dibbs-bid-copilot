@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/misc";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDate, formatNsn, money, num, pct } from "@/lib/format";
+import { useDataHealth } from "@/lib/hooks";
 
 const OUTCOME: Record<string, { label: string; variant: "success" | "destructive" | "secondary" | "outline" }> = {
   won: { label: "Won", variant: "success" },
@@ -18,12 +19,27 @@ const OUTCOME: Record<string, { label: string; variant: "success" | "destructive
 export default function HistoryPage() {
   const q = useQuery({ queryKey: ["history"], queryFn: async () => unwrap(await api.GET("/api/history")) });
   const s = q.data?.stats;
+  const tr = useDataHealth().data?.live_track_record;
   return (
     <div>
       <PageHeader
         title="History"
         description="Past recommendations vs what you bid and who won, once awards post on DIBBS. Wins need your CAGE code on your organization."
       />
+      {tr && tr.n > 0 && (
+        <div className="mb-4 rounded-lg border bg-card p-4" data-testid="track-record">
+          <div className="text-sm font-semibold">Live track record (all solicitations, not just yours)</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Every solicitation priced before it closed, checked against the winning price once DLA posted the award. No hindsight: only the
+            last prediction made before the return-by date counts.
+          </p>
+          <div className="mt-3 grid grid-cols-3 gap-2 md:max-w-xl">
+            <Stat label="Awarded lines checked" value={num(tr.n)} hint={`last ${tr.since_days} days`} />
+            <Stat label="Median price error" value={pct(tr.median_abs_pct_error)} />
+            <Stat label="Winner inside 80% range" value={pct(tr.coverage_80)} tone="good" />
+          </div>
+        </div>
+      )}
       {q.isLoading ? (
         <Loading />
       ) : q.error ? (

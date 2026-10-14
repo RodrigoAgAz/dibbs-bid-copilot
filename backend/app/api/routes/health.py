@@ -70,6 +70,13 @@ class ActiveModelOut(BaseModel):
     real_data: bool = False
 
 
+class TrackRecordOut(BaseModel):
+    n: int
+    coverage_80: float | None
+    median_abs_pct_error: float | None
+    since_days: int
+
+
 class DataHealthOut(BaseModel):
     status: str  # ok | degraded
     checked_at: str
@@ -80,6 +87,7 @@ class DataHealthOut(BaseModel):
     award_rows_last_30_days: int
     nsns_with_history: int
     model: ActiveModelOut | None
+    live_track_record: TrackRecordOut | None = None
     runs: dict[str, PipelineRunOut]
     checks: list[HealthCheckOut]
 

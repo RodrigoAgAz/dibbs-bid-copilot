@@ -71,7 +71,8 @@ def recommend_bid(
     qty = max(float(quantity), 0.0)
     lo = _ceil_cent(landed * (1.0 + max(min_margin_pct, 0.0)))
     floor_p = min(max(float(min_p_win), 0.05), 0.95)
-    hi = round(float(dist.ppf(1.0 - floor_p)), 2)
+    # Floor to the cent so the top of the grid never dips below the minimum chance to win.
+    hi = math.floor(round(float(dist.ppf(1.0 - floor_p)) * 100, 6)) / 100.0
     reasons: list[str] = []
 
     if lo > hi:

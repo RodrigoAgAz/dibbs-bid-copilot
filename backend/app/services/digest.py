@@ -54,6 +54,7 @@ class DigestLine:
 class Digest:
     org_name: str
     new_bid_lines: int = 0
+    new_needs_quote: int = 0
     new_expected_profit: float = 0.0
     top: list[DigestLine] = field(default_factory=list)
     closing: list[DigestLine] = field(default_factory=list)
@@ -87,7 +88,9 @@ def build_digest(db: Session, org_id: int, now: datetime | None = None) -> Diges
             SolicitationLine.fsc.in_(fscs),
         )
     ).all()
-    new = [r for r in rows if r[2].ingested_at and r[2].ingested_at >= now - timedelta(hours=26)]
+    fresh = [r for r in rows if r[2].ingested_at and r[2].ingested_at >= now - timedelta(hours=26)]
+    new = [r for r in fresh if r[0].expected_profit is not None]  # priced; "quote first" lines are counted apart
+    d.new_needs_quote = len(fresh) - len(new)
     d.new_bid_lines = len(new)
     d.new_expected_profit = round(sum(r[0].expected_profit or 0 for r in new), 2)
     d.top = [_line(*r) for r in sorted(new, key=lambda r: -(r[0].expected_profit or 0))[:TOP_N]]
@@ -132,6 +135,9 @@ def render_digest(d: Digest, today: date) -> tuple[str, str]:
             out.append(f"* {x.solicitation_number}  due {x.return_by_date:%b %d}  est. profit {_money(x.expected_profit)}"
                        f"  {base}/rfq/{x.solicitation_number}")
         out.append("")
+    if d.new_needs_quote:
+        out += [f"{d.new_needs_quote} more new line(s) have no price history yet: request supplier quotes to price them "
+                f"({base}/dashboard).", ""]
     if d.needs_review:
         out += [f"{d.needs_review} supplier quote(s) need your review: {base}/dashboard", ""]
     out += [f"All open lines: {base}/dashboard", "",

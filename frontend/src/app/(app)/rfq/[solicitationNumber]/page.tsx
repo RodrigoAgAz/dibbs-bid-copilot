@@ -213,9 +213,17 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
               {ex.aggressive_p_win != null && <span className="text-muted-foreground"> · {pct(ex.aggressive_p_win as number)}</span>}
             </span>
           </Tip>
-          <FlagBadges flags={{ provisional: r.provisional, low_data: Boolean(ex.low_data), cold_start: Boolean(ex.cold_start), approved_source_only: line.approved_source_only }} />
+          <FlagBadges flags={{ provisional: r.provisional, low_data: Boolean(ex.low_data), cold_start: Boolean(ex.cold_start), approved_source_only: line.approved_source_only, needs_quote: Boolean(ex.needs_quote) }} />
         </div>
-        {r.provisional && (
+        {ex.needs_quote ? (
+          <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-xs" data-testid="quote-first">
+            <div className="text-sm font-semibold">Quote first</div>
+            This NSN has no award history on file, so the winning price can only be estimated from similar items
+            {Array.isArray(ex.price_range) ? ` (80% range ${money((ex.price_range as number[])[0])}–${money((ex.price_range as number[])[1])})` : ""}. A
+            bid recommended from that guess would be a guess too: request supplier quotes below and the recommendation appears as
+            soon as one is in.
+          </div>
+        ) : r.provisional && (
           <p className="rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
             Provisional: no supplier quote yet. Landed cost is estimated from the predicted winning price. Send RFQ emails below to firm it up.
           </p>

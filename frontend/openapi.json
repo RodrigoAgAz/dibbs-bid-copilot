@@ -2646,6 +2646,11 @@
             "type": "integer",
             "title": "No Bid Lines"
           },
+          "needs_quote_lines": {
+            "type": "integer",
+            "title": "Needs Quote Lines",
+            "default": 0
+          },
           "total_expected_profit": {
             "type": "number",
             "title": "Total Expected Profit"
@@ -2883,6 +2888,11 @@
           "aidc": {
             "type": "boolean",
             "title": "Aidc",
+            "default": false
+          },
+          "needs_quote": {
+            "type": "boolean",
+            "title": "Needs Quote",
             "default": false
           }
         },

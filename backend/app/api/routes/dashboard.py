@@ -84,6 +84,7 @@ def dashboard(
             ex[("distribution", "median")].as_float().label("median"),
             ex["low_data"].as_boolean().label("low_data"),
             ex["cold_start"].as_boolean().label("cold_start"),
+            ex["needs_quote"].as_boolean().label("needs_quote"),
         )
         .join(L, R.solicitation_line_id == L.id)
         .join(S, L.solicitation_id == S.id)
@@ -128,10 +129,13 @@ def dashboard(
                     provisional=r.provisional,
                     first_article=r.first_article,
                     aidc=r.aidc,
+                    needs_quote=bool(r.needs_quote),
                 ),
             )
         )
-    lines.sort(key=lambda d: (d.no_bid, -(d.expected_profit or 0)))
+    # Priced lines by expected profit; "quote first" lines after them, largest opportunities first.
+    lines.sort(key=lambda d: (d.no_bid, d.expected_profit is None, -(d.expected_profit or 0),
+                              -((d.predicted_median or 0) * (d.quantity or 0))))
     awaiting = sum(q.sent for q in summaries.values())
     last = ctx.db.execute(
         select(IngestionRun.finished_at).where(IngestionRun.status.in_(["success", "partial"]))
@@ -141,7 +145,8 @@ def dashboard(
         summary=DashboardSummary(
             as_of=today,
             lines=len(lines),
-            bid_lines=sum(1 for d in lines if not d.no_bid),
+            bid_lines=sum(1 for d in lines if not d.no_bid and not d.flags.needs_quote),
+            needs_quote_lines=sum(1 for d in lines if not d.no_bid and d.flags.needs_quote),
             no_bid_lines=sum(1 for d in lines if d.no_bid),
             total_expected_profit=round(sum((d.expected_profit or 0) for d in lines if not d.no_bid), 2),
             quotes_awaiting_reply=awaiting,

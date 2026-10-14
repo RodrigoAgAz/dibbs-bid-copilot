@@ -113,6 +113,12 @@ def upsert_recommendation(
     if sa not in OPEN_SET_ASIDES and sa not in eligible:
         reasons.append(f"set-aside {sa} is not in your eligibility list")
 
+    q = pred.quantiles
+    # Quote first: with no award history for the NSN and no supplier quote, both the price range (FSC-wide) and
+    # the provisional cost (a fraction of that range's median) come from the same guess, so a "best bid" and its
+    # expected profit would be invented (live: bids at ~10x the median). Show the range, ask for a quote.
+    needs_quote = bool(landed.provisional and q.get("cold_start"))
+
     row = db.execute(
         select(Recommendation).where(
             Recommendation.organization_id == org_id, Recommendation.solicitation_line_id == line.id
@@ -121,17 +127,17 @@ def upsert_recommendation(
     if row is None:
         row = Recommendation(organization_id=org_id, solicitation_line_id=line.id)
         db.add(row)
-    q = pred.quantiles
     row.price_prediction_id = pred.id
     row.best_quote_id = landed.quote_id
     row.landed_cost_per_unit = round(landed.landed, 4)
     row.landed_breakdown = landed.to_dict()
     row.provisional = landed.provisional
-    row.recommended_bid = rec.recommended_bid
-    row.p_win_at_recommended = rec.p_win
-    row.expected_profit = rec.expected_profit
-    row.conservative_bid = rec.conservative_bid
-    row.aggressive_bid = rec.aggressive_bid
+    priced = not needs_quote
+    row.recommended_bid = rec.recommended_bid if priced else None
+    row.p_win_at_recommended = rec.p_win if priced else None
+    row.expected_profit = rec.expected_profit if priced else None
+    row.conservative_bid = rec.conservative_bid if priced else None
+    row.aggressive_bid = rec.aggressive_bid if priced else None
     row.no_bid = bool(reasons)
     row.no_bid_reason = "; ".join(reasons) if reasons else None
     row.explanation = {
@@ -155,6 +161,8 @@ def upsert_recommendation(
         "low_data": q.get("low_data", False),
         "cold_start": q.get("cold_start", False),
         "provisional": landed.provisional,
+        "needs_quote": needs_quote,
+        "price_range": [round(float(dist.ppf(0.1)), 4), round(float(dist.ppf(0.9)), 4)],
         "model": q.get("model"),
         "contributions": q.get("contributions", []),
         "similar_awards": q.get("similar_awards", []),
@@ -211,8 +219,8 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
 
 
 # Bump when the recommendation rules change: the next boot re-computes every open line once
-# (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability.
-ENGINE_VERSION = "2"
+# (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first.
+ENGINE_VERSION = "3"
 
 
 def refresh_all_recommendations(db: Session) -> dict:

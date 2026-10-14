@@ -14,6 +14,8 @@ class Flags(BaseModel):
     provisional: bool = True
     first_article: bool = False
     aidc: bool = False
+    # No NSN history and no supplier quote: no bid is recommended until a quote arrives.
+    needs_quote: bool = False
 
 
 class QuoteStatusSummary(BaseModel):
@@ -61,6 +63,7 @@ class DashboardSummary(BaseModel):
     lines: int
     bid_lines: int
     no_bid_lines: int
+    needs_quote_lines: int = 0
     total_expected_profit: float
     quotes_awaiting_reply: int
     needs_review: int

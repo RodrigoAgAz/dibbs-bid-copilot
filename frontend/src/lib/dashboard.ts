@@ -3,7 +3,7 @@ import type { Schemas } from "@/lib/api/client";
 
 export type DashboardLine = Schemas["DashboardLine"];
 
-export type FlagKey = "fast_award" | "approved_source_only" | "low_data" | "provisional";
+export type FlagKey = "fast_award" | "approved_source_only" | "low_data" | "provisional" | "needs_quote";
 export type StatusFilter = "all" | "not_started" | "drafts" | "sent" | "quoted" | "needs_review";
 
 export interface DashboardFilters {

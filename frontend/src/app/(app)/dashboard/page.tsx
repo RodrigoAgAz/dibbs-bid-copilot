@@ -23,6 +23,7 @@ const FLAG_OPTIONS: { key: FlagKey; label: string }[] = [
   { key: "approved_source_only", label: "Approved source only" },
   { key: "low_data", label: "Low data" },
   { key: "provisional", label: "Provisional" },
+  { key: "needs_quote", label: "Quote first" },
 ];
 
 const STATUS_LABEL: Record<ReturnType<typeof statusOf>, string> = {
@@ -177,7 +178,7 @@ export default function DashboardPage() {
       <OnboardingChecklist />
       {s && (
         <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
-          <Stat label="Matched lines" value={num(s.lines)} hint={`${num(s.bid_lines)} worth bidding`} />
+          <Stat label="Matched lines" value={num(s.lines)} hint={`${num(s.bid_lines)} worth bidding${s.needs_quote_lines ? ` · ${num(s.needs_quote_lines)} need a quote` : ""}`} />
           <Stat label="Expected profit" value={money(s.total_expected_profit, { compact: true, digits: 0 })} hint="sum over bid lines" tone="good" />
           <Stat label="No-bid" value={num(s.no_bid_lines)} hint="collapsed below" />
           <Stat label="Awaiting replies" value={num(s.quotes_awaiting_reply)} hint="supplier quote requests sent" />

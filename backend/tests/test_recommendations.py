@@ -140,3 +140,44 @@ def test_stale_predictions_are_repriced_when_history_arrives(client, db):
     assert db.query(PricePrediction).filter(PricePrediction.solicitation_line_id == line.id).count() >= 2
     rec = db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line.id)).scalar_one()
     assert rec.price_prediction_id == warm.id
+
+
+def test_lines_without_history_or_quote_ask_for_a_quote_first(client, db):
+    from datetime import date
+
+    from app.models import PricePrediction, Solicitation
+    from app.services.recommendations import refresh_stale_predictions
+
+    build_world(db, n_open=6)
+    me = signup(client, "q@broker.example.com", org="Quote First Org")
+    line = db.execute(
+        select(SolicitationLine).join(Solicitation).where(Solicitation.return_by_date >= date.today())
+        .order_by(SolicitationLine.id)
+    ).scalars().first()
+    line.nsn, line.niin, line.approved_source_only = "5305999999998", "999999998", False
+    db.query(PricePrediction).filter(PricePrediction.solicitation_line_id == line.id).delete()
+    db.commit()
+    refresh_stale_predictions(db)
+    db.commit()
+    rec = db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line.id,
+                                                  Recommendation.organization_id == me["organization"]["id"])).scalar_one()
+    assert not rec.no_bid and rec.recommended_bid is None and rec.expected_profit is None
+    assert rec.explanation["needs_quote"] and rec.explanation["price_range"][0] < rec.explanation["price_range"][1]
+
+    d = client.get("/api/dashboard").json()
+    row = next(x for x in d["lines"] if x["line_id"] == line.id)
+    assert row["flags"]["needs_quote"] and row["recommended_bid"] is None
+    assert d["summary"]["needs_quote_lines"] >= 1
+    bids = [x for x in d["lines"] if not x["no_bid"]]
+    first_unpriced = next(i for i, x in enumerate(bids) if x["expected_profit"] is None)
+    assert all(x["expected_profit"] is None for x in bids[first_unpriced:])  # quote-first lines come last
+
+    # A supplier quote turns it into a priced recommendation.
+    qr = client.post(f"/api/rfq/lines/{line.id}/quote-requests", json={"cage_code": "1ABC2"}, headers=csrf(client)).json()
+    median = rec.explanation["distribution"]["median"]
+    r = client.post(f"/api/quote-requests/{qr['id']}/quotes", json={"unit_price": round(median * 0.5, 4)}, headers=csrf(client))
+    assert r.status_code == 201, r.text
+    db.expire_all()
+    rec = db.get(Recommendation, rec.id)
+    assert not rec.provisional and not rec.explanation["needs_quote"]
+    assert rec.no_bid or rec.recommended_bid is not None

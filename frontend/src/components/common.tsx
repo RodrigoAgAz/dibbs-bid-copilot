@@ -82,6 +82,7 @@ export type LineFlags = {
   provisional?: boolean;
   first_article?: boolean;
   aidc?: boolean;
+  needs_quote?: boolean;
 };
 
 export function FlagBadges({ flags, compact }: { flags: LineFlags; compact?: boolean }) {
@@ -98,7 +99,15 @@ export function FlagBadges({ flags, compact }: { flags: LineFlags; compact?: boo
       tip: flags.cold_start ? "No past awards for this NSN: FSC-level model with a wider interval." : "Fewer than 3 past awards: wider uncertainty.",
       variant: "warning",
     });
-  if (flags.provisional)
+  if (flags.needs_quote)
+    items.push({
+      key: "nq",
+      label: "Quote first",
+      short: "QUOTE",
+      tip: "No award history for this NSN and no supplier quote yet: request quotes to get a recommended bid.",
+      variant: "warning",
+    });
+  if (flags.provisional && !flags.needs_quote)
     items.push({ key: "pv", label: "Provisional", short: "PROV", tip: "No supplier quote yet: landed cost is estimated from the predicted price.", variant: "secondary" });
   if (flags.first_article) items.push({ key: "fat", label: "First article", short: "FAT", tip: "First article testing required.", variant: "outline" });
   if (flags.aidc) items.push({ key: "aidc", label: "AIDC", short: "AIDC", tip: "Automated Indefinite Delivery Contract.", variant: "outline" });

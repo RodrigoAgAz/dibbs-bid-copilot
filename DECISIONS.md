@@ -182,6 +182,14 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   lines whose NSN has more award rows on file than when they were priced, and refreshes every org's
   recommendations for them. Only the ingest (default queue, never concurrent with itself) does this, so two jobs
   never upsert the same recommendations at once.
+- **Quote first for cold, unquoted lines.** After the floor, the top of the live dashboard was still all
+  cold-start NSNs (no award history) without supplier quotes, recommended at about 10x the predicted median: the
+  price range there is FSC-wide and the provisional cost is a fraction of its median, so the "expected profit"
+  is invented. Such lines now get no recommended bid (the price range is still shown) and a "Quote first" flag;
+  they sort after priced lines (largest opportunities first), are counted apart in the dashboard summary and the
+  digest, and get a normal recommendation as soon as a quote arrives. Lines with history but no quote keep a
+  provisional recommendation. A rules change bumps `ENGINE_VERSION`, which re-computes every open line once
+  (queued at boot, re-queued by the hourly ops check if a deploy kills it).
 - **Dashboard selects columns**, extracting the three values it needs from the explanation JSON in SQL
   (`#>>` on Postgres, `json_extract` on SQLite) instead of loading thousands of full explanations. Responses are
   gzip-compressed (3.5 MB → about 320 KB for 4,300 lines).

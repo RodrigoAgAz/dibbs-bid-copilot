@@ -1057,6 +1057,11 @@ export interface components {
             bid_lines: number;
             /** No Bid Lines */
             no_bid_lines: number;
+            /**
+             * Needs Quote Lines
+             * @default 0
+             */
+            needs_quote_lines: number;
             /** Total Expected Profit */
             total_expected_profit: number;
             /** Quotes Awaiting Reply */
@@ -1158,6 +1163,11 @@ export interface components {
              * @default false
              */
             aidc: boolean;
+            /**
+             * Needs Quote
+             * @default false
+             */
+            needs_quote: boolean;
         };
         /** ForgotPasswordIn */
         ForgotPasswordIn: {

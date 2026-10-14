@@ -371,7 +371,7 @@ export function SupplierPanel({
 
   return (
     <WriteGuard className="space-y-2">
-      {me && !me.email_delivery && (
+      {me && !me.email_delivery && me.organization.plan !== "demo" && (
         <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs" data-testid="email-not-configured">
           Email delivery isn&apos;t set up on this deployment yet: <strong>Send</strong> records the request, but nothing reaches the
           supplier. Copy the draft into your own email for now.

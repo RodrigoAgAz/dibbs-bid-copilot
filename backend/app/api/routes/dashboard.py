@@ -85,6 +85,8 @@ def dashboard(
             ex["low_data"].as_boolean().label("low_data"),
             ex["cold_start"].as_boolean().label("cold_start"),
             ex["needs_quote"].as_boolean().label("needs_quote"),
+            ex["confidence"].as_string().label("confidence"),
+            ex["rank_score"].as_float().label("rank_score"),
         )
         .join(L, R.solicitation_line_id == L.id)
         .join(S, L.solicitation_id == S.id)
@@ -130,11 +132,13 @@ def dashboard(
                     first_article=r.first_article,
                     aidc=r.aidc,
                     needs_quote=bool(r.needs_quote),
+                    confidence=r.confidence or "low",
                 ),
+                rank_score=r.rank_score,
             )
         )
-    # Priced lines by expected profit; "quote first" lines after them, largest opportunities first.
-    lines.sort(key=lambda d: (d.no_bid, d.expected_profit is None, -(d.expected_profit or 0),
+    # Best bets first: expected profit weighted by prediction confidence; then "quote first" lines, largest first.
+    lines.sort(key=lambda d: (d.no_bid, d.rank_score is None, -(d.rank_score or 0),
                               -((d.predicted_median or 0) * (d.quantity or 0))))
     awaiting = sum(q.sent for q in summaries.values())
     last = ctx.db.execute(

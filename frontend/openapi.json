@@ -2005,6 +2005,81 @@
               }
             ],
             "title": "Pinball Mean"
+          },
+          "test_rows": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Rows"
+          },
+          "test_window": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Test Window",
+            "default": []
+          },
+          "median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Abs Pct Error"
+          },
+          "coverage_80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 80"
+          },
+          "coverage_90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 90"
+          },
+          "baseline_median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Median Abs Pct Error"
+          },
+          "real_data": {
+            "type": "boolean",
+            "title": "Real Data",
+            "default": false
           }
         },
         "type": "object",
@@ -2545,6 +2620,17 @@
             ],
             "title": "Expected Profit"
           },
+          "rank_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Score"
+          },
           "no_bid": {
             "type": "boolean",
             "title": "No Bid"
@@ -2894,6 +2980,11 @@
             "type": "boolean",
             "title": "Needs Quote",
             "default": false
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence",
+            "default": "low"
           }
         },
         "type": "object",

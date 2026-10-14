@@ -15,6 +15,7 @@ import { Badge, Label, Tip } from "@/components/ui/misc";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
 import { useMe } from "@/lib/hooks";
+import { competitors, priceStory, type Award } from "@/lib/insights";
 import { countdown, formatDate, formatNsn, formatSolicitation, isDemoSolicitation, money, num, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -160,7 +161,14 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle>Recommendation</CardTitle>
-          <CardDescription>Maximizes P(win) × (bid − landed cost) × quantity</CardDescription>
+          <CardDescription>
+            Maximizes P(win) × (bid − landed cost) × quantity
+            {typeof ex.confidence === "string" && ex.confidence !== "none" ? (
+              <span className="ml-2 rounded border px-1.5 py-0.5 text-[11px]" data-testid="confidence">
+                {ex.confidence} confidence{typeof ex.n_prior_awards === "number" ? ` · ${ex.n_prior_awards} past awards` : ""}
+              </span>
+            ) : null}
+          </CardDescription>
         </div>
         <WriteGuard className="w-auto">
           <Button size="xs" variant="ghost" onClick={() => refresh.mutate()} disabled={refresh.isPending} aria-label="Recompute">
@@ -223,6 +231,15 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             bid recommended from that guess would be a guess too: request supplier quotes below and the recommendation appears as
             soon as one is in.
           </div>
+        ) : r.provisional && typeof ex.max_landed_cost === "number" ? (
+          <div className="rounded-md border bg-muted/50 p-3 text-xs" data-testid="target-cost">
+            <div className="text-sm font-semibold">
+              Target: get a landed supplier cost under <span className="num">{money(ex.max_landed_cost as number)}</span>
+            </div>
+            No supplier quote yet, so this bid is the price likely to win (about {pct(ex.target_p_win as number)} or better), not an
+            optimum against a guessed cost. A supplier quote at or below the target keeps your minimum margin; once quotes are in,
+            the bid is optimized against your real cost.
+          </div>
         ) : r.provisional && (
           <p className="rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
             Provisional: no supplier quote yet. Landed cost is estimated from the predicted winning price. Send RFQ emails below to firm it up.
@@ -283,6 +300,60 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
               conservative={r?.conservative_bid ?? null}
               aggressive={r?.aggressive_bid ?? null}
             />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Price story</CardTitle>
+            <CardDescription>What the award history says, in plain English</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc space-y-1.5 pl-4 text-sm" data-testid="price-story">
+              {priceStory(line.history as Award[], line.quantity).map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Who wins this NSN</CardTitle>
+            <CardDescription>Past awardees, most wins first</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <THead>
+                <tr>
+                  <TH>Awardee</TH>
+                  <TH className="text-right">Wins</TH>
+                  <TH className="text-right">Last price</TH>
+                  <TH>Last award</TH>
+                </tr>
+              </THead>
+              <TBody>
+                {competitors(line.history as Award[]).map((c) => (
+                  <TR key={c.cage}>
+                    <TD className="max-w-[200px] truncate" title={c.name ?? ""}>
+                      {c.name ?? <span className="text-muted-foreground">Unknown</span>}
+                      <div className="font-mono text-[11px] text-muted-foreground">{c.cage === "unknown" ? "—" : c.cage}</div>
+                    </TD>
+                    <TD className="num text-right">{c.wins}</TD>
+                    <TD className="num text-right">{money(c.lastPrice)}</TD>
+                    <TD>{formatDate(c.lastDate)}</TD>
+                  </TR>
+                ))}
+                {!line.history.length && (
+                  <TR>
+                    <TD colSpan={4} className="text-center text-xs text-muted-foreground">
+                      No past awards for this NSN.
+                    </TD>
+                  </TR>
+                )}
+              </TBody>
+            </Table>
           </CardContent>
         </Card>
       </div>

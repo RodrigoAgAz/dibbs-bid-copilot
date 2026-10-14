@@ -46,6 +46,18 @@ def run_pool(queues: list[str]) -> None:
 
 def main() -> None:
     _logging()
+    try:
+        # The worker runs the newest code once it starts, so it (not only the API's boot) queues a pending
+        # recommendation-engine refresh; the job itself refuses to run on an older worker.
+        from app.jobs.tasks import queue_engine_refresh_if_needed
+
+        queue_engine_refresh_if_needed()
+        from app.jobs.queue import enqueue_unique
+        from app.jobs.tasks import demo_refresh_job
+
+        enqueue_unique(demo_refresh_job)  # cheap when the demo is already topped up
+    except Exception:  # never block the worker from starting
+        log.exception("engine refresh check failed")
     pools = parse_pools(os.environ.get("WORKER_POOLS", f"{QUEUE_NAME};{BULK_QUEUE}"))
     if len(pools) == 1:
         run_pool(pools[0])

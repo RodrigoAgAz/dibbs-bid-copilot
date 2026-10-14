@@ -181,3 +181,37 @@ def test_lines_without_history_or_quote_ask_for_a_quote_first(client, db):
     rec = db.get(Recommendation, rec.id)
     assert not rec.provisional and not rec.explanation["needs_quote"]
     assert rec.no_bid or rec.recommended_bid is not None
+
+
+def test_confidence_tiers():
+    from app.services.recommendations import confidence_tier
+
+    levels = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+
+    def q(p10, p90, n, cold=False):
+        prices = [p10 * 0.9, p10, *([p10 + (p90 - p10) * k / 8 for k in range(1, 8)]), p90, p90 * 1.1]
+        return {"levels": levels, "prices": prices, "n_prior_awards": n, "cold_start": cold}
+
+    assert confidence_tier(q(1.0, 1.8, 12)) == "high"
+    assert confidence_tier(q(1.0, 3.0, 12)) == "medium"
+    assert confidence_tier(q(1.0, 1.8, 2)) == "medium"
+    assert confidence_tier(q(1.0, 20.0, 12)) == "low"
+    assert confidence_tier(q(1.0, 1.5, 1)) == "low"
+    assert confidence_tier(q(1.0, 1.5, 0, cold=True)) == "none"
+
+
+def test_provisional_bids_target_the_likely_winning_price(client, db):
+    build_world(db, n_open=8)
+    me = signup(client, "t@broker.example.com", org="Target Org")
+    recs = db.execute(select(Recommendation).where(Recommendation.organization_id == me["organization"]["id"])).scalars().all()
+    priced = [r for r in recs if r.provisional and not r.no_bid and r.recommended_bid is not None]
+    assert priced
+    for r in priced:
+        ex = r.explanation
+        assert r.p_win_at_recommended >= 0.5 and ex["target_p_win"] == 0.5
+        assert r.recommended_bid <= ex["distribution"]["median"] + 0.01
+        assert ex["max_landed_cost"] == pytest.approx(r.recommended_bid / 1.10, abs=1e-3)
+        assert ex["confidence"] in ("high", "medium", "low") and ex["rank_score"] is not None
+    d = client.get("/api/dashboard").json()
+    ranked = [x["rank_score"] for x in d["lines"] if not x["no_bid"] and x["rank_score"] is not None]
+    assert ranked == sorted(ranked, reverse=True)

@@ -887,6 +887,26 @@ export interface components {
             trained_at: string | null;
             /** Pinball Mean */
             pinball_mean: number | null;
+            /** Test Rows */
+            test_rows?: number | null;
+            /**
+             * Test Window
+             * @default []
+             */
+            test_window: (string | null)[];
+            /** Median Abs Pct Error */
+            median_abs_pct_error?: number | null;
+            /** Coverage 80 */
+            coverage_80?: number | null;
+            /** Coverage 90 */
+            coverage_90?: number | null;
+            /** Baseline Median Abs Pct Error */
+            baseline_median_abs_pct_error?: number | null;
+            /**
+             * Real Data
+             * @default false
+             */
+            real_data: boolean;
         };
         /** ActualBidIn */
         ActualBidIn: {
@@ -1029,6 +1049,8 @@ export interface components {
             p_win: number | null;
             /** Expected Profit */
             expected_profit: number | null;
+            /** Rank Score */
+            rank_score?: number | null;
             /** No Bid */
             no_bid: boolean;
             /** No Bid Reason */
@@ -1168,6 +1190,11 @@ export interface components {
              * @default false
              */
             needs_quote: boolean;
+            /**
+             * Confidence
+             * @default low
+             */
+            confidence: string;
         };
         /** ForgotPasswordIn */
         ForgotPasswordIn: {

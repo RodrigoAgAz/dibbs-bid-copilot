@@ -61,6 +61,13 @@ class ActiveModelOut(BaseModel):
     run_id: int
     trained_at: str | None
     pinball_mean: float | None
+    test_rows: int | None = None
+    test_window: list[str | None] = []
+    median_abs_pct_error: float | None = None
+    coverage_80: float | None = None
+    coverage_90: float | None = None
+    baseline_median_abs_pct_error: float | None = None
+    real_data: bool = False
 
 
 class DataHealthOut(BaseModel):

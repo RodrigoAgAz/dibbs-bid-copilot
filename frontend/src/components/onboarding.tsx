@@ -53,7 +53,12 @@ export function OnboardingChecklist() {
       hint: "Approved sources and past winners show up on every RFQ automatically; your contacts add emails and phone numbers.",
       href: "/suppliers",
     },
-    { done: (members.data?.length ?? 0) > 1, label: "Invite your team", hint: "Members can work RFQs; viewers are read-only.", href: "/settings" },
+    {
+      done: (members.data?.length ?? 0) > 1,
+      label: "Invite your team",
+      hint: "Members can work RFQs; viewers are read-only.",
+      href: "/settings",
+    },
   ];
   const left = steps.filter((s) => !s.done).length;
 
@@ -82,7 +87,11 @@ export function OnboardingChecklist() {
       <ul className="grid gap-2 sm:grid-cols-2">
         {steps.map((s) => (
           <li key={s.label} className="flex gap-2">
-            {s.done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" /> : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+            {s.done ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+            ) : (
+              <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            )}
             <div className="text-sm">
               <Link href={s.href} className={s.done ? "text-muted-foreground line-through" : "font-medium text-primary hover:underline"}>
                 {s.label}

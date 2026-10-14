@@ -83,6 +83,7 @@ export type LineFlags = {
   first_article?: boolean;
   aidc?: boolean;
   needs_quote?: boolean;
+  confidence?: string;
 };
 
 export function FlagBadges({ flags, compact }: { flags: LineFlags; compact?: boolean }) {

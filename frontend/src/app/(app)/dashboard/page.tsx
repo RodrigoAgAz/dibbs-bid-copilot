@@ -65,6 +65,22 @@ function QuoteCell({ line }: { line: DashboardLine }) {
   );
 }
 
+const CONFIDENCE: Record<string, { cls: string; label: string }> = {
+  high: { cls: "bg-success", label: "High confidence: several past awards and a tight predicted range" },
+  medium: { cls: "bg-warning", label: "Medium confidence: few past awards or a wider range" },
+  low: { cls: "bg-destructive/70", label: "Low confidence: one past award or a very wide range; check the history" },
+  none: { cls: "bg-muted-foreground/40", label: "No price history for this NSN: get a supplier quote first" },
+};
+
+function ConfidenceDot({ level }: { level?: string | null }) {
+  const c = CONFIDENCE[level ?? "low"] ?? CONFIDENCE.low;
+  return (
+    <Tip content={c.label}>
+      <span className={cn("inline-block h-2 w-2 rounded-full", c.cls)} aria-label={c.label} data-testid="confidence-dot" />
+    </Tip>
+  );
+}
+
 function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean }) {
   const router = useRouter();
   return (
@@ -112,7 +128,12 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
             <TD className="num text-right">{money(l.predicted_median)}</TD>
             <TD className="num text-right">{money(l.landed_cost)}</TD>
             <TD className="num text-right font-semibold">{noBid ? <span className="font-normal">{money(l.recommended_bid)}</span> : money(l.recommended_bid)}</TD>
-            <TD className="num text-right">{pct(l.p_win)}</TD>
+            <TD className="num text-right">
+              <span className="inline-flex items-center justify-end gap-1.5">
+                {pct(l.p_win)}
+                <ConfidenceDot level={l.flags.confidence} />
+              </span>
+            </TD>
             <TD className={cn("num text-right", !noBid && (l.expected_profit ?? 0) > 0 && "text-success font-medium")}>
               {money(l.expected_profit, { digits: 0 })}
             </TD>
@@ -139,7 +160,7 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
   const [page, setPage] = useState(0);
   const [showNoBid, setShowNoBid] = useState(false);
-  const [sort, setSort] = useState<SortKey>("expected_profit");
+  const [sort, setSort] = useState<SortKey>("best");
   const q = useQuery({ queryKey: ["dashboard"], queryFn: async () => unwrap(await api.GET("/api/dashboard")) });
 
   const allLines = useMemo(() => q.data?.lines ?? [], [q.data]);
@@ -225,6 +246,7 @@ export default function DashboardPage() {
           ))}
         </NativeSelect>
         <NativeSelect aria-label="Sort" value={sort} onChange={(e) => (setSort(e.target.value as SortKey), setPage(0))}>
+          <option value="best">Sort: best bets</option>
           <option value="expected_profit">Sort: expected profit</option>
           <option value="due">Sort: due soonest</option>
           <option value="line_value">Sort: line value</option>

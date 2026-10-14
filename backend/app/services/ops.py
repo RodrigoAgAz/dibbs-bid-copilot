@@ -108,13 +108,31 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
         "award_rows": int(real_awards),
         "award_rows_last_30_days": int(recent_awards),
         "nsns_with_history": int(nsns),
-        "model": {
-            "run_id": model.id,
-            "trained_at": _iso(model.created_at),
-            "pinball_mean": (model.metrics or {}).get("pinball_mean"),
-        } if model else None,
+        "model": _model_info(model, real_awards) if model else None,
         "runs": runs,
         "checks": checks,
+    }
+
+
+def _model_info(model: ModelRun, real_awards: int) -> dict:
+    """Held-out accuracy of the active model: tested on the most recent awards it never saw (time split)."""
+    from app.services.training import REAL_ONLY_THRESHOLD
+
+    m = model.metrics or {}
+    main, base = m.get("model") or {}, m.get("baseline") or {}
+    test = (m.get("windows") or {}).get("test") or [None, None]
+    return {
+        "run_id": model.id,
+        "trained_at": _iso(model.created_at),
+        "pinball_mean": m.get("pinball_mean"),
+        "test_rows": main.get("n"),
+        "test_window": [str(test[0]) if test[0] else None, str(test[1]) if test[1] else None],
+        "median_abs_pct_error": main.get("median_abs_pct_error"),
+        "coverage_80": main.get("coverage_80"),
+        "coverage_90": main.get("coverage_90"),
+        "baseline_median_abs_pct_error": base.get("median_abs_pct_error"),
+        # Training drops the synthetic demo history once this many real award rows exist.
+        "real_data": real_awards >= REAL_ONLY_THRESHOLD,
     }
 
 

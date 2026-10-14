@@ -74,8 +74,13 @@ def refresh_all_recommendations_job(version: str) -> dict:
     """One-off after a recommendation-rules change. Runs on the default queue, serialized with the ingest,
     so the two never upsert the same recommendations concurrently."""
     from app.models import IngestCheckpoint
-    from app.services.recommendations import refresh_all_recommendations
+    from app.services.recommendations import ENGINE_VERSION, refresh_all_recommendations
 
+    if version != ENGINE_VERSION:
+        # Queued by newer code but picked up by a worker still running older code (deploy overlap): computing
+        # here would stamp the new version on old rules. Leave it for the new worker (hourly ops check).
+        log.warning("engine refresh v%s skipped: this worker runs engine v%s", version, ENGINE_VERSION)
+        return {"skipped": f"worker runs engine v{ENGINE_VERSION}"}
     with session_scope() as db:
         out = refresh_all_recommendations(db)
         row = db.query(IngestCheckpoint).filter_by(source="recommendation_engine", key="version").one_or_none()
@@ -108,6 +113,14 @@ def queue_engine_refresh_if_needed() -> str | None:
         if row is not None and row.detail == ENGINE_VERSION:
             return None
     return enqueue_unique(refresh_all_recommendations_job, ENGINE_VERSION, job_timeout=2 * 3600)
+
+
+def demo_refresh_job() -> list:
+    """Simulated supplier quotes on real lines for demo orgs (default queue: serialized with the ingest)."""
+    from app.services.demo_refresh import refresh_demo_orgs
+
+    with session_scope() as db:
+        return refresh_demo_orgs(db)
 
 
 def ops_check_job() -> dict:

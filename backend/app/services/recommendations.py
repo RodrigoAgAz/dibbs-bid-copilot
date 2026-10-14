@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import date
 
 from sqlalchemy import func, or_, select
@@ -25,6 +26,34 @@ from dibbs_ml.bidding import recommend_bid
 log = logging.getLogger(__name__)
 
 OPEN_SET_ASIDES = {"", "NONE", "N", "UNRESTRICTED", "FULL AND OPEN", "NA"}
+
+# Without a supplier quote the landed cost is only an assumption (a fraction of the predicted price), so the
+# bid is not optimized against it: it targets the price that is likely to win (P(win) >= 50%), and the broker is
+# told the landed cost a supplier must beat. With a real quote the org's own floor (min_p_win) applies.
+PROVISIONAL_MIN_P_WIN = 0.5
+# Ranking weight per confidence tier ("best bets" = expected profit x weight).
+CONFIDENCE_WEIGHT = {"high": 1.0, "medium": 0.6, "low": 0.3, "none": 0.0}
+
+
+def confidence_tier(q: dict) -> str:
+    """How much the price prediction can be trusted, from award count and the width of the 80% range.
+
+    high: >= 3 prior awards and q90/q10 <= 2.2;  medium: >= 2 awards and q90/q10 <= 4.5;  low: anything else
+    with history;  none: no award history for the NSN (cold start).
+    """
+    if q.get("cold_start"):
+        return "none"
+    levels, prices = list(q.get("levels") or []), list(q.get("prices") or [])
+    try:
+        width = math.log(prices[levels.index(0.9)] / prices[levels.index(0.1)])
+    except (ValueError, ZeroDivisionError, IndexError):
+        return "low"
+    n = int(q.get("n_prior_awards") or 0)
+    if n >= 3 and width <= math.log(2.2):
+        return "high"
+    if n >= 2 and width <= math.log(4.5):
+        return "medium"
+    return "low"
 
 
 def open_lines(db: Session, today: date | None = None, fscs: list[str] | None = None) -> list[SolicitationLine]:
@@ -95,6 +124,7 @@ def upsert_recommendation(
     sol = line.solicitation
     dist = distribution_of(pred)
     landed, has_conforming, n_quotes = best_landed_cost(db, org_id, s, line, dist.median)
+    target_p = s.min_p_win if not landed.provisional else max(s.min_p_win, PROVISIONAL_MIN_P_WIN)
     rec = recommend_bid(
         dist,
         landed.landed,
@@ -102,7 +132,7 @@ def upsert_recommendation(
         min_margin_pct=s.min_margin_pct,
         min_expected_profit=s.min_expected_profit,
         max_line_value=s.max_line_value,
-        min_p_win=s.min_p_win,
+        min_p_win=target_p,
         approved_source_only=line.approved_source_only,
         has_conforming_quote=has_conforming,
         return_by_passed=bool(sol.return_by_date and sol.return_by_date < today),
@@ -114,6 +144,7 @@ def upsert_recommendation(
         reasons.append(f"set-aside {sa} is not in your eligibility list")
 
     q = pred.quantiles
+    confidence = confidence_tier(q)
     # Quote first: with no award history for the NSN and no supplier quote, both the price range (FSC-wide) and
     # the provisional cost (a fraction of that range's median) come from the same guess, so a "best bid" and its
     # expected profit would be invented (live: bids at ~10x the median). Show the range, ask for a quote.
@@ -163,6 +194,13 @@ def upsert_recommendation(
         "provisional": landed.provisional,
         "needs_quote": needs_quote,
         "price_range": [round(float(dist.ppf(0.1)), 4), round(float(dist.ppf(0.9)), 4)],
+        "confidence": confidence,
+        "n_prior_awards": q.get("n_prior_awards"),
+        "target_p_win": target_p,
+        # Provisional lines: the landed cost a supplier quote must come in under for the minimum margin at this bid.
+        "max_landed_cost": (round(rec.recommended_bid / (1.0 + s.min_margin_pct), 4)
+                            if landed.provisional and priced and rec.recommended_bid else None),
+        "rank_score": round((rec.expected_profit or 0.0) * CONFIDENCE_WEIGHT[confidence], 2) if priced else None,
         "model": q.get("model"),
         "contributions": q.get("contributions", []),
         "similar_awards": q.get("similar_awards", []),
@@ -219,8 +257,9 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
 
 
 # Bump when the recommendation rules change: the next boot re-computes every open line once
-# (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first.
-ENGINE_VERSION = "3"
+# (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first,
+# 4 = provisional bids target the likely winning price + confidence tiers.
+ENGINE_VERSION = "4"
 
 
 def refresh_all_recommendations(db: Session) -> dict:

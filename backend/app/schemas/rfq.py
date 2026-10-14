@@ -16,6 +16,7 @@ class Flags(BaseModel):
     aidc: bool = False
     # No NSN history and no supplier quote: no bid is recommended until a quote arrives.
     needs_quote: bool = False
+    confidence: str = "low"  # high | medium | low | none (see services.recommendations.confidence_tier)
 
 
 class QuoteStatusSummary(BaseModel):
@@ -51,6 +52,7 @@ class DashboardLine(BaseModel):
     aggressive_bid: float | None
     p_win: float | None
     expected_profit: float | None
+    rank_score: float | None = None  # expected profit x confidence weight (default sort)
     no_bid: bool
     no_bid_reason: str | None
     actual_bid: float | None

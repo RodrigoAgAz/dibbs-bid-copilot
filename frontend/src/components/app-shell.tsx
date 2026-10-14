@@ -99,6 +99,12 @@ function DataFreshness() {
           <div>
             {data.open_rfq_lines.toLocaleString()} open lines · {data.award_rows.toLocaleString()} award prices on file
           </div>
+          {data.model?.real_data && data.model.median_abs_pct_error != null && (
+            <div>
+              Model: median price error {Math.round(data.model.median_abs_pct_error * 100)}% on {data.model.test_rows?.toLocaleString()} recent
+              awards it never saw
+            </div>
+          )}
           {data.checks
             .filter((c) => !c.ok)
             .map((c) => (

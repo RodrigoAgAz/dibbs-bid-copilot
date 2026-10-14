@@ -190,6 +190,20 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   digest, and get a normal recommendation as soon as a quote arrives. Lines with history but no quote keep a
   provisional recommendation. A rules change bumps `ENGINE_VERSION`, which re-computes every open line once
   (queued at boot, re-queued by the hourly ops check if a deploy kills it).
+- **Provisional lines target the likely winning price** (engine v4). Without a supplier quote the landed cost is
+  an assumption (70% of the predicted price), and optimizing expected profit against it still pushed bids to the
+  win-probability floor whenever the range was wide (a 182 ft braid with one prior award at 1 ft: median $128,
+  bid $276). Unquoted lines now bid at P(win) >= 50% (about the predicted median) and show the landed cost a
+  supplier must beat for the minimum margin; quoted lines are optimized against the real cost with the org floor.
+- **Confidence tiers and "best bets" ranking.** high: >= 3 prior awards and q90/q10 <= 2.2; medium: >= 2 awards and
+  q90/q10 <= 4.5; low: the rest with history; none: no history (quote first). The default dashboard order is
+  expected profit x weight (1 / 0.6 / 0.3), so the top of the list is the lines the model understands.
+- **Engine refreshes are version-guarded**: the refresh job refuses to run (and to stamp the version) on a worker
+  still running older code, and the worker queues it at startup, since a deploy overlap once let the outgoing
+  worker stamp v3 on v2 rules.
+- **Demo refresher** (`services/demo_refresh.py`, every 2 h): demo orgs only, up to 12 real open lines with
+  simulated quotes from six fictional "(demo)" suppliers (placeholder CAGE codes ZZD01-06, example.com
+  addresses), so a visitor sees the whole sourcing loop on live RFQs without any real company shown quoting.
 - **Dashboard selects columns**, extracting the three values it needs from the explanation JSON in SQL
   (`#>>` on Postgres, `json_extract` on SQLite) instead of loading thousands of full explanations. Responses are
   gzip-compressed (3.5 MB → about 320 KB for 4,300 lines).

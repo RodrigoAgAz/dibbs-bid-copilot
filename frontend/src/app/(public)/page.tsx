@@ -108,6 +108,35 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {health.data?.model?.real_data && health.data.model.median_abs_pct_error != null && health.data.model.test_rows ? (
+        <section className="border-b bg-card">
+          <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:grid-cols-[1.2fr_2fr] sm:items-center" data-testid="accuracy">
+            <div>
+              <h2 className="text-xl font-semibold">Measured, not promised</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                The pricing model is tested on the {num(health.data.model.test_rows)} most recent real DIBBS awards it never saw during
+                training, and retrained every week as new awards post.
+              </p>
+            </div>
+            <dl className="grid grid-cols-3 gap-4">
+              <Stat label="Median price error" value={`${Math.round(health.data.model.median_abs_pct_error * 100)}%`} />
+              <Stat
+                label="Winning price inside the 80% range"
+                value={health.data.model.coverage_80 != null ? `${Math.round(health.data.model.coverage_80 * 100)}%` : "—"}
+              />
+              <Stat
+                label="Error using the last award price"
+                value={
+                  health.data.model.baseline_median_abs_pct_error != null
+                    ? `${Math.round(health.data.model.baseline_median_abs_pct_error * 100)}%`
+                    : "—"
+                }
+              />
+            </dl>
+          </div>
+        </section>
+      ) : null}
+
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-xl font-semibold">How it works</h2>
         <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

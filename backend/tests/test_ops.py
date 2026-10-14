@@ -120,7 +120,7 @@ def test_scheduler_registers_every_job():
 
     ids = {j.id for j in build_scheduler().get_jobs()}
     assert ids == {"daily_ingest", "nightly_backfill", "award_labeling", "followups", "ops_check", "retrain",
-                   "daily_digest"}
+                   "daily_digest", "demo_refresh"}
 
 
 # ----------------------------------------------------------------------------- data health
@@ -311,3 +311,10 @@ def test_pending_job_check_ignores_jobs_abandoned_by_a_killed_worker(monkeypatch
     job.last_heartbeat = datetime.now(UTC)
     job.save()
     assert jq.pending_job_id(ops_check_job) == job.id
+
+
+def test_engine_refresh_refuses_to_run_on_older_worker_code():
+    from app.jobs import tasks
+
+    out = tasks.refresh_all_recommendations_job("999")
+    assert "skipped" in out

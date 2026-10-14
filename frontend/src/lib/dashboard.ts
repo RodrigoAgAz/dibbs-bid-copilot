@@ -44,15 +44,26 @@ export function splitNoBid(lines: DashboardLine[]): { bid: DashboardLine[]; noBi
   return { bid: lines.filter((l) => !l.no_bid), noBid: lines.filter((l) => l.no_bid) };
 }
 
-export type SortKey = "expected_profit" | "due" | "line_value" | "p_win";
+export type SortKey = "best" | "expected_profit" | "due" | "line_value" | "p_win";
+
+const lineValue = (l: DashboardLine): number => (l.predicted_median ?? 0) * l.quantity;
 
 export function sortLines(lines: DashboardLine[], key: SortKey): DashboardLine[] {
+  if (key === "best") {
+    // Expected profit weighted by prediction confidence; unpriced ("quote first") lines last, biggest first.
+    return [...lines].sort((a, b) => {
+      const ra = a.rank_score ?? null;
+      const rb = b.rank_score ?? null;
+      if (ra === null || rb === null) return ra === rb ? lineValue(b) - lineValue(a) : ra === null ? 1 : -1;
+      return rb - ra;
+    });
+  }
   const v = (l: DashboardLine): number => {
     switch (key) {
       case "due":
         return -(l.days_left ?? 9999);
       case "line_value":
-        return (l.predicted_median ?? 0) * l.quantity;
+        return lineValue(l);
       case "p_win":
         return l.p_win ?? 0;
       default:

@@ -3664,6 +3664,11 @@
           "demo_mode": {
             "type": "boolean",
             "title": "Demo Mode"
+          },
+          "email_delivery": {
+            "type": "boolean",
+            "title": "Email Delivery",
+            "default": false
           }
         },
         "type": "object",

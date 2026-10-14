@@ -74,6 +74,7 @@ def _me(db: Session, user: User) -> MeOut:
         organization=OrganizationOut.model_validate(org),
         voice_globally_enabled=s.voice_enabled,
         demo_mode=s.demo_mode,
+        email_delivery=s.email_provider == "resend" and bool(s.resend_api_key),
     )
 
 

@@ -1405,6 +1405,11 @@ export interface components {
             voice_globally_enabled: boolean;
             /** Demo Mode */
             demo_mode: boolean;
+            /**
+             * Email Delivery
+             * @default false
+             */
+            email_delivery: boolean;
         };
         /** ModelRunOut */
         ModelRunOut: {

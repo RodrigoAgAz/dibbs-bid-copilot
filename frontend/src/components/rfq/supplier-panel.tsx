@@ -11,6 +11,7 @@ import { WriteGuard } from "@/components/common";
 import { FormError } from "@/components/form";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
 import { formatDateTime, money, num, pct } from "@/lib/format";
+import { useMe } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 type Candidate = Schemas["CandidateOut"];
@@ -355,6 +356,7 @@ export function SupplierPanel({
     onError: (e) => setErr(errorMessage(e)),
   });
   const undrafted = candidates.filter((c) => !c.quote_requests.some((q) => q.channel === "email"));
+  const { data: me } = useMe();
   const call = useMutation({
     mutationFn: async (c: Candidate) =>
       unwrap(
@@ -369,6 +371,12 @@ export function SupplierPanel({
 
   return (
     <WriteGuard className="space-y-2">
+      {me && !me.email_delivery && (
+        <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs" data-testid="email-not-configured">
+          Email delivery isn&apos;t set up on this deployment yet: <strong>Send</strong> records the request, but nothing reaches the
+          supplier. Copy the draft into your own email for now.
+        </p>
+      )}
       {undrafted.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>

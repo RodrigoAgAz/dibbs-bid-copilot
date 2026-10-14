@@ -71,6 +71,8 @@ class MeOut(BaseModel):
     organization: OrganizationOut
     voice_globally_enabled: bool
     demo_mode: bool
+    # False while EMAIL_PROVIDER=console: "Send" records quote requests but nothing reaches suppliers.
+    email_delivery: bool = False
 
 
 class InvitationOut(BaseModel):

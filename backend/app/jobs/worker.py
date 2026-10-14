@@ -15,6 +15,7 @@ import os
 import signal
 import sys
 import time
+import uuid
 
 from app.config import get_settings
 from app.jobs.queue import BULK_QUEUE, QUEUE_NAME
@@ -37,7 +38,9 @@ def run_pool(queues: list[str]) -> None:
 
     _logging()
     conn = Redis.from_url(get_settings().redis_url)
-    name = f"{'+'.join(queues)}.{os.getpid()}"
+    # Unique per process: PIDs repeat across container restarts, and a killed container's worker stays
+    # registered in Redis until its TTL expires, so pid-based names collide ("active worker named ...").
+    name = f"{'+'.join(queues)}-{uuid.uuid4().hex[:10]}"
     Worker([Queue(q, connection=conn) for q in queues], connection=conn, name=name).work(with_scheduler=False)
 
 

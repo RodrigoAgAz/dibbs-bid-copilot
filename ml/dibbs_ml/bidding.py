@@ -3,6 +3,10 @@
     P(win | b)   = 1 - F_W(b)                       (W = winning unit price, predicted distribution)
     E[profit](b) = P(win | b) * (b - landed) * quantity
 
+The search is limited to bids with P(win) >= min_p_win. Without that floor, wide (low-data) distributions
+push the argmax into the upper tail: a 5%-to-win bid at 70x the typical price can carry the largest
+"expected profit" while being useless to a broker, and the tail is where the model is least reliable.
+
 Used by the backend recommendation service and by the bidding backtest, so both use one engine.
 """
 
@@ -59,19 +63,25 @@ def recommend_bid(
     approved_source_only: bool = False,
     has_conforming_quote: bool = True,
     return_by_passed: bool = False,
+    min_p_win: float = 0.05,
     grid_points: int = 400,
     curve_points: int = 60,
 ) -> BidRecommendation:
     landed = float(landed_cost)
     qty = max(float(quantity), 0.0)
     lo = _ceil_cent(landed * (1.0 + max(min_margin_pct, 0.0)))
-    hi = round(float(dist.ppf(0.95)), 2)
+    floor_p = min(max(float(min_p_win), 0.05), 0.95)
+    hi = round(float(dist.ppf(1.0 - floor_p)), 2)
     reasons: list[str] = []
 
     if lo > hi:
-        # Even the minimum acceptable bid is above the 95th percentile of the winning price.
+        # Even the minimum acceptable bid has less than floor_p chance of winning.
         grid = np.array([lo])
-        reasons.append("cost too high: minimum-margin bid exceeds the 95th percentile of the expected winning price")
+        reasons.append(
+            f"cost too high: the minimum-margin bid has less than a {floor_p:.0%} chance of winning"
+            if floor_p > 0.05 else
+            "cost too high: minimum-margin bid exceeds the 95th percentile of the expected winning price"
+        )
     else:
         grid = np.unique(np.round(np.linspace(lo, hi, grid_points), 2))
         grid = grid[grid >= lo]  # rounding must never go below landed * (1 + margin)

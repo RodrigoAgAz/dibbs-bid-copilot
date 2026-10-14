@@ -6,6 +6,7 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String
+from sqlalchemy import true as sa_true
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.config import DEFAULT_FSC_WATCHLIST
@@ -47,6 +48,8 @@ class User(Base, TenantOwned):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    # Daily opportunity digest email (app/services/digest.py); users turn it off in Settings.
+    email_digest: Mapped[bool] = mapped_column(Boolean, default=True, server_default=sa_true())
 
     organization: Mapped[Organization] = relationship(back_populates="users")
 
@@ -72,6 +75,8 @@ class OrgSettings(Base, TenantOwned):
     first_article_allowance_per_line: Mapped[float] = mapped_column(Float, default=500.0)
     provisional_cost_fraction: Mapped[float] = mapped_column(Float, default=0.70)
     min_expected_profit: Mapped[float] = mapped_column(Float, default=25.0)
+    # Never recommend a bid with a lower chance of winning (keeps the optimizer out of the unreliable tail).
+    min_p_win: Mapped[float] = mapped_column(Float, default=0.2, server_default="0.2")
     # Sourcing / channels
     auto_send_rfq: Mapped[bool] = mapped_column(Boolean, default=False)
     voice_enabled: Mapped[bool] = mapped_column(Boolean, default=False)

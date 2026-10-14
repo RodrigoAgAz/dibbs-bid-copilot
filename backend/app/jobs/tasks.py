@@ -63,6 +63,13 @@ def followups_job() -> dict:
         return run_followups(db)
 
 
+def daily_digest_job() -> dict:
+    from app.services.digest import send_daily_digests
+
+    with session_scope() as db:
+        return send_daily_digests(db)
+
+
 def ops_check_job() -> dict:
     from app.services.ops import run_ops_check
 

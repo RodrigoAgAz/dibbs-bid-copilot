@@ -55,6 +55,11 @@ class UserOut(BaseModel):
     is_superadmin: bool
     created_at: datetime
     last_login_at: datetime | None
+    email_digest: bool = True
+
+
+class PreferencesIn(BaseModel):
+    email_digest: bool
 
 
 class AuthOptionsOut(BaseModel):

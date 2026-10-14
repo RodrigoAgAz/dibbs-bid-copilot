@@ -110,6 +110,7 @@ class SettingsOut(BaseModel):
     first_article_allowance_per_line: float
     provisional_cost_fraction: float
     min_expected_profit: float
+    min_p_win: float
     auto_send_rfq: bool
     voice_enabled: bool
     email_sender_name: str | None
@@ -131,6 +132,7 @@ class SettingsIn(BaseModel):
     first_article_allowance_per_line: float | None = Field(default=None, ge=0)
     provisional_cost_fraction: float | None = Field(default=None, gt=0, le=2)
     min_expected_profit: float | None = Field(default=None, ge=0)
+    min_p_win: float | None = Field(default=None, ge=0.05, le=0.9)
     auto_send_rfq: bool | None = None
     voice_enabled: bool | None = None
     email_sender_name: str | None = Field(default=None, max_length=200)

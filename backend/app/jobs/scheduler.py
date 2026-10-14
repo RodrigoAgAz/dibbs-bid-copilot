@@ -7,6 +7,7 @@ Schedules (America/New_York); [bulk] jobs run on the separate bulk queue/worker 
   * 07:30 daily      - [bulk] award labeling (newly posted awards, closed tracked solicitations)
   * every hour (:15) - email follow-ups / no_response marking
   * every hour (:45) - data-health check (logs; emails OPS_ALERT_EMAIL while degraded)
+  * Mon-Fri 09:00    - daily opportunity digest emails (after the 06:00/08:00 ingests; needs an email provider)
   * Sunday 03:00     - [bulk] retrain, evaluate, promote if better
 """
 
@@ -29,6 +30,7 @@ SCHEDULE = [
     ("award_labeling", tasks.award_labeling_job, CronTrigger(hour=7, minute=30, timezone=TZ)),
     ("followups", tasks.followups_job, CronTrigger(minute=15, timezone=TZ)),
     ("ops_check", tasks.ops_check_job, CronTrigger(minute=45, timezone=TZ)),
+    ("daily_digest", tasks.daily_digest_job, CronTrigger(day_of_week="mon-fri", hour=9, minute=0, timezone=TZ)),
     ("retrain", tasks.retrain_job, CronTrigger(day_of_week="sun", hour=3, minute=0, timezone=TZ)),
 ]
 

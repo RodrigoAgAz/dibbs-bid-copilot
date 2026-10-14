@@ -82,8 +82,61 @@ def test_dashboard_lists_ranked_lines(client, db):
     assert d["summary"]["lines"] == len(d["lines"]) > 0
     bids = [x for x in d["lines"] if not x["no_bid"]]
     assert [x["expected_profit"] for x in bids] == sorted([x["expected_profit"] for x in bids], reverse=True)
+    # Values extracted from the explanation JSON in SQL (the dashboard doesn't load whole explanations).
+    assert all(isinstance(x["predicted_median"], float) and x["predicted_median"] > 0 for x in d["lines"])
+    assert all(isinstance(x["flags"]["cold_start"], bool) for x in d["lines"])
     sn = d["lines"][0]["solicitation_number"]
     detail = client.get(f"/api/rfq/{sn}").json()
     ln = detail["lines"][0]
     assert ln["prediction"]["levels"][0] == 0.05 and len(ln["history"]) > 0
     assert ln["recommendation"]["explanation"]["curve"]
+
+
+def test_recommendations_respect_the_min_win_probability(client, db):
+    build_world(db, n_open=8)
+    me = signup(client, "p@broker.example.com", org="Pwin Org")
+    r = client.put("/api/settings", json={"min_p_win": 0.4}, headers=csrf(client))
+    assert r.status_code == 200 and r.json()["min_p_win"] == 0.4
+    db.expire_all()
+    recs = db.execute(select(Recommendation).where(Recommendation.organization_id == me["organization"]["id"])).scalars().all()
+    priced = [x for x in recs if not x.no_bid and x.p_win_at_recommended is not None]
+    assert priced and all(x.p_win_at_recommended >= 0.4 - 1e-6 for x in priced)
+    assert client.put("/api/settings", json={"min_p_win": 0.01}, headers=csrf(client)).status_code == 422
+
+
+def test_stale_predictions_are_repriced_when_history_arrives(client, db):
+    from datetime import date, timedelta
+
+    from app.models import AwardHistory, PricePrediction, Solicitation
+    from app.services.pricing import latest_prediction
+    from app.services.recommendations import refresh_stale_predictions
+
+    build_world(db, n_open=6)
+    signup(client, "s@broker.example.com", org="Stale Org")
+    # An open line for a brand-new NSN that hasn't been priced yet.
+    line = db.execute(
+        select(SolicitationLine).join(Solicitation).where(Solicitation.return_by_date >= date.today())
+        .order_by(SolicitationLine.id)
+    ).scalars().first()
+    line.nsn = "5305999999999"
+    line.niin = line.nsn[4:]
+    db.query(PricePrediction).filter(PricePrediction.solicitation_line_id == line.id).delete()
+    db.commit()
+    assert refresh_stale_predictions(db)["repredicted"] == 1  # unpriced lines count as stale
+    db.commit()
+    cold = latest_prediction(db, line.id)
+    assert cold.quantiles["cold_start"] and cold.quantiles["history_rows"] == 0
+    assert refresh_stale_predictions(db)["repredicted"] == 0  # nothing new: nothing repriced
+    # Its procurement history shows up later (a PDF fetched by a later run, the backfill, ...).
+    for i in range(4):
+        db.add(AwardHistory(nsn=line.nsn, award_date=date.today() - timedelta(days=60 * (i + 1)), unit_price=0.05,
+                            quantity=1000, contract_number=f"SPE7M0-STALE-{i}", source="rfq_pdf_history"))
+    db.commit()
+    out = refresh_stale_predictions(db)
+    db.commit()
+    assert out["repredicted"] == 1
+    warm = latest_prediction(db, line.id)
+    assert warm.id != cold.id and not warm.quantiles["cold_start"] and warm.quantiles["history_rows"] == 4
+    assert db.query(PricePrediction).filter(PricePrediction.solicitation_line_id == line.id).count() >= 2
+    rec = db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line.id)).scalar_one()
+    assert rec.price_prediction_id == warm.id

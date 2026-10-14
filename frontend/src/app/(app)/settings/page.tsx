@@ -203,6 +203,14 @@ export default function SettingsPage() {
             <NumberField label="Max line value" value={s.max_line_value} onChange={(v) => set("max_line_value", v)} step="100" suffix="$" hint="No-bid above this" />
             <NumberField label="Minimum expected profit" value={s.min_expected_profit} onChange={(v) => set("min_expected_profit", v)} step="1" suffix="$" hint="No-bid below this" />
             <NumberField
+              label="Minimum chance to win"
+              value={Math.round(s.min_p_win * 100)}
+              onChange={(v) => set("min_p_win", v / 100)}
+              step="5"
+              suffix="%"
+              hint="Never recommend long-shot bids"
+            />
+            <NumberField
               label="Provisional cost estimate"
               value={Math.round(s.provisional_cost_fraction * 100)}
               onChange={(v) => set("provisional_cost_fraction", v / 100)}
@@ -266,7 +274,9 @@ export default function SettingsPage() {
             <label className="flex items-center justify-between gap-3 text-sm">
               <span>
                 Auto-send RFQ emails
-                <span className="block text-xs text-muted-foreground">Send to suppliers with an email as soon as new lines arrive. Off: review drafts first.</span>
+                <span className="block text-xs text-muted-foreground">
+                  Send to candidate suppliers with an email address as soon as new lines arrive. Off: draft and send from each RFQ page.
+                </span>
               </span>
               <Switch checked={s.auto_send_rfq} onCheckedChange={(v) => set("auto_send_rfq", v)} aria-label="Auto-send RFQ emails" />
             </label>
@@ -284,8 +294,45 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        <Notifications />
         <Team />
       </div>
     </WriteGuard>
+  );
+}
+
+/** Personal preferences (saved immediately, per user). */
+function Notifications() {
+  const qc = useQueryClient();
+  const { data: me } = useMe();
+  const save = useMutation({
+    mutationFn: async (email_digest: boolean) => unwrap(await api.PUT("/api/auth/me/preferences", { body: { email_digest } })),
+    onSuccess: (data) => qc.setQueryData(["me"], data),
+  });
+  if (!me) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Notifications</CardTitle>
+        <CardDescription>Your personal email preferences.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <label className="flex items-center justify-between gap-3 text-sm">
+          <span>
+            Daily digest email
+            <span className="block text-xs text-muted-foreground">
+              Weekday mornings: the most profitable new lines, bid-worthy lines closing within two days, and quotes waiting for review.
+            </span>
+          </span>
+          <Switch
+            checked={me.user.email_digest ?? true}
+            onCheckedChange={(v) => save.mutate(v)}
+            disabled={save.isPending}
+            aria-label="Daily digest email"
+          />
+        </label>
+        <FormError message={save.error ? errorMessage(save.error) : null} />
+      </CardContent>
+    </Card>
   );
 }

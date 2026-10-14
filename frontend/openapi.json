@@ -263,6 +263,47 @@
         }
       }
     },
+    "/api/auth/me/preferences": {
+      "put": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update Preferences",
+        "operationId": "update_preferences_api_auth_me_preferences_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/forgot-password": {
       "post": {
         "tags": [
@@ -4019,6 +4060,19 @@
         ],
         "title": "PredictionOut"
       },
+      "PreferencesIn": {
+        "properties": {
+          "email_digest": {
+            "type": "boolean",
+            "title": "Email Digest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email_digest"
+        ],
+        "title": "PreferencesIn"
+      },
       "QuotePatch": {
         "properties": {
           "unit_price": {
@@ -4844,6 +4898,19 @@
             ],
             "title": "Min Expected Profit"
           },
+          "min_p_win": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.9,
+                "minimum": 0.05
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min P Win"
+          },
           "auto_send_rfq": {
             "anyOf": [
               {
@@ -4958,6 +5025,10 @@
             "type": "number",
             "title": "Min Expected Profit"
           },
+          "min_p_win": {
+            "type": "number",
+            "title": "Min P Win"
+          },
           "auto_send_rfq": {
             "type": "boolean",
             "title": "Auto Send Rfq"
@@ -5005,6 +5076,7 @@
           "first_article_allowance_per_line",
           "provisional_cost_fraction",
           "min_expected_profit",
+          "min_p_win",
           "auto_send_rfq",
           "voice_enabled",
           "email_sender_name",
@@ -5904,6 +5976,11 @@
               }
             ],
             "title": "Last Login At"
+          },
+          "email_digest": {
+            "type": "boolean",
+            "title": "Email Digest",
+            "default": true
           }
         },
         "type": "object",

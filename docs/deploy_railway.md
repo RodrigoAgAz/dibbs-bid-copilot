@@ -119,6 +119,7 @@ history, recent awards, then training). After that the scheduler (America/New_Yo
 | 01:00 | incremental backfill: PDFs for uncovered NSNs, older award postings, NSN searches | bulk |
 | 07:30 | award labeling: closed tracked solicitations (backoff 2/5/14 days) + new award postings | bulk |
 | hourly :15 / :45 | quote follow-ups / data-health check | default |
+| weekdays 09:00 | daily digest emails (needs `EMAIL_PROVIDER=resend`) | default |
 | Sunday 03:00 | retrain, promote if better | bulk |
 
 The worker runs one process per queue (`WORKER_POOLS=default;bulk`), so a long backfill never delays the

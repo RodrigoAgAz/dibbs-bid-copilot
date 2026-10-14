@@ -71,52 +71,63 @@ def dashboard(
     today = today_et()
     s = org_settings(ctx.db, ctx.org_id)
     fscs = fsc or list(s.fsc_watchlist or [])
+    # Columns only: loading whole Recommendation rows would pull every explanation JSON (curve, similar awards,
+    # contributions), megabytes for the thousands of open lines a live org has. Three small values come from it.
+    ex = Recommendation.explanation
+    R, L, S = Recommendation, SolicitationLine, Solicitation
     rows = ctx.db.execute(
-        select(Recommendation, SolicitationLine, Solicitation)
-        .join(SolicitationLine, Recommendation.solicitation_line_id == SolicitationLine.id)
-        .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
+        select(
+            L.id, S.solicitation_number, L.line_no, S.type_code, S.return_by_date, L.nsn, L.fsc, L.nomenclature,
+            L.quantity, L.unit_of_issue, S.set_aside, R.landed_cost_per_unit, R.recommended_bid, R.conservative_bid,
+            R.aggressive_bid, R.p_win_at_recommended, R.expected_profit, R.no_bid, R.no_bid_reason, R.actual_bid,
+            R.provisional, S.fast_award, L.approved_source_only, S.first_article, S.aidc,
+            ex[("distribution", "median")].as_float().label("median"),
+            ex["low_data"].as_boolean().label("low_data"),
+            ex["cold_start"].as_boolean().label("cold_start"),
+        )
+        .join(L, R.solicitation_line_id == L.id)
+        .join(S, L.solicitation_id == S.id)
         .where(
-            or_(Solicitation.return_by_date.is_(None), Solicitation.return_by_date >= today),
-            SolicitationLine.fsc.in_(fscs),
+            or_(S.return_by_date.is_(None), S.return_by_date >= today),
+            L.fsc.in_(fscs),
         )
     ).all()
-    summaries = quote_summaries(ctx, [ln.id for _, ln, _ in rows])
+    summaries = quote_summaries(ctx, [r.id for r in rows])
     lines: list[DashboardLine] = []
-    for rec, ln, sol in rows:
-        ex = rec.explanation or {}
+    for r in rows:
         lines.append(
             DashboardLine(
-                line_id=ln.id,
-                solicitation_number=sol.solicitation_number,
-                line_no=ln.line_no,
-                type_code=sol.type_code,
-                return_by_date=sol.return_by_date,
-                days_left=(sol.return_by_date - today).days if sol.return_by_date else None,
-                nsn=ln.nsn,
-                fsc=ln.fsc,
-                nomenclature=ln.nomenclature,
-                quantity=ln.quantity,
-                unit_of_issue=ln.unit_of_issue,
-                set_aside=sol.set_aside,
-                predicted_median=(ex.get("distribution") or {}).get("median"),
-                landed_cost=rec.landed_cost_per_unit,
-                recommended_bid=rec.recommended_bid,
-                conservative_bid=rec.conservative_bid,
-                aggressive_bid=rec.aggressive_bid,
-                p_win=rec.p_win_at_recommended,
-                expected_profit=rec.expected_profit,
-                no_bid=rec.no_bid,
-                no_bid_reason=rec.no_bid_reason,
-                actual_bid=rec.actual_bid,
-                quote_status=summaries.get(ln.id, QuoteStatusSummary()),
+                line_id=r.id,
+                solicitation_number=r.solicitation_number,
+                line_no=r.line_no,
+                type_code=r.type_code,
+                return_by_date=r.return_by_date,
+                days_left=(r.return_by_date - today).days if r.return_by_date else None,
+                nsn=r.nsn,
+                fsc=r.fsc,
+                nomenclature=r.nomenclature,
+                quantity=r.quantity,
+                unit_of_issue=r.unit_of_issue,
+                set_aside=r.set_aside,
+                predicted_median=r.median,
+                landed_cost=r.landed_cost_per_unit,
+                recommended_bid=r.recommended_bid,
+                conservative_bid=r.conservative_bid,
+                aggressive_bid=r.aggressive_bid,
+                p_win=r.p_win_at_recommended,
+                expected_profit=r.expected_profit,
+                no_bid=r.no_bid,
+                no_bid_reason=r.no_bid_reason,
+                actual_bid=r.actual_bid,
+                quote_status=summaries.get(r.id, QuoteStatusSummary()),
                 flags=Flags(
-                    fast_award=sol.fast_award,
-                    approved_source_only=ln.approved_source_only,
-                    low_data=bool(ex.get("low_data")),
-                    cold_start=bool(ex.get("cold_start")),
-                    provisional=rec.provisional,
-                    first_article=sol.first_article,
-                    aidc=sol.aidc,
+                    fast_award=r.fast_award,
+                    approved_source_only=r.approved_source_only,
+                    low_data=bool(r.low_data),
+                    cold_start=bool(r.cold_start),
+                    provisional=r.provisional,
+                    first_article=r.first_article,
+                    aidc=r.aidc,
                 ),
             )
         )

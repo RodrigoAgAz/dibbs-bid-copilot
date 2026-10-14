@@ -169,6 +169,30 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   pipeline timestamps, nothing tenant-specific. Thresholds: ingest success within 14 h, labeling within 30 h,
   newest index file at most 4 days old (weekend + holiday).
 
+## Recommendation quality (found on live data)
+- **Minimum chance to win** (`org_settings.min_p_win`, default 20%, migration 0004). On live data 28% of
+  bid-worthy lines were recommended at P(win) < 20% and 159 at the 5% grid edge, e.g. a lock washer whose history
+  is $0.02-0.13 recommended at $10.29 (P(win) 5%, "expected profit" $77k). Those tail bids carried 47% of the
+  summed expected profit. Wide (low-data) distributions push the argmax into the tail, which is also where the
+  quantile model is least reliable, and a broker gains nothing from 1-in-20 bids. The bid search is now limited to
+  P(win) >= min_p_win; if even the minimum-margin bid is below it, the line is a no-bid ("cost too high").
+- **Stale predictions are re-priced.** 1,856 of 4,273 live open lines were priced as cold start, many of them for
+  NSNs that do have history: it arrived after the line was first priced (ingest fetches at most 600 PDFs per run,
+  backfill and labeling add rows later). Predictions now record `history_rows`; every ingest run re-prices open
+  lines whose NSN has more award rows on file than when they were priced, and refreshes every org's
+  recommendations for them. Only the ingest (default queue, never concurrent with itself) does this, so two jobs
+  never upsert the same recommendations at once.
+- **Dashboard selects columns**, extracting the three values it needs from the explanation JSON in SQL
+  (`#>>` on Postgres, `json_extract` on SQLite) instead of loading thousands of full explanations. Responses are
+  gzip-compressed (3.5 MB → about 320 KB for 4,300 lines).
+
+## Daily digest
+- Weekdays 09:00 ET (after the 06:00/08:00 ingests), one email per owner/member with: the most profitable
+  bid-worthy lines that arrived in the last 26 h, bid-worthy lines closing within 2 days without a recorded bid,
+  and quotes waiting for review. No news, no email. Opt-out per user in Settings (`users.email_digest`). Never for
+  demo/internal orgs, and skipped entirely while `EMAIL_PROVIDER=console` (it would only fill the outbox table).
+  Idempotent per user per day (ingest_checkpoints `digest`).
+
 ## Accounts and the public demo
 - **Read-only `viewer` role.** Enforced once, in `get_current_user`: any non-GET request from a viewer is 403,
   whatever the endpoint, so new endpoints can't forget the check. The UI wraps write controls in `WriteGuard`

@@ -151,6 +151,7 @@ def predict_line(
         "low_data": n_prior < LOW_DATA_PRIOR_AWARDS,
         "cold_start": is_cold,
         "n_prior_awards": n_prior,
+        "history_rows": len(hist),  # award rows on file when priced; more later = stale (refresh_stale_predictions)
         "reference_price": round(cold_ref if is_cold else ref, 4),
         "reference_type": cold_ref_type if is_cold else ref_type,
         "model": model_name,

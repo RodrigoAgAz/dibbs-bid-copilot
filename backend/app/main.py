@@ -7,6 +7,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.config import get_settings
 from app.core.security import ACCESS_COOKIE, CSRF_COOKIE, CSRF_HEADER, REFRESH_COOKIE, csrf_matches
@@ -33,6 +34,8 @@ def create_app() -> FastAPI:
         description="Bid recommendations for DLA DIBBS solicitations. The app never submits bids.",
     )
 
+    # The dashboard returns every open line in the org's FSCs (thousands in live mode): compress it.
+    app.add_middleware(GZipMiddleware, minimum_size=2048)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[s.frontend_origin],

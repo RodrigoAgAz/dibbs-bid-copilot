@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import date
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.timeutil import today_et
@@ -102,6 +102,7 @@ def upsert_recommendation(
         min_margin_pct=s.min_margin_pct,
         min_expected_profit=s.min_expected_profit,
         max_line_value=s.max_line_value,
+        min_p_win=s.min_p_win,
         approved_source_only=line.approved_source_only,
         has_conforming_quote=has_conforming,
         return_by_passed=bool(sol.return_by_date and sol.return_by_date < today),
@@ -207,6 +208,60 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
     rec = upsert_recommendation(db, org_id, s, line, pred)
     db.flush()
     return rec
+
+
+def refresh_stale_predictions(db: Session, limit: int | None = None) -> dict:
+    """Re-price open lines whose NSN gained award history after they were priced, then refresh every org's
+    recommendations for them.
+
+    History arrives after a line is first priced all the time: the ingest fetches a bounded number of RFQ PDFs
+    per run, the nightly backfill and award labeling add rows, and other solicitations for the same NSN bring
+    their own procurement history. Without this, such lines keep a cold-start (FSC-wide) prediction.
+    """
+    from app.models import AwardHistory, Organization, PricePrediction
+
+    lines = open_lines(db)
+    if not lines:
+        return {"stale": 0, "repredicted": 0}
+    nsns = sorted({ln.nsn for ln in lines})
+    counts: dict[str, int] = {}
+    for i in range(0, len(nsns), 1000):
+        counts.update(db.execute(
+            select(AwardHistory.nsn, func.count())
+            .where(AwardHistory.nsn.in_(nsns[i:i + 1000]), AwardHistory.unit_price > 0, AwardHistory.quantity > 0)
+            .group_by(AwardHistory.nsn)
+        ).all())
+    ids = [ln.id for ln in lines]
+    latest: dict[int, dict] = {}
+    for i in range(0, len(ids), 1000):
+        chunk = ids[i:i + 1000]
+        newest = (
+            select(PricePrediction.solicitation_line_id, func.max(PricePrediction.id).label("pid"))
+            .where(PricePrediction.solicitation_line_id.in_(chunk))
+            .group_by(PricePrediction.solicitation_line_id)
+            .subquery()
+        )
+        latest.update(db.execute(
+            select(PricePrediction.solicitation_line_id, PricePrediction.quantiles)
+            .join(newest, PricePrediction.id == newest.c.pid)
+        ).all())
+    stale = []
+    for ln in lines:
+        q = latest.get(ln.id)
+        used = None if q is None else q.get("history_rows", q.get("n_prior_awards", 0))
+        if used is None or counts.get(ln.nsn, 0) > used:
+            stale.append(ln)
+    todo = stale[:limit] if limit else stale
+    if todo:
+        idx = fsc_median_index(db, {ln.fsc for ln in todo}, today_et())
+        for ln in todo:
+            predict_line(db, ln, fsc_index=idx)
+        db.flush()
+        todo_ids = [ln.id for ln in todo]
+        for org_id in db.execute(select(Organization.id)).scalars():
+            refresh_org_recommendations(db, org_id, line_ids=todo_ids)
+        db.flush()
+    return {"stale": len(stale), "repredicted": len(todo)}
 
 
 def orgs_watching(db: Session, fsc: str) -> list[int]:

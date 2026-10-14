@@ -185,6 +185,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Preferences */
+        put: operations["update_preferences_api_auth_me_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -1518,6 +1535,11 @@ export interface components {
              */
             created_at: string;
         };
+        /** PreferencesIn */
+        PreferencesIn: {
+            /** Email Digest */
+            email_digest: boolean;
+        };
         /** QuotePatch */
         QuotePatch: {
             /** Unit Price */
@@ -1745,6 +1767,8 @@ export interface components {
             provisional_cost_fraction?: number | null;
             /** Min Expected Profit */
             min_expected_profit?: number | null;
+            /** Min P Win */
+            min_p_win?: number | null;
             /** Auto Send Rfq */
             auto_send_rfq?: boolean | null;
             /** Voice Enabled */
@@ -1784,6 +1808,8 @@ export interface components {
             provisional_cost_fraction: number;
             /** Min Expected Profit */
             min_expected_profit: number;
+            /** Min P Win */
+            min_p_win: number;
             /** Auto Send Rfq */
             auto_send_rfq: boolean;
             /** Voice Enabled */
@@ -2014,6 +2040,11 @@ export interface components {
             created_at: string;
             /** Last Login At */
             last_login_at: string | null;
+            /**
+             * Email Digest
+             * @default true
+             */
+            email_digest: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -2259,6 +2290,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    update_preferences_api_auth_me_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferencesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

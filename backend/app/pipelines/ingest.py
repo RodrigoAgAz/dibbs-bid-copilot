@@ -172,6 +172,12 @@ def run_daily_ingest(db: Session, mode: str | None = None, only_date: date | Non
         db.commit()
         if make_recommendations and new_lines:
             summary.update(_predict_and_recommend(db, [ln.id for ln in new_lines]))
+        if make_recommendations:
+            # Lines priced before their NSN's history arrived (PDFs fetched later, backfill, labeling).
+            from app.services.recommendations import refresh_stale_predictions
+
+            summary["stale_repriced"] = refresh_stale_predictions(db)["repredicted"]
+            db.commit()
         run.status = "success" if not errors else "partial"
     except Exception as exc:
         db.rollback()

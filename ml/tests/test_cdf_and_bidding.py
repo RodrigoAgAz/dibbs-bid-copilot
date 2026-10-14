@@ -93,3 +93,18 @@ def test_no_bid_rules():
     # A good line is a bid.
     r = recommend_bid(d, 7.0, 100, min_expected_profit=25)
     assert not r.no_bid and r.no_bid_reason is None
+
+
+def test_min_p_win_keeps_wide_distributions_out_of_the_tail():
+    # A wide (cold-start-like) distribution with a cheap landed cost: unconstrained, the argmax sits in the
+    # far upper tail (P(win) under 10%, the live failure mode); with the floor it stays at P(win) >= 20%.
+    d = PriceDistribution.lognormal(math.log(0.15), 1.8)
+    free = recommend_bid(d, 0.10, 150_000)
+    assert free.p_win < 0.1
+    capped = recommend_bid(d, 0.10, 150_000, min_p_win=0.2)
+    assert capped.p_win >= 0.2 - 1e-6
+    assert capped.recommended_bid <= round(float(d.ppf(0.8)), 2) + 0.01
+    assert capped.grid_high == pytest.approx(round(float(d.ppf(0.8)), 2))
+    # When even the minimum-margin bid is a long shot, it's a no-bid with a clear reason.
+    r = recommend_bid(PriceDistribution.lognormal(math.log(10), 0.2), 12.0, 10, min_p_win=0.3)
+    assert r.no_bid and "less than a 30% chance" in r.no_bid_reason

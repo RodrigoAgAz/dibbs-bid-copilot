@@ -119,7 +119,8 @@ def test_scheduler_registers_every_job():
     from app.jobs.scheduler import build_scheduler
 
     ids = {j.id for j in build_scheduler().get_jobs()}
-    assert ids == {"daily_ingest", "nightly_backfill", "award_labeling", "followups", "ops_check", "retrain"}
+    assert ids == {"daily_ingest", "nightly_backfill", "award_labeling", "followups", "ops_check", "retrain",
+                   "daily_digest"}
 
 
 # ----------------------------------------------------------------------------- data health

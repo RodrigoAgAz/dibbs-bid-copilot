@@ -31,6 +31,7 @@ from app.schemas.auth import (
     MeOut,
     OkOut,
     OrganizationOut,
+    PreferencesIn,
     ResetPasswordIn,
     SignupIn,
     UserOut,
@@ -68,6 +69,7 @@ def _me(db: Session, user: User) -> MeOut:
             is_superadmin=user.is_superadmin,
             created_at=user.created_at,
             last_login_at=user.last_login_at,
+            email_digest=user.email_digest,
         ),
         organization=OrganizationOut.model_validate(org),
         voice_globally_enabled=s.voice_enabled,
@@ -164,6 +166,13 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
 
 @router.get("/me", response_model=MeOut)
 def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> MeOut:
+    return _me(db, user)
+
+
+@router.put("/me/preferences", response_model=MeOut)
+def update_preferences(body: PreferencesIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> MeOut:
+    user.email_digest = body.email_digest
+    db.commit()
     return _me(db, user)
 
 

@@ -40,6 +40,8 @@ class Solicitation(Base):
     pdf_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     raw_json: Mapped[dict | None] = mapped_column(JSONType, nullable=True)
     details_fetched_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    # Last record-page check for an award (award labeling backs off as the solicitation ages).
+    award_checked_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     lines: Mapped[list[SolicitationLine]] = relationship(

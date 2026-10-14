@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -42,3 +43,46 @@ def ready(db: Session = Depends(get_db)) -> dict:
         "email_provider": s.email_provider,
         "voice_enabled": s.voice_enabled,
     }
+
+
+class HealthCheckOut(BaseModel):
+    name: str
+    ok: bool
+    detail: str
+
+
+class PipelineRunOut(BaseModel):
+    last_success_at: str | None
+    last_status: str | None
+    last_finished_at: str | None
+
+
+class ActiveModelOut(BaseModel):
+    run_id: int
+    trained_at: str | None
+    pinball_mean: float | None
+
+
+class DataHealthOut(BaseModel):
+    status: str  # ok | degraded
+    checked_at: str
+    connector_mode: str
+    newest_rfq_posting_date: str | None
+    open_rfq_lines: int
+    award_rows: int
+    award_rows_last_30_days: int
+    nsns_with_history: int
+    model: ActiveModelOut | None
+    runs: dict[str, PipelineRunOut]
+    checks: list[HealthCheckOut]
+
+
+@router.get("/api/health/data", response_model=DataHealthOut)
+def data_health(db: Session = Depends(get_db)) -> dict:
+    """Public data freshness (DIBBS-derived counts and pipeline timestamps only; no tenant data).
+
+    Drives the "data updated" indicator in the app and lets operators check a deployment without logging in.
+    """
+    from app.services.ops import data_health as compute
+
+    return compute(db)

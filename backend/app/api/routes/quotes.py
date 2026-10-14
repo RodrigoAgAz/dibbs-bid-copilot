@@ -24,6 +24,7 @@ from app.models import (
 from app.schemas.rfq import (
     CallIn,
     CallLogOut,
+    DraftRequestsIn,
     ManualQuoteIn,
     NewQuoteRequestIn,
     QuotePatch,
@@ -36,6 +37,7 @@ from app.schemas.rfq import (
 from app.services.recommendations import refresh_line_for_org
 from app.services.sourcing import (
     _email_context,
+    create_draft_requests,
     history_median,
     process_inbound_email,
     regenerate_draft,
@@ -86,6 +88,19 @@ def add_quote_request(line_id: int, body: NewQuoteRequestIn, ctx: TenantContext 
     qr.email_subject, qr.email_body = d.subject, d.body
     ctx.db.commit()
     return quote_request_out(ctx, qr)
+
+
+@router.post("/rfq/lines/{line_id}/quote-requests/draft", response_model=list[QuoteRequestOut], status_code=201)
+def draft_quote_requests(line_id: int, body: DraftRequestsIn, ctx: TenantContext = Depends(get_tenant)) -> list[QuoteRequestOut]:
+    """Draft email quote requests for this line's candidate suppliers (all, or the given CAGEs). Never sends."""
+    from app.services.recommendations import org_settings
+
+    line = _line(ctx, line_id)
+    cages = {c.strip().upper() for c in body.cage_codes} if body.cage_codes is not None else None
+    created = create_draft_requests(ctx.db, ctx.org_id, line, org_settings(ctx.db, ctx.org_id), cage_codes=cages,
+                                    allow_auto_send=False)
+    ctx.db.commit()
+    return [quote_request_out(ctx, qr) for qr in created]
 
 
 @router.patch("/quote-requests/{qr_id}", response_model=QuoteRequestOut)

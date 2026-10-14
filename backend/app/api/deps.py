@@ -21,6 +21,10 @@ def _token_from_request(request: Request) -> str | None:
     return None
 
 
+SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+READ_ONLY_DETAIL = "This account is read-only. Create your own account to make changes."
+
+
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     token = _token_from_request(request)
     payload = decode_access_token(token) if token else None
@@ -29,6 +33,9 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     user = db.get(User, int(payload["sub"]))
     if user is None or not user.is_active or user.organization_id != payload.get("org"):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+    # Viewers (read-only seats and the public demo) can never change anything, whatever the endpoint.
+    if user.role == UserRole.viewer and request.method not in SAFE_METHODS:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, READ_ONLY_DETAIL)
     return user
 
 

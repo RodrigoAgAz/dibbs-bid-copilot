@@ -7,12 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FormError } from "@/components/form";
 import { api, errorMessage } from "@/lib/api/client";
+import { useAuthOptions } from "@/lib/hooks";
 
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const options = useAuthOptions();
+
+  async function exploreDemo() {
+    setBusy(true);
+    setError(null);
+    const { error } = await api.POST("/api/auth/demo");
+    setBusy(false);
+    if (error) return setError(errorMessage(error));
+    router.replace("/dashboard");
+    router.refresh();
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,6 +55,18 @@ export default function LoginPage() {
           <Button type="submit" disabled={busy}>
             {busy ? "Logging in…" : "Log in"}
           </Button>
+          {options.data?.public_demo && (
+            <>
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                or
+                <span className="h-px flex-1 bg-border" />
+              </div>
+              <Button type="button" variant="outline" disabled={busy} onClick={exploreDemo} data-testid="explore-demo">
+                Explore the live demo (no sign-up)
+              </Button>
+            </>
+          )}
           <div className="flex justify-between text-xs">
             <Link className="text-primary hover:underline" href="/forgot-password">
               Forgot password?

@@ -52,6 +52,28 @@
         }
       }
     },
+    "/api/health/data": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Data Health",
+        "description": "Public data freshness (DIBBS-derived counts and pipeline timestamps only; no tenant data).\n\nDrives the \"data updated\" indicator in the app and lets operators check a deployment without logging in.",
+        "operationId": "data_health_api_health_data_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataHealthOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/signup": {
       "post": {
         "tags": [
@@ -127,6 +149,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/options": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Options",
+        "description": "What the login page should offer (public).",
+        "operationId": "options_api_auth_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthOptionsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/demo": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Demo Login",
+        "description": "\"Explore the demo\": a read-only session in the Atlas demo org (PUBLIC_DEMO=true only).",
+        "operationId": "demo_login_api_auth_demo_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
                 }
               }
             }
@@ -993,6 +1059,63 @@
         }
       }
     },
+    "/api/rfq/lines/{line_id}/quote-requests/draft": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Draft Quote Requests",
+        "description": "Draft email quote requests for this line's candidate suppliers (all, or the given CAGEs). Never sends.",
+        "operationId": "draft_quote_requests_api_rfq_lines__line_id__quote_requests_draft_post",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftRequestsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuoteRequestOut"
+                  },
+                  "title": "Response Draft Quote Requests Api Rfq Lines  Line Id  Quote Requests Draft Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/quote-requests/{qr_id}": {
       "patch": {
         "tags": [
@@ -1814,6 +1937,43 @@
         ],
         "title": "AcceptInviteIn"
       },
+      "ActiveModelOut": {
+        "properties": {
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id"
+          },
+          "trained_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trained At"
+          },
+          "pinball_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinball Mean"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "trained_at",
+          "pinball_mean"
+        ],
+        "title": "ActiveModelOut"
+      },
       "ActualBidIn": {
         "properties": {
           "actual_bid": {
@@ -1860,6 +2020,19 @@
           "part_number"
         ],
         "title": "ApprovedSourceOut"
+      },
+      "AuthOptionsOut": {
+        "properties": {
+          "public_demo": {
+            "type": "boolean",
+            "title": "Public Demo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "public_demo"
+        ],
+        "title": "AuthOptionsOut"
       },
       "AwardOut": {
         "properties": {
@@ -2470,6 +2643,109 @@
         ],
         "title": "DashboardSummary"
       },
+      "DataHealthOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "checked_at": {
+            "type": "string",
+            "title": "Checked At"
+          },
+          "connector_mode": {
+            "type": "string",
+            "title": "Connector Mode"
+          },
+          "newest_rfq_posting_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newest Rfq Posting Date"
+          },
+          "open_rfq_lines": {
+            "type": "integer",
+            "title": "Open Rfq Lines"
+          },
+          "award_rows": {
+            "type": "integer",
+            "title": "Award Rows"
+          },
+          "award_rows_last_30_days": {
+            "type": "integer",
+            "title": "Award Rows Last 30 Days"
+          },
+          "nsns_with_history": {
+            "type": "integer",
+            "title": "Nsns With History"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActiveModelOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "runs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PipelineRunOut"
+            },
+            "type": "object",
+            "title": "Runs"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/HealthCheckOut"
+            },
+            "type": "array",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checked_at",
+          "connector_mode",
+          "newest_rfq_posting_date",
+          "open_rfq_lines",
+          "award_rows",
+          "award_rows_last_30_days",
+          "nsns_with_history",
+          "model",
+          "runs",
+          "checks"
+        ],
+        "title": "DataHealthOut"
+      },
+      "DraftRequestsIn": {
+        "properties": {
+          "cage_codes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cage Codes"
+          }
+        },
+        "type": "object",
+        "title": "DraftRequestsIn"
+      },
       "EmailOut": {
         "properties": {
           "id": {
@@ -2598,6 +2874,29 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HealthCheckOut": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "ok",
+          "detail"
+        ],
+        "title": "HealthCheckOut"
       },
       "HistoryOut": {
         "properties": {
@@ -2991,7 +3290,7 @@
           },
           "role": {
             "type": "string",
-            "pattern": "^(owner|member)$",
+            "pattern": "^(owner|member|viewer)$",
             "title": "Role",
             "default": "member"
           }
@@ -3564,6 +3863,50 @@
           "unknown"
         ],
         "title": "PhoneType"
+      },
+      "PipelineRunOut": {
+        "properties": {
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "last_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Status"
+          },
+          "last_finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "last_success_at",
+          "last_status",
+          "last_finished_at"
+        ],
+        "title": "PipelineRunOut"
       },
       "PredictionOut": {
         "properties": {

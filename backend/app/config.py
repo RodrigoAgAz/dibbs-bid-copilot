@@ -75,6 +75,19 @@ class Settings(BaseSettings):
     auto_seed: bool = False
     # Live mode: on first boot, queue an initial load (recent RFQs + PDF history + train) on the worker.
     auto_backfill: bool = False
+    # Live mode: nightly incremental backfill (more procurement history + award postings) on the bulk queue.
+    nightly_backfill: bool = True
+    # Ops: email this address (throttled) when data goes stale or a pipeline fails. Needs a real email provider.
+    ops_alert_email: str = ""
+
+    # Public demo: "Explore the demo" signs visitors in as a read-only viewer of the Atlas demo org.
+    public_demo: bool = False
+    # False = the seeded demo accounts (DEMO_CREDENTIALS.md) cannot log in with their published passwords;
+    # bootstrap replaces their password hashes at every boot. Set false on any internet-facing deployment.
+    demo_password_login: bool = True
+    # Ensure this superadmin exists at boot (password re-applied each boot, so the variable is the source of truth).
+    bootstrap_admin_email: str = ""
+    bootstrap_admin_password: str = ""
 
     @field_validator("database_url")
     @classmethod

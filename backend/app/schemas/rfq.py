@@ -297,6 +297,10 @@ class NewQuoteRequestIn(BaseModel):
     part_number: str | None = Field(default=None, max_length=100)
 
 
+class DraftRequestsIn(BaseModel):
+    cage_codes: list[str] | None = Field(default=None, max_length=50)
+
+
 class SimulatedReplyIn(BaseModel):
     text: str = Field(min_length=1, max_length=20000)
 

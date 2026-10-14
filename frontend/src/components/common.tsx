@@ -3,7 +3,18 @@
 import * as React from "react";
 import { AlertTriangle, Inbox } from "lucide-react";
 import { Badge, Spinner, Tip } from "@/components/ui/misc";
+import { useReadOnly } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+
+/** Disables every control inside for read-only seats and the public demo (the API enforces this too). */
+export function WriteGuard({ children, className }: { children: React.ReactNode; className?: string }) {
+  const readOnly = useReadOnly();
+  return (
+    <fieldset disabled={readOnly} className={cn("m-0 min-w-0 border-0 p-0", className)} title={readOnly ? "Read-only access" : undefined}>
+      {children}
+    </fieldset>
+  );
+}
 
 export function PageHeader({ title, description, actions }: { title: string; description?: React.ReactNode; actions?: React.ReactNode }) {
   return (

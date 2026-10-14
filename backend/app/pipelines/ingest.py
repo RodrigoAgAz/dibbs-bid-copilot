@@ -236,6 +236,6 @@ def _predict_and_recommend(db: Session, line_ids: list[int]) -> dict:
             continue
         ids = [ln.id for ln in lines if ln.fsc in (s.fsc_watchlist or [])]
         if ids:
-            out["recommendations"] += refresh_org_recommendations(db, s.organization_id, create_quote_drafts=True, line_ids=ids)
+            out["recommendations"] += refresh_org_recommendations(db, s.organization_id, auto_quotes=True, line_ids=ids)
             db.commit()
     return out

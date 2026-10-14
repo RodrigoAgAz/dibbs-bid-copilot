@@ -114,3 +114,16 @@ export const FEATURE_LABELS: Record<string, string> = {
   fob: "FOB",
   ref_type: "Reference price type",
 };
+
+/** "just now", "12 min ago", "3 h ago", "2 days ago" (null -> "never"). */
+export function timeAgo(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return "never";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "—";
+  const mins = Math.max(0, Math.round((now.getTime() - t) / 60_000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 48) return `${hours} h ago`;
+  return `${Math.round(hours / 24)} days ago`;
+}

@@ -39,6 +39,29 @@ def _line_with_sources(db, line_ids, aso: bool | None = None):
     raise AssertionError("no suitable line")
 
 
+def _draft(client, db, ln) -> QuoteRequest:
+    """Quote requests are drafted on demand from the RFQ page (none exist right after signup)."""
+    assert db.execute(select(QuoteRequest).where(QuoteRequest.solicitation_line_id == ln.id)).first() is None
+    r = client.post(f"/api/rfq/lines/{ln.id}/quote-requests/draft", json={}, headers=csrf(client))
+    assert r.status_code == 201 and r.json(), r.text
+    db.expire_all()
+    return db.get(QuoteRequest, r.json()[0]["id"])
+
+
+def test_on_demand_drafts_are_idempotent_and_filterable(client, db):
+    _, line_ids, org_id = _setup(client, db)
+    ln = _line_with_sources(db, line_ids)
+    cands = candidate_suppliers(db, org_id, ln)
+    first = cands[0].cage_code
+    r = client.post(f"/api/rfq/lines/{ln.id}/quote-requests/draft", json={"cage_codes": [first]}, headers=csrf(client))
+    assert r.status_code == 201 and [q["cage_code"] for q in r.json()] == [first]
+    r = client.post(f"/api/rfq/lines/{ln.id}/quote-requests/draft", json={}, headers=csrf(client))
+    assert {q["cage_code"] for q in r.json()} == {c.cage_code for c in cands} - {first}
+    r = client.post(f"/api/rfq/lines/{ln.id}/quote-requests/draft", json={}, headers=csrf(client))
+    assert r.json() == []  # nothing left to draft
+    assert all(q.status == QuoteRequestStatus.draft for q in db.execute(select(QuoteRequest)).scalars())
+
+
 def test_candidate_order_approved_then_historical_then_saved(client, db):
     _, line_ids, org_id = _setup(client, db)
     ln = _line_with_sources(db, line_ids)
@@ -54,7 +77,7 @@ def test_candidate_order_approved_then_historical_then_saved(client, db):
 def test_send_email_and_signed_inbound_reply_updates_recommendation(client, app, db):
     _, line_ids, org_id = _setup(client, db)
     ln = _line_with_sources(db, line_ids, aso=False)
-    qr = db.execute(select(QuoteRequest).where(QuoteRequest.solicitation_line_id == ln.id)).scalars().first()
+    qr = _draft(client, db, ln)
     assert qr is not None and qr.status == QuoteRequestStatus.draft and "RFQ" in qr.email_subject
     r = client.patch(f"/api/quote-requests/{qr.id}", json={"email_to": "sales@supplier.example.com"}, headers=csrf(client))
     assert r.status_code == 200
@@ -89,7 +112,7 @@ def test_send_email_and_signed_inbound_reply_updates_recommendation(client, app,
 def test_review_queue_for_low_confidence_and_outliers(client, db):
     _, line_ids, org_id = _setup(client, db)
     ln = _line_with_sources(db, line_ids, aso=False)
-    qr = db.execute(select(QuoteRequest).where(QuoteRequest.solicitation_line_id == ln.id)).scalars().first()
+    qr = _draft(client, db, ln)
     r = client.post(f"/api/quote-requests/{qr.id}/simulate-reply", headers=csrf(client),
                     json={"text": "We have it. About $1.10 for small lots or $0.90 for bigger ones."})
     assert r.status_code == 200
@@ -108,7 +131,7 @@ def test_aso_line_non_conforming_quote_is_flagged(client, db):
         db.get(SolicitationLine, i).approved_source_only for i in line_ids) else None
     if ln is None:
         return
-    qr = db.execute(select(QuoteRequest).where(QuoteRequest.solicitation_line_id == ln.id)).scalars().first()
+    qr = _draft(client, db, ln)
     client.post(f"/api/quote-requests/{qr.id}/simulate-reply", headers=csrf(client),
                 json={"text": "We can offer an equivalent, P/N ALT-12345, unit price $2.00 each, 2 weeks."})
     q = db.execute(select(SupplierQuote).where(SupplierQuote.quote_request_id == qr.id)).scalar_one()
@@ -120,7 +143,7 @@ def test_aso_line_non_conforming_quote_is_flagged(client, db):
 def test_followups_and_no_response(client, db):
     _, line_ids, org_id = _setup(client, db)
     ln = db.get(SolicitationLine, line_ids[0])
-    qr = db.execute(select(QuoteRequest).where(QuoteRequest.solicitation_line_id == ln.id)).scalars().first()
+    qr = _draft(client, db, ln)
     qr.email_to = "x@supplier.example.com"
     qr.status = QuoteRequestStatus.sent
     qr.sent_at = datetime.now(UTC) - timedelta(hours=49)
@@ -143,7 +166,7 @@ def test_followups_and_no_response(client, db):
 def test_manual_quote_and_actual_bid(client, db):
     _, line_ids, org_id = _setup(client, db)
     ln = _line_with_sources(db, line_ids, aso=False)
-    qr = db.execute(select(QuoteRequest).where(QuoteRequest.solicitation_line_id == ln.id)).scalars().first()
+    qr = _draft(client, db, ln)
     r = client.post(f"/api/quote-requests/{qr.id}/quotes", json={"unit_price": 2.5, "lead_time_days": 10}, headers=csrf(client))
     assert r.status_code == 201
     r = client.post(f"/api/rfq/lines/{ln.id}/actual-bid", json={"actual_bid": 3.999}, headers=csrf(client))

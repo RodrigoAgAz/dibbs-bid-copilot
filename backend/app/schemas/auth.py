@@ -35,7 +35,7 @@ class AcceptInviteIn(BaseModel):
 
 class InviteIn(BaseModel):
     email: EmailStr
-    role: str = Field(default="member", pattern="^(owner|member)$")
+    role: str = Field(default="member", pattern="^(owner|member|viewer)$")
 
 
 class OrganizationOut(BaseModel):
@@ -55,6 +55,10 @@ class UserOut(BaseModel):
     is_superadmin: bool
     created_at: datetime
     last_login_at: datetime | None
+
+
+class AuthOptionsOut(BaseModel):
+    public_demo: bool
 
 
 class MeOut(BaseModel):

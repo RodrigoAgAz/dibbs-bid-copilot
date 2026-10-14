@@ -151,3 +151,37 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   1.52's `install-deps` fails. Railway sets `INSTALL_PLAYWRIGHT=0` anyway (form-POST banner).
 - The frontend Dockerfile moved to `frontend/Dockerfile`, with `runner` as the last stage, because Railway builds
   the final stage.
+
+## Operations (live mode)
+- **Two queues, two worker processes.** Award labeling took 1.5 h on the live site (4,168 record pages a day) and
+  blocked the single worker, delaying the 2-hourly ingest. Long jobs (`@bulk`: labeling, backfill, retrain,
+  initial load) now go to a `bulk` queue served by its own process. The scheduler skips a job that is already
+  queued or running instead of piling up duplicates.
+- **One DIBBS rate limit across processes.** With two worker processes the per-process 1 req/s limiter would
+  allow 2 req/s, so the limiter takes a Redis `SET NX PX` slot per host when Redis is configured.
+- **Award labeling only checks closed solicitations**, with a per-solicitation backoff (`award_checked_at`,
+  migration 0003): every 2 days for the first 2 weeks after close, then 5, then 14, up to 75 days, at most 400
+  record pages a run. Lines a broker bid on (or sent quote requests for) are checked first. Award listings by
+  posting date cover the rest.
+- **Nightly incremental backfill** (01:00 ET, live mode) grows history: PDFs for NSNs not yet covered (skipping
+  NSNs whose history already came with a daily-ingest PDF), 3 older award posting dates, 10 NSN searches.
+- **Data health** (`app/services/ops.py`) is public at `/api/health/data`: only DIBBS-derived counts and
+  pipeline timestamps, nothing tenant-specific. Thresholds: ingest success within 14 h, labeling within 30 h,
+  newest index file at most 4 days old (weekend + holiday).
+
+## Accounts and the public demo
+- **Read-only `viewer` role.** Enforced once, in `get_current_user`: any non-GET request from a viewer is 403,
+  whatever the endpoint, so new endpoints can't forget the check. The UI wraps write controls in `WriteGuard`
+  (a disabled `<fieldset>`). Owners can invite viewers too (e.g. an accountant).
+- **Public demo = one-click viewer session** in the Atlas demo org (`POST /api/auth/demo`, `PUBLIC_DEMO=true`,
+  rate-limited per IP). Sharing owner passwords would let any visitor change settings, invite users or send
+  email. `DEMO_PASSWORD_LOGIN=false` replaces the published demo passwords with random ones at every boot
+  (only while they still match the published value) and revokes those sessions.
+- **`BOOTSTRAP_ADMIN_*`** instead of a shell command: Railway's shell needs an SSH key on the account, and the
+  variable doubles as password rotation. Passwords under 12 characters are ignored.
+- **Quote requests are drafted on demand.** Ingest used to create a draft per candidate supplier for every new
+  line for every org (thousands a day, most with no email address to send to). Now the RFQ page drafts them
+  (all candidates or one) and never sends without a click; the automatic path only runs for orgs with
+  auto-send on, and only for candidates with an email address.
+- **Landing, Terms and Privacy pages** describe what the product actually does (no bid submission, public data,
+  per-org isolation, no tracking cookies). They are not legal advice and should be reviewed by counsel.

@@ -86,9 +86,20 @@ Notes:
 Deploy all services; Postgres and Redis come up first. Open `https://<frontend-domain>` and log in with
 an account from `DEMO_CREDENTIALS.md`.
 
-> **Change the demo passwords** (or don't use `AUTO_SEED`) if the URL is shared: they're in the repo.
-> For a real deployment set `DEMO_MODE=false`, leave `AUTO_SEED` unset, sign up normally and create a
-> superadmin with `python -m app.cli create-superadmin you@example.com` (Railway → backend → shell).
+### Before sharing the URL
+
+The seeded demo passwords are published in `DEMO_CREDENTIALS.md`, so lock them and offer the read-only demo
+instead. On the **backend** service:
+
+```
+DEMO_PASSWORD_LOGIN=false                 # seeded demo accounts can no longer sign in (applied at every boot)
+PUBLIC_DEMO=true                          # "Explore the live demo" on the landing and login pages (read-only)
+BOOTSTRAP_ADMIN_EMAIL=you@yourcompany.com # your superadmin for /admin
+BOOTSTRAP_ADMIN_PASSWORD=<12+ characters> # re-applied at every boot; change the variable to rotate it
+```
+
+The demo visitor is a `viewer`: every non-GET request from it is refused by the API, and the UI disables the
+controls. Your own company account is a normal sign-up at `/signup`.
 
 ## 4. Going live with DIBBS data
 
@@ -99,8 +110,23 @@ CONNECTOR_MODE=live
 SCRAPER_USER_AGENT=YourCompany-BidCopilot/1.0 (+mailto:you@yourcompany.com)
 ```
 
-The scheduler then runs the real ingest at 06:00 ET. To build history, run a bounded backfill from the
-backend shell; it's resumable, so run it repeatedly:
+With `AUTO_BACKFILL=true` on the backend, the first boot queues an initial live load (recent RFQs, PDF
+history, recent awards, then training). After that the scheduler (America/New_York) runs:
+
+| When | Job | Queue |
+|---|---|---|
+| every 2 h, 06:00–20:00 | RFQ ingest (new index files only) | default |
+| 01:00 | incremental backfill: PDFs for uncovered NSNs, older award postings, NSN searches | bulk |
+| 07:30 | award labeling: closed tracked solicitations (backoff 2/5/14 days) + new award postings | bulk |
+| hourly :15 / :45 | quote follow-ups / data-health check | default |
+| Sunday 03:00 | retrain, promote if better | bulk |
+
+The worker runs one process per queue (`WORKER_POOLS=default;bulk`), so a long backfill never delays the
+ingest; all processes share the 1 request/second DIBBS limit through Redis. Data freshness is public at
+`/api/health/data` and shown in the app header; set `OPS_ALERT_EMAIL` (needs a real email provider) to be
+emailed when something goes stale.
+
+To add history faster, run a bounded backfill from the backend shell; it's resumable:
 
 ```bash
 python -m app.cli backfill --mode live --start 2023-01-01 --end today --max-pdfs 500 --max-award-dates 2 --max-award-pages 5 --max-nsn-searches 10

@@ -198,6 +198,10 @@ def _create_orgs(db) -> list[Organization]:
     db.get(OrgSettings, orgs[0].id).set_aside_eligibility = ["SB", "WOSB"]
     # Second org watches a narrower niche, so the two dashboards differ.
     db.get(OrgSettings, orgs[1].id).fsc_watchlist = ["5305", "5306", "5310", "5330"]
+    db.flush()
+    from app.services.accounts import ensure_demo_viewer
+
+    ensure_demo_viewer(db)  # read-only account behind "Explore the demo" (PUBLIC_DEMO=true)
     db.get(OrgSettings, orgs[1].id).min_margin_pct = 0.15
     db.flush()
     return orgs

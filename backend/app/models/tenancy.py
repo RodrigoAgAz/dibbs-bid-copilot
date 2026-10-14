@@ -16,6 +16,7 @@ from app.models.types import StringList, UTCDateTime, utcnow
 class UserRole(str, enum.Enum):
     owner = "owner"
     member = "member"
+    viewer = "viewer"  # read-only seat (also the public demo account)
 
 
 class Organization(Base):

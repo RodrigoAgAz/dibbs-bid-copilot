@@ -132,8 +132,14 @@ def _email_context(db: Session, qr: QuoteRequest, line: SolicitationLine, s: Org
     )
 
 
-def create_draft_requests(db: Session, org_id: int, line: SolicitationLine, s: OrgSettings) -> list[QuoteRequest]:
-    """Draft one email quote request per candidate supplier (idempotent). Auto-sends if enabled."""
+def create_draft_requests(db: Session, org_id: int, line: SolicitationLine, s: OrgSettings,
+                          cage_codes: set[str] | None = None, only_sendable: bool = False,
+                          allow_auto_send: bool = True) -> list[QuoteRequest]:
+    """Draft one email quote request per candidate supplier (idempotent). Auto-sends if enabled.
+
+    `cage_codes` limits it to those candidates; `only_sendable` skips candidates without an email address
+    (used by the automatic path, where a draft nobody can send is just noise).
+    """
     created = []
     existing = {
         qr.cage_code
@@ -146,7 +152,9 @@ def create_draft_requests(db: Session, org_id: int, line: SolicitationLine, s: O
         ).scalars()
     }
     for cand in candidate_suppliers(db, org_id, line):
-        if cand.cage_code in existing:
+        if cand.cage_code in existing or (cage_codes is not None and cand.cage_code not in cage_codes):
+            continue
+        if only_sendable and not (cand.contact and cand.contact.email):
             continue
         qr = QuoteRequest(
             organization_id=org_id,
@@ -166,7 +174,7 @@ def create_draft_requests(db: Session, org_id: int, line: SolicitationLine, s: O
         draft = template_email(_email_context(db, qr, line, s))
         qr.email_subject, qr.email_body = draft.subject, draft.body
         created.append(qr)
-        if s.auto_send_rfq and qr.email_to:
+        if allow_auto_send and s.auto_send_rfq and qr.email_to:
             regenerate_draft(db, qr)
             send_quote_request(db, qr)
     return created

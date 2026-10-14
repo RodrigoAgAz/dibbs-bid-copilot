@@ -263,7 +263,13 @@ For a classroom demo, add your own phone numbers as consenting test contacts.
 | `JWT_SECRET` | dev value | Signs access tokens. **Change in production** |
 | `COOKIE_SECURE` | `false` | `true` behind HTTPS |
 | `FRONTEND_ORIGIN` | `http://localhost:3000` | CORS origin and links in emails |
-| `DEMO_MODE` | `true` | Demo badge, `simulate-reply` endpoint |
+| `DEMO_MODE` | `true` | Enables the `simulate-reply` endpoint (demo quote replies) |
+| `PUBLIC_DEMO` | `false` | "Explore the live demo": one-click read-only session in the Atlas demo org |
+| `DEMO_PASSWORD_LOGIN` | `true` | `false` locks the seeded demo accounts (their passwords are published) at every boot |
+| `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | empty | Superadmin ensured at boot; the variable is the source of truth for its password (min 12 chars) |
+| `NIGHTLY_BACKFILL` | `true` | Live mode: 01:00 ET incremental backfill on the bulk queue |
+| `OPS_ALERT_EMAIL` | empty | Emailed (at most every 12 h) while data is stale or a pipeline fails |
+| `WORKER_POOLS` | `default;bulk` | Worker processes, one per `;`-separated pool of queues |
 | `LOG_LEVEL` | `INFO` | Backend log level |
 | `ANTHROPIC_API_KEY` | empty | Enables the real LLM (else the deterministic mock) |
 | `LLM_MODEL` | `claude-sonnet-5-5` | Model for drafting/extraction |
@@ -371,6 +377,8 @@ Postgres 16, otherwise SQLite. Migrations are applied by Alembic, so they're tes
   `next build` and the Playwright e2e test.
 - **Local Windows dev.** RQ workers need `fork`, so local jobs run in-process threads; the Docker worker
   uses RQ normally.
+- **Legal pages are a starting point.** `/terms` and `/privacy` describe what the product actually does, but
+  they were not written by a lawyer; have them reviewed before charging customers.
 - **Approved-source logic** treats AMSC B/C/D/H/P/R and source-controlled items as approved-source-only.
   Brokers can still quote other parts; they're flagged non-conforming.
 - Recommendations are decision support. Price-reasonableness, Buy American/Berry, quality (AS9100),

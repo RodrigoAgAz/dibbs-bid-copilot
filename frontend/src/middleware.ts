@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/login", "/signup", "/forgot-password", "/reset-password"];
+const PUBLIC = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"];
 
 /**
  * Route guard. The csrf_token cookie (path=/, same lifetime as the refresh token) is the
@@ -12,7 +12,8 @@ export function middleware(req: NextRequest) {
   const isPublic = PUBLIC.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (pathname === "/") {
-    return NextResponse.redirect(new URL(hasSession ? "/dashboard" : "/login", req.url));
+    // Signed-in users go straight to today's RFQs; everyone else sees the landing page.
+    return hasSession ? NextResponse.redirect(new URL("/dashboard", req.url)) : NextResponse.next();
   }
   if (!isPublic && !hasSession) {
     const url = new URL("/login", req.url);

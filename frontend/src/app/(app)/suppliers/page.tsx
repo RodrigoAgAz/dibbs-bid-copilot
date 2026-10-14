@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { Empty, ErrorState, Loading, PageHeader } from "@/components/common";
+import { Empty, ErrorState, Loading, PageHeader, WriteGuard } from "@/components/common";
 import { Field, FormError } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -107,9 +107,11 @@ export default function SuppliersPage() {
         title="Suppliers"
         description="Your firm's supplier directory. Contacts here are private to your organization and used for RFQ emails and calls."
         actions={
-          <Button size="sm" onClick={() => setAdding(true)}>
-            <Plus /> Add supplier
-          </Button>
+          <WriteGuard className="w-auto">
+            <Button size="sm" onClick={() => setAdding(true)}>
+              <Plus /> Add supplier
+            </Button>
+          </WriteGuard>
         }
       />
       <div className="relative mb-3 w-72">
@@ -154,6 +156,7 @@ export default function SuppliersPage() {
                   </TD>
                   <TD className="text-[12px]">{s.fsc_tags.join(", ") || "—"}</TD>
                   <TD className="text-right">
+                    <WriteGuard className="inline-flex w-auto">
                     <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => setEditing(s)}>
                       <Pencil />
                     </Button>
@@ -167,6 +170,7 @@ export default function SuppliersPage() {
                     >
                       <Trash2 />
                     </Button>
+                    </WriteGuard>
                   </TD>
                 </TR>
               ))}

@@ -63,6 +63,11 @@ After changing API schemas: `python dev.py api-types` (or `make api-types`) to r
   Public DIBBS data (solicitations, lines, awards, companies, predictions) is global.
 - **Auth**: JWT access token (15 min) + rotating opaque refresh token (30 days), httpOnly cookies;
   mutating cookie-authenticated requests need the `x-csrf-token` header = `csrf_token` cookie.
+  Roles: owner / member / viewer. Viewers (and the public demo session) get 403 on every non-GET request in
+  `get_current_user`; in the UI wrap write controls in `WriteGuard` (`components/common.tsx`).
+- **Jobs**: `app/jobs/queue.py` has two RQ queues; mark long jobs `@bulk` so they run on the bulk worker
+  process, never blocking ingest. The scheduler uses `enqueue_unique`. DIBBS requests share one 1 req/s
+  limit across processes via Redis.
 - **External calls** always have a deterministic offline twin: fixture connectors, MockLLM,
   ConsoleEmailProvider, MockVoiceProvider. Tests and demo mode never touch the network.
 - **Connectors**: max 1 req/s per host, exponential backoff, `SCRAPER_USER_AGENT`, raw responses
@@ -74,7 +79,7 @@ After changing API schemas: `python dev.py api-types` (or `make api-types`) to r
 
 ## Frontend notes
 
-- Pages: `src/app/(auth)/{login,signup,forgot-password,reset-password}`, `src/app/(app)/{dashboard,rfq/[solicitationNumber],history,suppliers,settings,admin}`.
+- Pages: `src/app/(public)/{page,terms,privacy}` (landing at `/` for signed-out visitors), `src/app/(auth)/{login,signup,forgot-password,reset-password}`, `src/app/(app)/{dashboard,rfq/[solicitationNumber],history,suppliers,settings,admin}`.
 - All data access goes through `api` (openapi-fetch + generated `schema.d.ts`) and TanStack Query; invalidate
   `["rfq", sn]` / `["dashboard"]` after mutations. Pure logic lives in `src/lib/{format,charts,dashboard}.ts`
   with Vitest tests.

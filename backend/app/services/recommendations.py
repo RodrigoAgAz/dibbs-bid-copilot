@@ -171,8 +171,15 @@ def ensure_prediction(db: Session, line: SolicitationLine, fsc_index=None) -> Pr
 
 
 def refresh_org_recommendations(
-    db: Session, org_id: int, create_quote_drafts: bool = False, line_ids: list[int] | None = None
+    db: Session, org_id: int, create_quote_drafts: bool = False, line_ids: list[int] | None = None,
+    auto_quotes: bool = False,
 ) -> int:
+    """(Re)compute recommendations for the org's open lines.
+
+    create_quote_drafts: draft a quote request for every candidate supplier (demo seed).
+    auto_quotes: only if the org turned on auto-send, draft and send to candidates that have an email address.
+    Otherwise quote requests are drafted on demand from the RFQ page.
+    """
     s = org_settings(db, org_id)
     lines = open_lines(db, fscs=list(s.fsc_watchlist or []))
     if line_ids is not None:
@@ -184,10 +191,10 @@ def refresh_org_recommendations(
     n = 0
     for line in lines:
         pred = ensure_prediction(db, line, fsc_index)
-        if create_quote_drafts:
+        if create_quote_drafts or (auto_quotes and s.auto_send_rfq):
             from app.services.sourcing import create_draft_requests
 
-            create_draft_requests(db, org_id, line, s)
+            create_draft_requests(db, org_id, line, s, only_sendable=not create_quote_drafts)
         upsert_recommendation(db, org_id, s, line, pred)
         n += 1
     db.flush()

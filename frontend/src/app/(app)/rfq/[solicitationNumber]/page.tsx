@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, Copy, ExternalLink, FileText, RefreshCw } from "lucide-react";
 import { Contributions, HistoryChart, PWinChart, WaterfallChart } from "@/components/rfq/charts";
 import { SupplierPanel } from "@/components/rfq/supplier-panel";
-import { ErrorState, FlagBadges, Loading } from "@/components/common";
+import { ErrorState, FlagBadges, Loading, WriteGuard } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -125,6 +125,7 @@ function ActualBid({ line, sn }: { line: Line; sn: string }) {
     },
   });
   return (
+    <WriteGuard>
     <form
       className="flex items-end gap-2"
       onSubmit={(e) => {
@@ -141,6 +142,7 @@ function ActualBid({ line, sn }: { line: Line; sn: string }) {
       </Button>
       {save.error ? <span className="text-xs text-destructive">{errorMessage(save.error)}</span> : null}
     </form>
+    </WriteGuard>
   );
 }
 
@@ -160,9 +162,11 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
           <CardTitle>Recommendation</CardTitle>
           <CardDescription>Maximizes P(win) × (bid − landed cost) × quantity</CardDescription>
         </div>
-        <Button size="xs" variant="ghost" onClick={() => refresh.mutate()} disabled={refresh.isPending} aria-label="Recompute">
-          <RefreshCw className={cn(refresh.isPending && "animate-spin")} />
-        </Button>
+        <WriteGuard className="w-auto">
+          <Button size="xs" variant="ghost" onClick={() => refresh.mutate()} disabled={refresh.isPending} aria-label="Recompute">
+            <RefreshCw className={cn(refresh.isPending && "animate-spin")} />
+          </Button>
+        </WriteGuard>
       </CardHeader>
       <CardContent className="space-y-3">
         {r.no_bid ? (

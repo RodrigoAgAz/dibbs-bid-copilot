@@ -70,11 +70,17 @@ def run_backfill(db: Session, fscs: list[str], start: date, end: date, mode: str
         for nsn, sn, tc, sid in rows:
             if nsn not in best or (tc in ("T", "U") and best[nsn][0][8:9] == "Q"):
                 best[nsn] = (sn, sid)
+        # NSNs whose procurement history already came in with a daily-ingest PDF need no second fetch.
+        have_pdf_history = {
+            n for (n,) in db.execute(
+                select(AwardHistory.nsn).where(AwardHistory.source == "rfq_pdf_history").distinct()
+            ).all()
+        }
         budget = max_pdfs
         for nsn, (sn, sid) in best.items():
             if budget <= 0:
                 break
-            if checkpoint_done(db, "backfill_nsn_pdf", nsn):
+            if nsn in have_pdf_history or checkpoint_done(db, "backfill_nsn_pdf", nsn):
                 continue
             budget -= 1
             try:

@@ -38,6 +38,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/health/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Data Health
+         * @description Public data freshness (DIBBS-derived counts and pipeline timestamps only; no tenant data).
+         *
+         *     Drives the "data updated" indicator in the app and lets operators check a deployment without logging in.
+         */
+        get: operations["data_health_api_health_data_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/signup": {
         parameters: {
             query?: never;
@@ -66,6 +88,46 @@ export interface paths {
         put?: never;
         /** Login */
         post: operations["login_api_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Options
+         * @description What the login page should offer (public).
+         */
+        get: operations["options_api_auth_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Demo Login
+         * @description "Explore the demo": a read-only session in the Atlas demo org (PUBLIC_DEMO=true only).
+         */
+        post: operations["demo_login_api_auth_demo_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -360,6 +422,26 @@ export interface paths {
         put?: never;
         /** Add Quote Request */
         post: operations["add_quote_request_api_rfq_lines__line_id__quote_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rfq/lines/{line_id}/quote-requests/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft Quote Requests
+         * @description Draft email quote requests for this line's candidate suppliers (all, or the given CAGEs). Never sends.
+         */
+        post: operations["draft_quote_requests_api_rfq_lines__line_id__quote_requests_draft_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -780,6 +862,15 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** ActiveModelOut */
+        ActiveModelOut: {
+            /** Run Id */
+            run_id: number;
+            /** Trained At */
+            trained_at: string | null;
+            /** Pinball Mean */
+            pinball_mean: number | null;
+        };
         /** ActualBidIn */
         ActualBidIn: {
             /** Actual Bid */
@@ -793,6 +884,11 @@ export interface components {
             part_number: string;
             /** Company Name */
             company_name?: string | null;
+        };
+        /** AuthOptionsOut */
+        AuthOptionsOut: {
+            /** Public Demo */
+            public_demo: boolean;
         };
         /** AwardOut */
         AwardOut: {
@@ -953,6 +1049,37 @@ export interface components {
             /** Last Ingest At */
             last_ingest_at: string | null;
         };
+        /** DataHealthOut */
+        DataHealthOut: {
+            /** Status */
+            status: string;
+            /** Checked At */
+            checked_at: string;
+            /** Connector Mode */
+            connector_mode: string;
+            /** Newest Rfq Posting Date */
+            newest_rfq_posting_date: string | null;
+            /** Open Rfq Lines */
+            open_rfq_lines: number;
+            /** Award Rows */
+            award_rows: number;
+            /** Award Rows Last 30 Days */
+            award_rows_last_30_days: number;
+            /** Nsns With History */
+            nsns_with_history: number;
+            model: components["schemas"]["ActiveModelOut"] | null;
+            /** Runs */
+            runs: {
+                [key: string]: components["schemas"]["PipelineRunOut"];
+            };
+            /** Checks */
+            checks: components["schemas"]["HealthCheckOut"][];
+        };
+        /** DraftRequestsIn */
+        DraftRequestsIn: {
+            /** Cage Codes */
+            cage_codes?: string[] | null;
+        };
         /** EmailOut */
         EmailOut: {
             /** Id */
@@ -1027,6 +1154,15 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HealthCheckOut */
+        HealthCheckOut: {
+            /** Name */
+            name: string;
+            /** Ok */
+            ok: boolean;
+            /** Detail */
+            detail: string;
         };
         /** HistoryOut */
         HistoryOut: {
@@ -1339,6 +1475,15 @@ export interface components {
          * @enum {string}
          */
         PhoneType: "landline" | "mobile" | "unknown";
+        /** PipelineRunOut */
+        PipelineRunOut: {
+            /** Last Success At */
+            last_success_at: string | null;
+            /** Last Status */
+            last_status: string | null;
+            /** Last Finished At */
+            last_finished_at: string | null;
+        };
         /** PredictionOut */
         PredictionOut: {
             /** Levels */
@@ -1932,6 +2077,26 @@ export interface operations {
             };
         };
     };
+    data_health_api_health_data_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataHealthOut"];
+                };
+            };
+        };
+    };
     signup_api_auth_signup_post: {
         parameters: {
             query?: never;
@@ -1994,6 +2159,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    options_api_auth_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthOptionsOut"];
+                };
+            };
+        };
+    };
+    demo_login_api_auth_demo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
                 };
             };
         };
@@ -2626,6 +2831,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuoteRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_quote_requests_api_rfq_lines__line_id__quote_requests_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftRequestsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteRequestOut"][];
                 };
             };
             /** @description Validation Error */

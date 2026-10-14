@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.config import get_settings
-from app.core.ratelimit import enforce
+from app.core.ratelimit import client_ip, enforce
 from app.core.security import (
     REFRESH_COOKIE,
     clear_auth_cookies,
@@ -25,6 +25,7 @@ from app.db import get_db
 from app.models import Invitation, Organization, OrgSettings, PasswordResetToken, RefreshToken, User, UserRole
 from app.schemas.auth import (
     AcceptInviteIn,
+    AuthOptionsOut,
     ForgotPasswordIn,
     LoginIn,
     MeOut,
@@ -104,6 +105,27 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
     user = db.execute(select(User).where(User.email == str(body.email).lower())).scalar_one_or_none()
     if user is None or not user.is_active or not verify_password(body.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
+    _issue_session(db, response, user)
+    return _me(db, user)
+
+
+@router.get("/options", response_model=AuthOptionsOut)
+def options() -> AuthOptionsOut:
+    """What the login page should offer (public)."""
+    return AuthOptionsOut(public_demo=get_settings().public_demo)
+
+
+@router.post("/demo", response_model=MeOut)
+def demo_login(request: Request, response: Response, db: Session = Depends(get_db)) -> MeOut:
+    """"Explore the demo": a read-only session in the Atlas demo org (PUBLIC_DEMO=true only)."""
+    if not get_settings().public_demo:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "The public demo is not enabled")
+    enforce(request, "demo", client_ip(request), limit=20, window_s=3600)
+    from app.services.accounts import ensure_demo_viewer
+
+    user = ensure_demo_viewer(db)
+    if user is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The demo isn't available right now")
     _issue_session(db, response, user)
     return _me(db, user)
 

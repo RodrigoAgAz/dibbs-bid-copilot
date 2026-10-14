@@ -16,7 +16,7 @@ def bootstrap_org_job(org_id: int, line_ids: list[int] | None = None) -> None:
     from app.services.recommendations import refresh_org_recommendations
 
     with session_scope() as db:
-        refresh_org_recommendations(db, org_id, create_quote_drafts=True, line_ids=line_ids)
+        refresh_org_recommendations(db, org_id, auto_quotes=True, line_ids=line_ids)
 
 
 def on_organization_created(db: Session, org_id: int) -> None:
@@ -33,7 +33,7 @@ def on_organization_created(db: Session, org_id: int) -> None:
         lines = open_lines(db, fscs=list(s.fsc_watchlist or [])) if s else []
         lines.sort(key=lambda ln: ln.solicitation.return_by_date or date.max)
         ids = [ln.id for ln in lines]
-        refresh_org_recommendations(db, org_id, create_quote_drafts=True, line_ids=ids[:SYNC_LIMIT])
+        refresh_org_recommendations(db, org_id, auto_quotes=True, line_ids=ids[:SYNC_LIMIT])
         db.commit()
         if len(ids) > SYNC_LIMIT:
             from app.jobs.queue import enqueue

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, UserPlus, X } from "lucide-react";
-import { ErrorState, Loading, PageHeader } from "@/components/common";
+import { ErrorState, Loading, PageHeader, WriteGuard } from "@/components/common";
 import { FormError, FormNotice } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +45,7 @@ function Team() {
   const members = useQuery({ queryKey: ["members"], queryFn: async () => unwrap(await api.GET("/api/org/members")) });
   const invites = useQuery({ queryKey: ["invites"], queryFn: async () => unwrap(await api.GET("/api/org/invitations")) });
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"member" | "owner">("member");
+  const [role, setRole] = useState<"member" | "owner" | "viewer">("member");
   const [link, setLink] = useState<string | null>(null);
   const invite = useMutation({
     mutationFn: async () => unwrap(await api.POST("/api/org/invitations", { body: { email, role } })),
@@ -109,8 +109,9 @@ function Team() {
               <Label htmlFor="invite-email">Invite by email</Label>
               <Input id="invite-email" type="email" required className="h-8 w-64 text-xs" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-            <NativeSelect value={role} onChange={(e) => setRole(e.target.value as "member" | "owner")} aria-label="Role">
+            <NativeSelect value={role} onChange={(e) => setRole(e.target.value as "member" | "owner" | "viewer")} aria-label="Role">
               <option value="member">Member</option>
+              <option value="viewer">Viewer (read-only)</option>
               <option value="owner">Owner</option>
             </NativeSelect>
             <Button size="sm" type="submit" disabled={invite.isPending}>
@@ -155,7 +156,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div>
+    <WriteGuard>
       <PageHeader
         title="Settings"
         description="Saving recalculates landed costs and recommendations for today's lines."
@@ -285,6 +286,6 @@ export default function SettingsPage() {
 
         <Team />
       </div>
-    </div>
+    </WriteGuard>
   );
 }

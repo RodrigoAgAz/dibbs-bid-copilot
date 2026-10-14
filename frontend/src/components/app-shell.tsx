@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, CalendarClock, History, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
+import { Building2, CalendarClock, Eye, History, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/misc";
+import { Badge, Tip } from "@/components/ui/misc";
 import { api } from "@/lib/api/client";
-import { useMe } from "@/lib/hooks";
+import { formatDate, timeAgo } from "@/lib/format";
+import { useDataHealth, useMe } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -23,12 +24,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient();
   const { data: me } = useMe();
 
-  async function logout() {
+  async function endSession(to: string) {
     await api.POST("/api/auth/logout");
     qc.clear();
-    router.replace("/login");
+    router.replace(to);
     router.refresh();
   }
+  const logout = () => endSession("/login");
 
   const nav = me?.user.is_superadmin ? [...NAV, { href: "/admin", label: "Admin", icon: ShieldCheck }] : NAV;
 
@@ -59,7 +61,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            {me?.demo_mode && <Badge variant="warning">Demo data</Badge>}
+            <DataFreshness />
+            {me?.organization.plan === "demo" && <Badge variant="warning">Demo org</Badge>}
             {me && (
               <div className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex" data-testid="org-name">
                 <Building2 className="h-3.5 w-3.5" />
@@ -75,7 +78,64 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+      {me?.user.role === "viewer" && (
+        <ReadOnlyBanner demo={me.organization.plan === "demo"} org={me.organization.name} onSignup={() => endSession("/signup")} />
+      )}
       <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-4">{children}</main>
+    </div>
+  );
+}
+
+/** "DIBBS data 40 min ago" with the health checks in a tooltip (live connectors only). */
+function DataFreshness() {
+  const { data } = useDataHealth();
+  if (!data || data.connector_mode === "fixture") return null;
+  const ok = data.status === "ok";
+  return (
+    <Tip
+      content={
+        <div className="space-y-1">
+          <div>Newest DIBBS posting: {formatDate(data.newest_rfq_posting_date)}</div>
+          <div>
+            {data.open_rfq_lines.toLocaleString()} open lines · {data.award_rows.toLocaleString()} award prices on file
+          </div>
+          {data.checks
+            .filter((c) => !c.ok)
+            .map((c) => (
+              <div key={c.name}>⚠ {c.name}</div>
+            ))}
+        </div>
+      }
+    >
+      <span className="hidden items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground lg:flex" data-testid="data-freshness">
+        <span className={cn("h-1.5 w-1.5 rounded-full", ok ? "bg-success" : "bg-warning")} />
+        DIBBS data {timeAgo(data.runs["dibbs_rfq"]?.last_success_at ?? null)}
+      </span>
+    </Tip>
+  );
+}
+
+function ReadOnlyBanner({ demo, org, onSignup }: { demo: boolean; org: string; onSignup: () => Promise<void> }) {
+  return (
+    <div className="border-b bg-primary/5" data-testid="read-only-banner">
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-[13px]">
+        <Eye className="h-4 w-4 text-primary" />
+        {demo ? (
+          <span>
+            You&apos;re exploring a <strong>read-only demo</strong>: real DIBBS solicitations and award history, priced for a fictional
+            broker. Supplier contacts and quotes in this demo are simulated.
+          </span>
+        ) : (
+          <span>
+            You have read-only access to <strong>{org}</strong>. Ask an owner for member access to make changes.
+          </span>
+        )}
+        {demo && (
+          <Button size="xs" className="ml-auto" onClick={() => void onSignup()}>
+            Start your own account
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

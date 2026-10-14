@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildWaterfall, bestPoint, historyPoints, quantile } from "./charts";
 import { DEFAULT_FILTERS, filterLines, splitNoBid, statusOf, type DashboardLine } from "./dashboard";
-import { countdown, formatNsn, formatSolicitation, isDemoSolicitation, money, pct } from "./format";
+import { countdown, formatNsn, formatSolicitation, isDemoSolicitation, money, pct, timeAgo } from "./format";
 
 describe("format", () => {
   it("formats NSNs and solicitation numbers", () => {
@@ -26,6 +26,15 @@ describe("format", () => {
     expect(countdown(2).tone).toBe("warn");
     expect(countdown(9)).toEqual({ label: "9 days", tone: "normal" });
     expect(countdown(-1).label).toBe("closed");
+  });
+
+  it("formats relative times", () => {
+    const now = new Date("2026-10-14T15:00:00Z");
+    expect(timeAgo(null, now)).toBe("never");
+    expect(timeAgo("2026-10-14T14:59:40Z", now)).toBe("just now");
+    expect(timeAgo("2026-10-14T14:48:00Z", now)).toBe("12 min ago");
+    expect(timeAgo("2026-10-14T12:00:00Z", now)).toBe("3 h ago");
+    expect(timeAgo("2026-10-11T15:00:00Z", now)).toBe("3 days ago");
   });
 });
 

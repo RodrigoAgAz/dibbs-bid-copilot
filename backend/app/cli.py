@@ -40,26 +40,37 @@ def migrate() -> None:
 
 @cli.command()
 def bootstrap() -> None:
-    """Container start-up: apply migrations, then seed the demo if AUTO_SEED=true and the DB is empty."""
+    """Container start-up: migrations, initial live load (AUTO_BACKFILL), demo seed (AUTO_SEED, empty DB only),
+    then account hardening (DEMO_PASSWORD_LOGIN / PUBLIC_DEMO / BOOTSTRAP_ADMIN_*)."""
     _setup_logging()
     migrate()
     _maybe_queue_initial_live_load()
-    if not get_settings().auto_seed:
-        return
-    from sqlalchemy import func, select
+    if get_settings().auto_seed:
+        from sqlalchemy import func, select
 
+        from app.db import session_scope
+        from app.models import Organization
+
+        with session_scope() as db:
+            n = db.execute(select(func.count()).select_from(Organization)).scalar_one()
+        if n == 0:
+            typer.echo("AUTO_SEED: empty database, seeding the demo ...")
+            from app.seed.demo import run_seed
+
+            run_seed()
+        else:
+            typer.echo(f"AUTO_SEED: {n} organization(s) present, skipping seed")
+    _secure_accounts()
+
+
+def _secure_accounts() -> None:
     from app.db import session_scope
-    from app.models import Organization
+    from app.services.accounts import secure_accounts
 
     with session_scope() as db:
-        n = db.execute(select(func.count()).select_from(Organization)).scalar_one()
-    if n == 0:
-        typer.echo("AUTO_SEED: empty database, seeding the demo ...")
-        from app.seed.demo import run_seed
-
-        run_seed()
-    else:
-        typer.echo(f"AUTO_SEED: {n} organization(s) present, skipping seed")
+        out = secure_accounts(db)
+    if out:
+        typer.echo(f"accounts: {out}")
 
 
 def _maybe_queue_initial_live_load() -> None:

@@ -72,6 +72,17 @@ export default function SignupPage() {
           <Button type="submit" disabled={busy}>
             {busy ? "Creating…" : invite ? "Accept invitation" : "Create account"}
           </Button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            By continuing you agree to the{" "}
+            <Link className="underline" href="/terms" target="_blank">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link className="underline" href="/privacy" target="_blank">
+              Privacy Policy
+            </Link>
+            .
+          </p>
           <p className="text-center text-xs text-muted-foreground">
             Already have an account?{" "}
             <Link className="text-primary hover:underline" href="/login">

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Badge, Label, Tip } from "@/components/ui/misc";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
+import { WriteGuard } from "@/components/common";
 import { FormError } from "@/components/form";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
 import { formatDateTime, money, num, pct } from "@/lib/format";
@@ -338,6 +339,22 @@ export function SupplierPanel({
     },
     onError: (e) => setErr(errorMessage(e)),
   });
+  const draft = useMutation({
+    mutationFn: async (cages: string[] | null) =>
+      unwrap(
+        await api.POST("/api/rfq/lines/{line_id}/quote-requests/draft", {
+          params: { path: { line_id: lineId } },
+          body: { cage_codes: cages },
+        }),
+      ),
+    onSuccess: (created) => {
+      setErr(null);
+      if (created.length === 1) setOpen(created[0].cage_code);
+      invalidate();
+    },
+    onError: (e) => setErr(errorMessage(e)),
+  });
+  const undrafted = candidates.filter((c) => !c.quote_requests.some((q) => q.channel === "email"));
   const call = useMutation({
     mutationFn: async (c: Candidate) =>
       unwrap(
@@ -351,7 +368,18 @@ export function SupplierPanel({
   });
 
   return (
-    <div className="space-y-2">
+    <WriteGuard className="space-y-2">
+      {undrafted.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            {undrafted.length} candidate supplier{undrafted.length === 1 ? "" : "s"} without a quote request. Drafts are only sent when
+            you click Send.
+          </span>
+          <Button size="xs" variant="outline" disabled={draft.isPending} onClick={() => draft.mutate(null)} data-testid="draft-all">
+            <Plus /> Draft requests for all {undrafted.length}
+          </Button>
+        </div>
+      )}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <THead>
@@ -423,7 +451,12 @@ export function SupplierPanel({
                             ))}
                           </div>
                         ) : (
-                          <p className="p-2 text-xs text-muted-foreground">No quote request for this supplier yet.</p>
+                          <div className="flex items-center gap-3 p-2 text-xs text-muted-foreground">
+                            No quote request for this supplier yet.
+                            <Button size="xs" variant="outline" disabled={draft.isPending} onClick={() => draft.mutate([c.cage_code])}>
+                              <Plus /> Draft quote request
+                            </Button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -454,7 +487,7 @@ export function SupplierPanel({
         </Button>
       </form>
       <FormError message={err} />
-    </div>
+    </WriteGuard>
   );
 }
 

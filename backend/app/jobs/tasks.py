@@ -70,6 +70,23 @@ def daily_digest_job() -> dict:
         return send_daily_digests(db)
 
 
+def refresh_all_recommendations_job(version: str) -> dict:
+    """One-off after a recommendation-rules change. Runs on the default queue, serialized with the ingest,
+    so the two never upsert the same recommendations concurrently."""
+    from app.models import IngestCheckpoint
+    from app.services.recommendations import refresh_all_recommendations
+
+    with session_scope() as db:
+        out = refresh_all_recommendations(db)
+        row = db.query(IngestCheckpoint).filter_by(source="recommendation_engine", key="version").one_or_none()
+        if row is None:
+            db.add(IngestCheckpoint(source="recommendation_engine", key="version", status="done", detail=version))
+        else:
+            row.detail = version
+    log.info("recommendations recomputed for engine v%s: %s", version, out)
+    return out
+
+
 def ops_check_job() -> dict:
     from app.services.ops import run_ops_check
 

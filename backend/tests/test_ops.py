@@ -259,3 +259,24 @@ def test_bootstrap_admin_is_created_and_password_follows_the_variable(client, db
                                                 "password": "second-long-password"}).status_code == 200
     settings(bootstrap_admin_password="short")
     assert "bootstrap_admin" not in secure_accounts(db)
+
+
+def test_rules_change_queues_one_full_refresh(client, db, monkeypatch):
+    from app import cli
+    from app.jobs import queue, tasks
+    from app.services.recommendations import ENGINE_VERSION
+    from tests.helpers import build_world
+
+    calls = []
+    monkeypatch.setattr(queue, "enqueue_unique", lambda func, *a, **k: calls.append((func.__name__, a)) or "job-1")
+    cli._maybe_queue_engine_refresh()
+    assert calls == []  # no recommendations yet: nothing to recompute
+    build_world(db, n_open=6)
+    signup(client, "engine@broker.example.com", org="Engine Org")
+    cli._maybe_queue_engine_refresh()
+    assert calls == [("refresh_all_recommendations_job", (ENGINE_VERSION,))]
+    out = tasks.refresh_all_recommendations_job(ENGINE_VERSION)
+    assert sum(out.values()) > 0
+    calls.clear()
+    cli._maybe_queue_engine_refresh()
+    assert calls == []  # marker now matches the engine version

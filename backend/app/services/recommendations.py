@@ -210,6 +210,22 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
     return rec
 
 
+# Bump when the recommendation rules change: the next boot re-computes every open line once
+# (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability.
+ENGINE_VERSION = "2"
+
+
+def refresh_all_recommendations(db: Session) -> dict:
+    """Recompute every org's recommendations for its open lines (after a rules change)."""
+    from app.models import Organization
+
+    out = {}
+    for org_id in list(db.execute(select(Organization.id)).scalars()):
+        out[org_id] = refresh_org_recommendations(db, org_id)
+        db.commit()
+    return out
+
+
 def refresh_stale_predictions(db: Session, limit: int | None = None) -> dict:
     """Re-price open lines whose NSN gained award history after they were priced, then refresh every org's
     recommendations for them.

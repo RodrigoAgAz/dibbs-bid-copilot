@@ -45,6 +45,7 @@ def bootstrap() -> None:
     _setup_logging()
     migrate()
     _maybe_queue_initial_live_load()
+    _maybe_queue_engine_refresh()
     if get_settings().auto_seed:
         from sqlalchemy import func, select
 
@@ -104,6 +105,29 @@ def _maybe_queue_initial_live_load() -> None:
         else:
             marker.detail = job
     typer.echo(f"AUTO_BACKFILL: queued initial live load (job {job})")
+
+
+def _maybe_queue_engine_refresh() -> None:
+    """Recommendation rules changed since the stored engine version: re-compute every open line once."""
+    from sqlalchemy import select
+
+    from app.db import session_scope
+    from app.jobs.queue import enqueue_unique
+    from app.jobs.tasks import refresh_all_recommendations_job
+    from app.models import IngestCheckpoint, Recommendation
+    from app.services.recommendations import ENGINE_VERSION
+
+    with session_scope() as db:
+        if db.execute(select(Recommendation.id).limit(1)).first() is None:
+            return  # nothing to recompute (fresh database; the seed computes with the current engine)
+        row = db.execute(
+            select(IngestCheckpoint).where(IngestCheckpoint.source == "recommendation_engine",
+                                           IngestCheckpoint.key == "version")
+        ).scalar_one_or_none()
+        if row is not None and row.detail == ENGINE_VERSION:
+            return
+    job = enqueue_unique(refresh_all_recommendations_job, ENGINE_VERSION, job_timeout=2 * 3600)
+    typer.echo(f"recommendation engine v{ENGINE_VERSION}: queued a full refresh (job {job})")
 
 
 def _job_alive(job_id: str | None) -> str | None:

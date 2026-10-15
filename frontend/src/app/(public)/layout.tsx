@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AUTH_PAGES } from "@/lib/flags";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,12 +13,20 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <span className="text-sm font-semibold">DIBBS Bid Copilot</span>
           </Link>
           <nav className="ml-auto flex items-center gap-1 text-sm">
-            <Link href="/login" className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
-              Log in
-            </Link>
-            <Link href="/signup" className="rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-primary/90">
-              Create account
-            </Link>
+            {AUTH_PAGES ? (
+              <>
+                <Link href="/login" className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
+                  Log in
+                </Link>
+                <Link href="/signup" className="rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-primary/90">
+                  Create account
+                </Link>
+              </>
+            ) : (
+              <Link href="/enter" className="rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-primary/90">
+                Open the app
+              </Link>
+            )}
           </nav>
         </div>
       </header>
@@ -35,9 +44,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <Link href="/privacy" className="hover:text-foreground">
               Privacy
             </Link>
-            <Link href="/login" className="hover:text-foreground">
-              Log in
-            </Link>
+            {AUTH_PAGES && (
+              <Link href="/login" className="hover:text-foreground">
+                Log in
+              </Link>
+            )}
           </nav>
         </div>
       </footer>

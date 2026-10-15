@@ -26,6 +26,7 @@ export default defineConfig({
     ? undefined
     : [
         { command: `${python} ../dev.py api`, url: "http://localhost:8000/api/health", reuseExistingServer: true, timeout: 120_000 },
-        { command: "npm run dev", url: "http://localhost:3000/login", reuseExistingServer: true, timeout: 180_000 },
+        // The login flow is under test, so the sign-in pages are on here (they are off by default during development).
+        { command: "npm run dev", url: "http://localhost:3000/login", reuseExistingServer: true, timeout: 180_000, env: { NEXT_PUBLIC_AUTH_PAGES: "true" } },
       ],
 });

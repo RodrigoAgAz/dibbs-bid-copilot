@@ -8,6 +8,7 @@ import { BadgeDollarSign, BarChart3, FileSearch, Inbox, Lock, MailCheck, ShieldC
 import { Button } from "@/components/ui/button";
 import { api, errorMessage, unwrap } from "@/lib/api/client";
 import { formatDate, formatSolicitation, money, num, pct, plural } from "@/lib/format";
+import { AUTH_PAGES } from "@/lib/flags";
 import { useAuthOptions, useDataHealth } from "@/lib/hooks";
 
 const STEPS = [
@@ -99,12 +100,14 @@ export default function LandingPage() {
                 {busy ? "Opening the demo…" : "Explore the live demo"}
               </Button>
             )}
-            <Button size="lg" variant={options.data?.public_demo ? "outline" : "default"} asChild>
-              <Link href="/signup">Create your account</Link>
-            </Button>
+            {AUTH_PAGES && (
+              <Button size="lg" variant={options.data?.public_demo ? "outline" : "default"} asChild>
+                <Link href="/signup">Create your account</Link>
+              </Button>
+            )}
           </div>
           {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          {options.data?.public_demo && <p className="mt-3 text-xs text-muted-foreground">The demo is read-only and needs no sign-up.</p>}
+          {options.data?.public_demo && AUTH_PAGES && <p className="mt-3 text-xs text-muted-foreground">The demo is read-only and needs no sign-up.</p>}
           {live && health.data && (
             <dl className="mt-12 grid max-w-3xl grid-cols-2 gap-6 sm:grid-cols-4" data-testid="live-stats">
               <Stat label="Open RFQ lines tracked" value={num(health.data.open_rfq_lines)} />
@@ -233,9 +236,11 @@ export default function LandingPage() {
           Create an account, pick your FSCs and margin floor, and today&apos;s open solicitations are priced within minutes.
         </p>
         <div className="mt-6 flex justify-center gap-3">
-          <Button asChild>
-            <Link href="/signup">Create your account</Link>
-          </Button>
+          {AUTH_PAGES && (
+            <Button asChild>
+              <Link href="/signup">Create your account</Link>
+            </Button>
+          )}
           {options.data?.public_demo && (
             <Button variant="outline" onClick={() => exploreDemo()} disabled={busy}>
               Explore the demo first

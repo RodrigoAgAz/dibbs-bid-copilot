@@ -268,3 +268,20 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   auto-send on, and only for candidates with an email address.
 - **Landing, Terms and Privacy pages** describe what the product actually does (no bid submission, public data,
   per-org isolation, no tracking cookies). They are not legal advice and should be reviewed by counsel.
+
+## Live QA pass (2026-10-15)
+- **History outcomes**: "lost" only when the broker recorded a bid; an award to someone else without a recorded
+  bid is "awarded" (counting those as losses made the win rate meaningless). "Recommendation would win" counts
+  only recommendations computed before the award with a verified winning price (`data_quality` rule): derived
+  listing prices produced "wins" like a $1.80 bid vs a $720 "winning price".
+- **Nothing drawn from a guess**: on quote-first and no-reference lines the P(win) curve, the cost waterfall and
+  the dashboard landed cost are hidden until a supplier quote exists; quote-first ranges wider than 20x are not
+  shown at all.
+- **Confidence needs agreeing history**: "high" also requires the last five inflation-adjusted awards to be within
+  2.5x of each other ("medium": 6x). A narrow model range over scattered history (often a unit-of-issue change)
+  was labeled high confidence.
+- **Unusable quotes are ignored for cost**: expired quotes and quotes whose lead time exceeds the line's delivery
+  days. Parsed quotes that need review still wait for approval; the RFQ page says so.
+- **Demo data hygiene**: demo-org suppliers always carry "(demo)", simulated email threads get consistent
+  timestamps, and `tidy_demo_org` repairs older demo rows idempotently (demo orgs only) on each demo refresh.
+- **`SUPPORT_EMAIL`** is shown on the Terms and Privacy pages; until it is set they show no contact line.

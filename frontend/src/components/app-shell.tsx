@@ -10,6 +10,7 @@ import { api } from "@/lib/api/client";
 import { formatDate, timeAgo } from "@/lib/format";
 import { useDataHealth, useMe } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import { AUTH_PAGES } from "@/lib/flags";
 
 const NAV = [
   { href: "/dashboard", label: "Today", icon: CalendarClock },
@@ -80,10 +81,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="max-w-[180px] truncate">{me.user.email}</span>
               </div>
             )}
+            {AUTH_PAGES && (
             <Button variant="ghost" size="sm" onClick={logout} aria-label="Log out">
               <LogOut />
               <span className="hidden sm:inline">Log out</span>
             </Button>
+            )}
           </div>
         </div>
       </header>
@@ -145,7 +148,7 @@ function ReadOnlyBanner({ demo, org, onSignup }: { demo: boolean; org: string; o
             You have read-only access to <strong>{org}</strong>. Ask an owner for member access to make changes.
           </span>
         )}
-        {demo && (
+        {demo && AUTH_PAGES && (
           <Button size="xs" className="ml-auto" onClick={() => void onSignup()}>
             Start your own account
           </Button>

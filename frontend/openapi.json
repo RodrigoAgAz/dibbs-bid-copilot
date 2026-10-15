@@ -1650,6 +1650,28 @@
         }
       }
     },
+    "/api/history/pilot": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Pilot",
+        "description": "The pilot loop for this organization: the tool's pre-award decisions against the firm's own bids, costs and\noutcomes on awarded lines, as completed profit per broker-hour (services/pilot.py; also `pilot-report` on the CLI).",
+        "operationId": "pilot_api_history_pilot_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PilotOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/history": {
       "get": {
         "tags": [
@@ -3518,6 +3540,11 @@
             "type": "boolean",
             "title": "Counted",
             "default": false
+          },
+          "historical": {
+            "type": "boolean",
+            "title": "Historical",
+            "default": false
           }
         },
         "type": "object",
@@ -4394,6 +4421,320 @@
           "unknown"
         ],
         "title": "PhoneType"
+      },
+      "PilotBucket": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "firm_bids": {
+            "type": "integer",
+            "title": "Firm Bids",
+            "default": 0
+          },
+          "firm_wins": {
+            "type": "integer",
+            "title": "Firm Wins",
+            "default": 0
+          },
+          "firm_profit": {
+            "type": "number",
+            "title": "Firm Profit",
+            "default": 0.0
+          },
+          "firm_regret": {
+            "type": "number",
+            "title": "Firm Regret",
+            "default": 0.0
+          },
+          "tool_bids": {
+            "type": "integer",
+            "title": "Tool Bids",
+            "default": 0
+          },
+          "tool_wins": {
+            "type": "integer",
+            "title": "Tool Wins",
+            "default": 0
+          },
+          "tool_profit": {
+            "type": "number",
+            "title": "Tool Profit",
+            "default": 0.0
+          },
+          "tool_regret": {
+            "type": "number",
+            "title": "Tool Regret",
+            "default": 0.0
+          },
+          "increment": {
+            "type": "number",
+            "title": "Increment",
+            "default": 0.0
+          },
+          "increment_per_firm_hour": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Increment Per Firm Hour"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "n"
+        ],
+        "title": "PilotBucket"
+      },
+      "PilotComparison": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "n_real_cost": {
+            "type": "integer",
+            "title": "N Real Cost",
+            "default": 0
+          },
+          "n_estimated_cost": {
+            "type": "integer",
+            "title": "N Estimated Cost",
+            "default": 0
+          },
+          "n_outcome_inferred": {
+            "type": "integer",
+            "title": "N Outcome Inferred",
+            "default": 0
+          },
+          "oracle_profit": {
+            "type": "number",
+            "title": "Oracle Profit",
+            "default": 0.0
+          },
+          "firm": {
+            "$ref": "#/components/schemas/PilotPolicy"
+          },
+          "tool": {
+            "$ref": "#/components/schemas/PilotPolicy"
+          },
+          "increment": {
+            "type": "number",
+            "title": "Increment"
+          },
+          "increment_per_firm_hour": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Increment Per Firm Hour"
+          },
+          "profit_per_hour_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profit Per Hour Delta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "n",
+          "firm",
+          "tool",
+          "increment"
+        ],
+        "title": "PilotComparison"
+      },
+      "PilotOut": {
+        "properties": {
+          "org_id": {
+            "type": "integer",
+            "title": "Org Id"
+          },
+          "org_name": {
+            "type": "string",
+            "title": "Org Name"
+          },
+          "cage_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cage Code"
+          },
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "hours_per_line": {
+            "type": "number",
+            "title": "Hours Per Line"
+          },
+          "lines": {
+            "type": "integer",
+            "title": "Lines"
+          },
+          "lines_decided": {
+            "type": "integer",
+            "title": "Lines Decided"
+          },
+          "firm_bids": {
+            "type": "integer",
+            "title": "Firm Bids"
+          },
+          "historical_lines": {
+            "type": "integer",
+            "title": "Historical Lines",
+            "default": 0
+          },
+          "head_to_head": {
+            "$ref": "#/components/schemas/PilotComparison"
+          },
+          "head_to_head_real_cost": {
+            "$ref": "#/components/schemas/PilotComparison"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PilotComparison"
+          },
+          "by_fsc": {
+            "items": {
+              "$ref": "#/components/schemas/PilotBucket"
+            },
+            "type": "array",
+            "title": "By Fsc"
+          },
+          "by_confidence": {
+            "items": {
+              "$ref": "#/components/schemas/PilotBucket"
+            },
+            "type": "array",
+            "title": "By Confidence"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Inputs"
+          },
+          "cost_model": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Cost Model"
+          },
+          "contestability": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Contestability"
+          },
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Caveats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "org_id",
+          "org_name",
+          "generated_at",
+          "hours_per_line",
+          "lines",
+          "lines_decided",
+          "firm_bids",
+          "head_to_head",
+          "head_to_head_real_cost",
+          "policy"
+        ],
+        "title": "PilotOut",
+        "description": "The pilot loop: did following the tool make this broker more money per hour than its own process?"
+      },
+      "PilotPolicy": {
+        "properties": {
+          "bids": {
+            "type": "integer",
+            "title": "Bids"
+          },
+          "no_bids": {
+            "type": "integer",
+            "title": "No Bids",
+            "default": 0
+          },
+          "wins": {
+            "type": "integer",
+            "title": "Wins"
+          },
+          "win_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Win Rate"
+          },
+          "profit": {
+            "type": "number",
+            "title": "Profit"
+          },
+          "hours": {
+            "type": "number",
+            "title": "Hours"
+          },
+          "profit_per_hour": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profit Per Hour"
+          },
+          "regret": {
+            "type": "number",
+            "title": "Regret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bids",
+          "wins",
+          "profit",
+          "hours",
+          "profit_per_hour",
+          "regret"
+        ],
+        "title": "PilotPolicy",
+        "description": "One bidding policy (the firm's own process, or the tool) over the same awarded lines."
       },
       "PipelineRunOut": {
         "properties": {

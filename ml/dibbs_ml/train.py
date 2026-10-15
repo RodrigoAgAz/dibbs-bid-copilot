@@ -157,13 +157,23 @@ def train_from_awards(
 
 
 def should_promote(metrics: dict) -> tuple[bool, str]:
+    """Pinball loss on the held-out window decides; once enough awarded pilot lines with a pre-award decision fall in
+    that window (`metrics["pilot_regret"]`, dibbs_ml.pilot.compare_policies), the candidate must also not leave
+    materially more profit on the table than the active model on those real lines."""
     act = metrics.get("active_model_on_same_test")
     if not act or "pinball_mean" not in act:
         return True, "no comparable active model"
     new, old = metrics["pinball_mean"], act["pinball_mean"]
-    if new < old:
-        return True, f"pinball {new:.4f} < active {old:.4f}"
-    return False, f"pinball {new:.4f} >= active {old:.4f}"
+    if new >= old:
+        return False, f"pinball {new:.4f} >= active {old:.4f}"
+    pr = metrics.get("pilot_regret") or {}
+    if pr.get("enough"):
+        c, a = pr["candidate"]["regret"], pr["active"]["regret"]
+        if not pr.get("passed", True):
+            return False, (f"pinball {new:.4f} < active {old:.4f} but regret on {pr['n']} awarded pilot lines "
+                           f"${c:,.0f} > active ${a:,.0f} (+{100 * pr['tolerance']:.0f}% allowed)")
+        return True, f"pinball {new:.4f} < active {old:.4f}; regret on {pr['n']} awarded pilot lines ${c:,.0f} vs active ${a:,.0f}"
+    return True, f"pinball {new:.4f} < active {old:.4f}"
 
 
 def save_artifact(model: PricingModel, directory: Path, run_id: int | str) -> Path:

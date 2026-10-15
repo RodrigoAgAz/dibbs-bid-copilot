@@ -6,6 +6,7 @@ import logging
 from datetime import date
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
@@ -99,6 +100,11 @@ def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = Fals
     items = build_item_index(db)  # similar items (same part family / manufacturer) for the cold-start model
     result = train_from_awards(df, as_of=as_of, active_model=active_model, items=items)
     clear_item_index()
+    try:
+        result.metrics["pilot_regret"] = pilot_regret_metrics(db, result, active_model)
+    except Exception as exc:  # the regret check must never block a retrain
+        log.exception("pilot regret check failed")
+        result.metrics["pilot_regret"] = {"n": 0, "enough": False, "passed": True, "error": str(exc)[:300]}
     promote, reason = should_promote(result.metrics)
     if force_promote:
         promote, reason = True, f"forced ({reason})"
@@ -151,6 +157,64 @@ def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = Fals
         "report": str(report),
         "previous_active": active_run.id if active_run else None,
     }
+
+
+def pilot_regret_metrics(db: Session, result, active_model) -> dict:
+    """Regret of the candidate's bids vs the active model's on the awarded pilot lines that fall in the candidate's
+    held-out test window (dibbs_ml.pilot.compare_policies). Both models are the held-out twins, predicting from the
+    frame rows of those awards (strictly-prior features), and bid through the same engine with each organization's
+    rules against the real landed cost (what the firm paid when recorded, else the estimate the line was priced at).
+    """
+    from app.services.pilot import pilot_lines_for_training
+    from dibbs_ml import pilot as pilot_math
+    from dibbs_ml.bidding import recommend_bid
+    from dibbs_ml.cdf import PriceDistribution
+
+    empty = {"n": 0, "min_lines": pilot_math.REGRET_MIN_LINES, "enough": False, "passed": True}
+    pairs = pilot_lines_for_training(db)
+    if not pairs:
+        return {**empty, "note": "no awarded pilot lines with a pre-award decision"}
+    lo, hi = (date.fromisoformat(x) for x in result.test_window.split(".."))
+    frame = result.frame
+    d = pd.to_datetime(frame["award_date"]).dt.date
+    test = frame[(d >= lo) & (d <= hi)]
+    if test.empty:
+        return {**empty, "note": "empty test window"}
+    # The frame carries no solicitation number: an award is identified by NSN, award date and winning price.
+    key: dict[tuple, int] = {}
+    for i, (nsn, ad, price) in enumerate(zip(test["nsn"], pd.to_datetime(test["award_date"]).dt.date,
+                                           test["unit_price"], strict=True)):
+        key.setdefault((str(nsn), ad, round(float(price), 4)), i)
+    picked, lines, rules = [], [], []
+    for ln, s in pairs:
+        i = key.get((ln.nsn, ln.award_date, round(ln.winning_price, 4)))
+        if i is not None:
+            picked.append(i)
+            lines.append(ln)
+            rules.append(s)
+    if not picked:
+        return {**empty, "note": f"{len(pairs)} awarded pilot lines, none in the test window {lo}..{hi}"}
+    sub = test.iloc[picked]
+    candidate = getattr(result.model, "eval_model", None) or result.model
+    active = (getattr(active_model, "eval_model", None) or active_model) if active_model is not None else None
+    if active is None:
+        return {**empty, "n": len(lines), "note": "no active model to compare with"}
+
+    def bids(model) -> list[float | None]:
+        logq, _ = model.predict_log(sub, kind="model")
+        out: list[float | None] = []
+        for i, (ln, s) in enumerate(zip(lines, rules, strict=True)):
+            dist = PriceDistribution(model.levels, np.exp(logq[i]))
+            rec = recommend_bid(dist, ln.landed, ln.quantity, min_margin_pct=s.min_margin_pct,
+                                min_expected_profit=s.min_expected_profit, max_line_value=s.max_line_value,
+                                min_p_win=s.min_p_win, fulfilment_loss_pct=float(getattr(s, "fulfilment_loss_pct", 0.0) or 0.0))
+            out.append(None if rec.no_bid else rec.recommended_bid)
+        return out
+
+    out = pilot_math.compare_policies(bids(candidate), bids(active), lines, min_lines=pilot_math.REGRET_MIN_LINES)
+    out["test_window"] = [lo.isoformat(), hi.isoformat()]
+    out["real_cost_lines"] = sum(1 for ln in lines if ln.cost_basis == "actual")
+    return out
 
 
 def _repredict_open_lines(db: Session) -> None:

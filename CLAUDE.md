@@ -18,22 +18,24 @@ backend/            FastAPI app (Python 3.12, SQLAlchemy 2, Alembic, Pydantic v2
     api/deps.py     get_current_user, get_tenant (THE tenancy dependency), role guards
     api/routes/     one router per area (auth, org+settings, suppliers, dashboard, rfq, quotes, history, admin, webhooks)
     connectors/     one module per external source (fixture + live modes, rate limiting, raw cache)
-    pipelines/      backfill, daily ingest, award labeling, FSC volume report
+    pipelines/      backfill, daily ingest, award labeling, FSC volume report, pilot_import (a firm's bids/costs/outcomes)
     services/       pricing (model inference), recommendations, landed cost, cost_model (tenant cost tiers), triage,
                     contestability + competitors, evaluation (DLA rules), sensitivity, portfolio, sourcing, email,
-                    llm, voice, training
+                    llm, voice, training, pilot (the tool vs the firm's own process on awarded lines)
     pipelines/      also enrichment.py: FLIS/PUB LOG characteristics and distributor catalog imports
     jobs/           RQ queue/worker, APScheduler schedules, task functions
     seed/           synthetic history + demo orgs (make seed)
-    cli.py          `python -m app.cli <cmd>`: migrate, seed, backfill, ingest, labels, train, fsc-report, ...
+    cli.py          `python -m app.cli <cmd>`: migrate, seed, backfill, ingest, labels, train, fsc-report,
+                    import-bids / import-costs / import-outcomes / pilot-report, ...
   alembic/          migrations (portable types: run on Postgres and SQLite)
   tests/            pytest; fixtures/ holds REAL captured DIBBS samples
 ml/
   dibbs_ml/         features (leakage-safe), baseline, LightGBM quantiles, conformal, CDF, bidding engine,
                     cost_model (tenant cost tiers), competitors (profiles, reseller-share contestability),
-                    evaluation, backtest, reports. Pure Python, no DB models (reads via SQL / DataFrames).
+                    evaluation, backtest, pilot (profit per broker-hour vs the firm's process, regret check), reports.
+                    Pure Python, no DB models (reads via SQL / DataFrames).
   data/             static PPI CSV (+ scripts/refresh_ppi.py)
-  reports/          generated: latest_model.md, fsc_volume.md, PNG charts
+  reports/          generated: latest_model.md, fsc_volume.md, pilot_<org>.md, PNG charts
   tests/            ML unit tests (incl. the leakage test and recommendation-math tests)
 frontend/           Next.js 15 App Router + TS + Tailwind + shadcn-style UI + TanStack Query + Recharts
   src/lib/api/      openapi-fetch client + generated schema.d.ts (npm run gen:api)

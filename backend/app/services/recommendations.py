@@ -217,6 +217,7 @@ def upsert_recommendation(
         row = Recommendation(organization_id=org_id, solicitation_line_id=line.id)
         db.add(row)
     before = _decision_state(row)
+    row.source = "engine"  # a pilot import may have created the row as "historical" before the engine priced the line
     row.price_prediction_id = pred.id
     row.best_quote_id = landed.quote_id
     row.landed_cost_per_unit = round(landed.landed, 4)
@@ -349,6 +350,8 @@ def snapshot_payload(row: Recommendation, pred: PricePrediction | None, usable_q
         "confidence": ex.get("confidence"),
         "target_p_win": ex.get("target_p_win"),
         "max_landed_cost": ex.get("max_landed_cost"),
+        # Contestability shown with the decision, so the pilot evaluation can score it once the award posts.
+        "p_winnable": (ex.get("contestability") or {}).get("p_winnable"),
         "actual_bid": row.actual_bid,
         "actual_cost_per_unit": row.actual_cost_per_unit,
         **extra,

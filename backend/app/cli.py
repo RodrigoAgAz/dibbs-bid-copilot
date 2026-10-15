@@ -278,6 +278,64 @@ def import_catalog_cmd(
     typer.echo(json.dumps(out))
 
 
+@cli.command("import-bids")
+def import_bids_cmd(path: str, org: int = typer.Option(..., help="organization id the bids belong to")) -> None:
+    """Pilot: load a firm's historical bids (solicitation number, NSN, bid per unit, date[, line, quantity]) onto its
+    recommendations; lines the tool never priced become 'historical' rows (excluded from the dashboard)."""
+    from app.db import session_scope
+    from app.pipelines.pilot_import import import_bids, read_text
+
+    _setup_logging()
+    with session_scope() as db:
+        out = import_bids(db, org, read_text(path), source_file=Path(path).name)
+        db.commit()
+    typer.echo(json.dumps(out, indent=2))
+
+
+@cli.command("import-costs")
+def import_costs_cmd(path: str, org: int = typer.Option(..., help="organization id the purchases belong to")) -> None:
+    """Pilot: load what the firm paid on won lines (solicitation number, NSN, cost per unit[, freight, date paid, quantity])."""
+    from app.db import session_scope
+    from app.pipelines.pilot_import import import_costs, read_text
+
+    _setup_logging()
+    with session_scope() as db:
+        out = import_costs(db, org, read_text(path), source_file=Path(path).name)
+        db.commit()
+    typer.echo(json.dumps(out, indent=2))
+
+
+@cli.command("import-outcomes")
+def import_outcomes_cmd(path: str, org: int = typer.Option(..., help="organization id (needs a CAGE code)")) -> None:
+    """Pilot: load outcomes award labeling has not recorded (solicitation number, NSN, won/lost or awardee CAGE[, award
+    price, award date, contract, quantity]); existing award rows are left alone."""
+    from app.db import session_scope
+    from app.pipelines.pilot_import import import_outcomes, read_text
+
+    _setup_logging()
+    with session_scope() as db:
+        out = import_outcomes(db, org, read_text(path), source_file=Path(path).name)
+        db.commit()
+    typer.echo(json.dumps(out, indent=2))
+
+
+@cli.command("pilot-report")
+def pilot_report_cmd(org: int = typer.Option(..., help="organization id"),
+                     out: str = typer.Option("", help="directory for the report (default ml/reports)")) -> None:
+    """Pilot: write ml/reports/pilot_<org>.md (the tool vs the firm's own process, completed profit per broker-hour)
+    and print the headline numbers."""
+    from app.db import session_scope
+    from app.services.pilot import write_pilot_report
+
+    _setup_logging()
+    with session_scope() as db:
+        path, ev = write_pilot_report(db, org, Path(out) if out else None)
+    h = ev["head_to_head"]
+    typer.echo(json.dumps({"report": str(path), "lines_compared": h["n"], "firm": h["firm"], "tool": h["tool"],
+                           "increment": h["increment"], "increment_per_firm_hour": h["increment_per_firm_hour"],
+                           "inputs": ev["inputs"], "caveats": ev["caveats"]}, indent=2, default=str))
+
+
 @cli.command("create-superadmin")
 def create_superadmin(email: str, password: str = typer.Option(..., prompt=True, hide_input=True)) -> None:
     """Create (or promote) a global superadmin user."""

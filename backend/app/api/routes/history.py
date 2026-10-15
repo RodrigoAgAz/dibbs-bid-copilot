@@ -19,11 +19,20 @@ from app.models import (
     Solicitation,
     SolicitationLine,
 )
-from app.schemas.rfq import HistoryOut, HistoryRow, HistoryStats
+from app.schemas.rfq import HistoryOut, HistoryRow, HistoryStats, PilotOut
 from app.services.data_quality import MAX_RATIO, RELIABLE_SOURCES
 from app.services.ops import SYNTHETIC_PREFIX, hide_synthetic
 
 router = APIRouter(prefix="/api", tags=["history"])
+
+
+@router.get("/history/pilot", response_model=PilotOut)
+def pilot(ctx: TenantContext = Depends(get_tenant)) -> PilotOut:
+    """The pilot loop for this organization: the tool's pre-award decisions against the firm's own bids, costs and
+    outcomes on awarded lines, as completed profit per broker-hour (services/pilot.py; also `pilot-report` on the CLI)."""
+    from app.services.pilot import evaluate_pilot
+
+    return PilotOut(**evaluate_pilot(ctx.db, ctx.org_id))
 
 
 @router.get("/history", response_model=HistoryOut)
@@ -141,6 +150,7 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
                 awardee_cage=a.awardee_cage if a else None,
                 award_date=a.award_date if a else None,
                 counted=counted,
+                historical=rec.source == "historical",
             )
         )
     decided = won + lost

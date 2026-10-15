@@ -9,6 +9,7 @@ import { Badge, Tip } from "@/components/ui/misc";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDate, formatNsn, money, num, pct, plural } from "@/lib/format";
+import { costBasisNote, pilotVerdict, type PilotOut } from "@/lib/pilot";
 import { cn } from "@/lib/utils";
 import { useDataHealth } from "@/lib/hooks";
 
@@ -29,8 +30,118 @@ const FILTERS = [
 ] as const;
 type FilterKey = (typeof FILTERS)[number]["key"];
 
+const VERDICT_BADGE: Record<string, "success" | "destructive" | "warning" | "secondary"> = {
+  good: "success",
+  bad: "destructive",
+  warn: "warning",
+  neutral: "secondary",
+};
+
+function PilotSection({ p }: { p: PilotOut }) {
+  const h = p.head_to_head;
+  const v = pilotVerdict(h, p.inputs ?? {});
+  const basis = costBasisNote(h);
+  const byConfidence = p.by_confidence ?? [];
+  const caveats = p.caveats ?? [];
+  const [showCaveats, setShowCaveats] = useState(false);
+  return (
+    <div className="mb-4 rounded-lg border bg-card p-4" data-testid="pilot">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="text-sm font-semibold">Pilot: the tool against your own process</div>
+        <Badge variant={VERDICT_BADGE[v.tone]}>{v.label}</Badge>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Awarded lines you bid on where the tool had decided before the award posted: your completed profit at your bid against the profit
+        the tool&apos;s bid would have made, at the cost you actually paid where you recorded it. {v.sentence}
+      </p>
+      {h.n > 0 && (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
+            <Stat label="Lines compared" value={num(h.n)} hint={basis ?? `all ${num(h.n_real_cost)} at the cost you paid`} />
+            <Stat
+              label="Your profit / hour"
+              value={money(h.firm.profit_per_hour)}
+              hint={`${num(h.firm.wins)} of ${plural(h.firm.bids, "bid")} won · ${money(h.firm.profit)} in ${num(h.firm.hours, 1)} h`}
+            />
+            <Stat
+              label="Tool's profit / hour"
+              value={money(h.tool.profit_per_hour)}
+              hint={`${num(h.tool.wins)} of ${plural(h.tool.bids, "bid")} won${h.tool.no_bids ? `, ${plural(h.tool.no_bids, "no-bid")}` : ""} · ${money(h.tool.profit)} in ${num(h.tool.hours, 1)} h`}
+            />
+            <Stat
+              label="Increment"
+              value={money(h.increment)}
+              tone={h.n >= 30 ? (h.increment > 0 ? "good" : h.increment < 0 ? "bad" : undefined) : undefined}
+              hint={h.increment_per_firm_hour != null ? `${money(h.increment_per_firm_hour)} per hour you spent` : "tool profit − your profit"}
+            />
+            <Stat
+              label="Left on the table"
+              value={`${money(h.firm.regret)} / ${money(h.tool.regret)}`}
+              hint={`you / the tool, against the best bid with hindsight (${money(h.oracle_profit)})`}
+            />
+          </div>
+          {byConfidence.length > 1 && (
+            <div className="mt-3 overflow-x-auto">
+              <Table>
+                <THead>
+                  <tr>
+                    <TH>Confidence</TH>
+                    <TH className="text-right">Lines</TH>
+                    <TH className="text-right">Your wins</TH>
+                    <TH className="text-right">Your profit</TH>
+                    <TH className="text-right">Tool wins</TH>
+                    <TH className="text-right">Tool profit</TH>
+                    <TH className="text-right">Increment</TH>
+                  </tr>
+                </THead>
+                <TBody>
+                  {byConfidence.map((b) => (
+                    <TR key={b.key}>
+                      <TD className="capitalize">{b.key}</TD>
+                      <TD className="num text-right">{num(b.n)}</TD>
+                      <TD className="num text-right">{num(b.firm_wins)}</TD>
+                      <TD className="num text-right">{money(b.firm_profit)}</TD>
+                      <TD className="num text-right">{num(b.tool_wins)}</TD>
+                      <TD className="num text-right">{money(b.tool_profit)}</TD>
+                      <TD className={cn("num text-right font-medium", b.increment > 0 && "text-success", b.increment < 0 && "text-destructive")}>
+                        {money(b.increment)}
+                      </TD>
+                    </TR>
+                  ))}
+                </TBody>
+              </Table>
+            </div>
+          )}
+          {p.policy.n > h.n && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              As a policy over all {num(p.policy.n)} awarded lines it decided (including {num(p.policy.n - h.n)} you skipped), the tool would
+              have placed {plural(p.policy.tool.bids, "bid")}, won {num(p.policy.tool.wins)} and made {money(p.policy.tool.profit)} in{" "}
+              {num(p.policy.tool.hours, 1)} h.
+            </p>
+          )}
+        </>
+      )}
+      {caveats.length > 0 && (
+        <div className="mt-2">
+          <Button variant="ghost" size="xs" onClick={() => setShowCaveats((x) => !x)}>
+            {showCaveats ? "Hide" : "Show"} {plural(caveats.length, "caveat")}
+          </Button>
+          {showCaveats && (
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-[11px] text-muted-foreground">
+              {caveats.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const q = useQuery({ queryKey: ["history"], queryFn: async () => unwrap(await api.GET("/api/history")) });
+  const pilot = useQuery({ queryKey: ["history", "pilot"], queryFn: async () => unwrap(await api.GET("/api/history/pilot")) });
   const s = q.data?.stats;
   const [filter, setFilter] = useState<FilterKey>("all");
   const [shown, setShown] = useState(PAGE);
@@ -63,6 +174,7 @@ export default function HistoryPage() {
           </div>
         </div>
       )}
+      {pilot.data && (pilot.data.head_to_head.n > 0 || (pilot.data.inputs?.firm_bids ?? 0) > 0) && <PilotSection p={pilot.data} />}
       {q.isLoading ? (
         <Loading />
       ) : q.error ? (
@@ -138,7 +250,11 @@ export default function HistoryPage() {
                       <TD className="num text-right">{num(r.quantity)}</TD>
                       <TD className="num text-right">{money(r.landed_cost)}</TD>
                       <TD className="num text-right">
-                        {r.counted && r.snapshot_bid != null ? (
+                        {r.historical ? (
+                          <Tip content="Imported from your records: the tool never priced this line">
+                            <span className="text-muted-foreground">not priced</span>
+                          </Tip>
+                        ) : r.counted && r.snapshot_bid != null ? (
                           <Tip content={`The bid shown before the award posted${r.recommended_bid != null && Math.abs(r.recommended_bid - r.snapshot_bid) > 1e-6 ? ` (now ${money(r.recommended_bid)} after a recompute)` : ""}`}>
                             <span>{money(r.snapshot_bid)}</span>
                           </Tip>

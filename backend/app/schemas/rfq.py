@@ -407,6 +407,8 @@ class HistoryRow(BaseModel):
     award_date: date | None
     # Counted in "recommendation would win": a snapshot before the award, verified winning price, a bid recommended
     counted: bool = False
+    # Imported from the firm's records for a line the tool never priced (no recommendation to compare with)
+    historical: bool = False
 
 
 class HistoryStats(BaseModel):
@@ -428,3 +430,68 @@ class HistoryStats(BaseModel):
 class HistoryOut(BaseModel):
     stats: HistoryStats
     rows: list[HistoryRow]
+
+
+# ----------------------------------------------------------------------------------------------- pilot evaluation
+class PilotPolicy(BaseModel):
+    """One bidding policy (the firm's own process, or the tool) over the same awarded lines."""
+
+    bids: int
+    no_bids: int = 0
+    wins: int
+    win_rate: float | None = None
+    profit: float  # completed profit: (bid - landed cost) x quantity on won lines
+    hours: float  # bids x pursuit hours per line
+    profit_per_hour: float | None
+    regret: float  # hindsight-best profit minus this policy's profit
+
+
+class PilotComparison(BaseModel):
+    n: int
+    n_real_cost: int = 0  # lines where the firm recorded what it paid
+    n_estimated_cost: int = 0  # lines priced at the landed-cost estimate
+    n_outcome_inferred: int = 0
+    oracle_profit: float = 0.0
+    firm: PilotPolicy
+    tool: PilotPolicy
+    increment: float  # tool profit - firm profit
+    increment_per_firm_hour: float | None = None
+    profit_per_hour_delta: float | None = None
+
+
+class PilotBucket(BaseModel):
+    key: str
+    n: int
+    firm_bids: int = 0
+    firm_wins: int = 0
+    firm_profit: float = 0.0
+    firm_regret: float = 0.0
+    tool_bids: int = 0
+    tool_wins: int = 0
+    tool_profit: float = 0.0
+    tool_regret: float = 0.0
+    increment: float = 0.0
+    increment_per_firm_hour: float | None = None
+
+
+class PilotOut(BaseModel):
+    """The pilot loop: did following the tool make this broker more money per hour than its own process?"""
+
+    org_id: int
+    org_name: str
+    cage_code: str | None = None
+    generated_at: str
+    hours_per_line: float
+    lines: int  # awarded lines with a verified price and a cost basis
+    lines_decided: int  # of which the tool had decided before the award
+    firm_bids: int
+    historical_lines: int = 0
+    head_to_head: PilotComparison
+    head_to_head_real_cost: PilotComparison
+    policy: PilotComparison
+    by_fsc: list[PilotBucket] = Field(default_factory=list)
+    by_confidence: list[PilotBucket] = Field(default_factory=list)
+    inputs: dict[str, int] = Field(default_factory=dict)
+    cost_model: dict[str, Any] = Field(default_factory=dict)
+    contestability: dict[str, Any] = Field(default_factory=dict)
+    caveats: list[str] = Field(default_factory=list)

@@ -73,7 +73,8 @@ def main(argv: list[str]) -> int:
         print(_env()["DATABASE_URL"])
         return 0
     if target in {"migrate", "seed", "ingest", "labels", "train", "fsc-report", "followups", "backfill",
-                  "export-openapi", "create-superadmin"}:
+                  "export-openapi", "create-superadmin", "import-characteristics", "import-catalog",
+                  "import-bids", "import-costs", "import-outcomes", "pilot-report"}:
         return backend_cli([target, *rest])
     if target == "api":
         env = _env()

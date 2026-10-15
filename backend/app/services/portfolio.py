@@ -71,6 +71,7 @@ def portfolio_summary(db: Session, org_id: int, s: OrgSettings) -> PortfolioSumm
         .join(L, R.solicitation_line_id == L.id)
         .join(S, L.solicitation_id == S.id)
         .where(R.organization_id == org_id, or_(S.return_by_date.is_(None), S.return_by_date >= today), not_awarded(),
+               R.source != "historical",
                L.fsc.in_(list(s.fsc_watchlist or [])) if s.fsc_watchlist else True)
     ).all()
     out = PortfolioSummary(working_capital_limit=s.working_capital_limit, max_open_awards=s.max_open_awards,

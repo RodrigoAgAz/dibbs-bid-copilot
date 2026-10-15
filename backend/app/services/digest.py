@@ -85,6 +85,7 @@ def build_digest(db: Session, org_id: int, now: datetime | None = None) -> Diges
         .where(
             Recommendation.organization_id == org_id,
             Recommendation.no_bid.is_(False),
+            Recommendation.source != "historical",
             Solicitation.return_by_date >= today,
             not_awarded(),
             SolicitationLine.fsc.in_(fscs),

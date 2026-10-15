@@ -106,6 +106,7 @@ def dashboard(
             or_(S.return_by_date.is_(None), S.return_by_date >= today),
             not_awarded(),
             L.fsc.in_(fscs),
+            R.source != "historical",  # pilot-imported bids on lines the tool never priced carry no recommendation
             *([~S.solicitation_number.startswith(SYNTHETIC_PREFIX)] if hide_synthetic() else []),
         )
     ).all()

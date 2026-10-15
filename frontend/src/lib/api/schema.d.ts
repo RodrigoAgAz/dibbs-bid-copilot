@@ -667,6 +667,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/history/pilot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pilot
+         * @description The pilot loop for this organization: the tool's pre-award decisions against the firm's own bids, costs and
+         *     outcomes on awarded lines, as completed profit per broker-hour (services/pilot.py; also `pilot-report` on the CLI).
+         */
+        get: operations["pilot_api_history_pilot_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/history": {
         parameters: {
             query?: never;
@@ -1394,6 +1415,11 @@ export interface components {
              * @default false
              */
             counted: boolean;
+            /**
+             * Historical
+             * @default false
+             */
+            historical: boolean;
         };
         /** HistoryStats */
         HistoryStats: {
@@ -1682,6 +1708,166 @@ export interface components {
          * @enum {string}
          */
         PhoneType: "landline" | "mobile" | "unknown";
+        /** PilotBucket */
+        PilotBucket: {
+            /** Key */
+            key: string;
+            /** N */
+            n: number;
+            /**
+             * Firm Bids
+             * @default 0
+             */
+            firm_bids: number;
+            /**
+             * Firm Wins
+             * @default 0
+             */
+            firm_wins: number;
+            /**
+             * Firm Profit
+             * @default 0
+             */
+            firm_profit: number;
+            /**
+             * Firm Regret
+             * @default 0
+             */
+            firm_regret: number;
+            /**
+             * Tool Bids
+             * @default 0
+             */
+            tool_bids: number;
+            /**
+             * Tool Wins
+             * @default 0
+             */
+            tool_wins: number;
+            /**
+             * Tool Profit
+             * @default 0
+             */
+            tool_profit: number;
+            /**
+             * Tool Regret
+             * @default 0
+             */
+            tool_regret: number;
+            /**
+             * Increment
+             * @default 0
+             */
+            increment: number;
+            /** Increment Per Firm Hour */
+            increment_per_firm_hour?: number | null;
+        };
+        /** PilotComparison */
+        PilotComparison: {
+            /** N */
+            n: number;
+            /**
+             * N Real Cost
+             * @default 0
+             */
+            n_real_cost: number;
+            /**
+             * N Estimated Cost
+             * @default 0
+             */
+            n_estimated_cost: number;
+            /**
+             * N Outcome Inferred
+             * @default 0
+             */
+            n_outcome_inferred: number;
+            /**
+             * Oracle Profit
+             * @default 0
+             */
+            oracle_profit: number;
+            firm: components["schemas"]["PilotPolicy"];
+            tool: components["schemas"]["PilotPolicy"];
+            /** Increment */
+            increment: number;
+            /** Increment Per Firm Hour */
+            increment_per_firm_hour?: number | null;
+            /** Profit Per Hour Delta */
+            profit_per_hour_delta?: number | null;
+        };
+        /**
+         * PilotOut
+         * @description The pilot loop: did following the tool make this broker more money per hour than its own process?
+         */
+        PilotOut: {
+            /** Org Id */
+            org_id: number;
+            /** Org Name */
+            org_name: string;
+            /** Cage Code */
+            cage_code?: string | null;
+            /** Generated At */
+            generated_at: string;
+            /** Hours Per Line */
+            hours_per_line: number;
+            /** Lines */
+            lines: number;
+            /** Lines Decided */
+            lines_decided: number;
+            /** Firm Bids */
+            firm_bids: number;
+            /**
+             * Historical Lines
+             * @default 0
+             */
+            historical_lines: number;
+            head_to_head: components["schemas"]["PilotComparison"];
+            head_to_head_real_cost: components["schemas"]["PilotComparison"];
+            policy: components["schemas"]["PilotComparison"];
+            /** By Fsc */
+            by_fsc?: components["schemas"]["PilotBucket"][];
+            /** By Confidence */
+            by_confidence?: components["schemas"]["PilotBucket"][];
+            /** Inputs */
+            inputs?: {
+                [key: string]: number;
+            };
+            /** Cost Model */
+            cost_model?: {
+                [key: string]: unknown;
+            };
+            /** Contestability */
+            contestability?: {
+                [key: string]: unknown;
+            };
+            /** Caveats */
+            caveats?: string[];
+        };
+        /**
+         * PilotPolicy
+         * @description One bidding policy (the firm's own process, or the tool) over the same awarded lines.
+         */
+        PilotPolicy: {
+            /** Bids */
+            bids: number;
+            /**
+             * No Bids
+             * @default 0
+             */
+            no_bids: number;
+            /** Wins */
+            wins: number;
+            /** Win Rate */
+            win_rate?: number | null;
+            /** Profit */
+            profit: number;
+            /** Hours */
+            hours: number;
+            /** Profit Per Hour */
+            profit_per_hour: number | null;
+            /** Regret */
+            regret: number;
+        };
         /** PipelineRunOut */
         PipelineRunOut: {
             /** Last Success At */
@@ -3648,6 +3834,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pilot_api_history_pilot_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PilotOut"];
                 };
             };
         };

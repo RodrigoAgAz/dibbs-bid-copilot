@@ -414,3 +414,51 @@ These changes make every shown number traceable to what was actually confirmed, 
   independently in these sums: an assumption, stated in the module.
 - Downside shown as such: the effort committed to lines being pursued (what is lost if none wins) and the chance that
   none of the quoted lines is won.
+
+## Pilot loop (2026-10-15, step 7 of the maths plan)
+Steps 1-6 made every number traceable; none of them proves the product makes a broker more money per hour than the
+broker's own process. The pilot loop measures exactly that on a firm's real lines, and nothing in this plan counts as
+proven until it does.
+- **What is compared.** Awarded lines on which the tool's decision (bid or no-bid) sits in a `recommendation_snapshots`
+  row dated BEFORE the award posted, the firm's own bid, the verified winning price and the landed cost: what the firm
+  paid (`actual_cost_per_unit`; the cost import stores it landed = unit cost + freight / quantity) when recorded, else
+  the estimate the recommendation was priced against, flagged `estimate` and excluded from the "real costs only" table.
+  Per line: hindsight profit (a bid at the winning price), the firm's profit, the tool's counterfactual profit, each
+  policy's regret (hindsight minus policy) and the increment (tool minus firm). `dibbs_ml.pilot` holds the maths.
+- **Win rule and its bias.** Only the winning price is observed. A counterfactual bid wins iff it is below the winning
+  price (ties lose) and, when the firm itself won, also at that price (every competitor was above it). A recommended bid
+  above the firm's own winning bid is scored as a loss although the second-lowest bid is unknown; the bias runs against
+  the tool and is listed in every report. Without a CAGE code on the organization the firm's outcome is inferred (a bid
+  at or below the winning price won) and counted as such.
+- **Hours.** Each bid placed costs `pursuit_hours_per_line` (org setting, step 6); a no-bid costs nothing; the firm's
+  time on lines it skipped is unknown and not charged. The headline is the increment per hour the firm actually spent.
+  "Completed profit" means the award posted and the outcome is known; fulfilment losses and payment timing are ignored.
+- **Three comparisons, in order of fairness.** Head to head (lines the firm bid on where the tool had decided), the
+  same on real costs only, and the tool as a policy over every line it decided (its bids on lines the firm skipped are
+  counterfactual wins or losses). By supply class and by confidence tier for the head to head. The same evaluation adds
+  the tenant cost model's leave-one-out error and the contestability Brier score (per supply class from public awards,
+  and on the firm's own lines from the P(winnable) now stored in each snapshot).
+- **Imports map onto existing rows.** `import-bids`, `import-costs`, `import-outcomes` (CLI; `pipelines/pilot_import.py`)
+  read delimited files with columns matched by name. A bid or cost lands on the organization's recommendation for that
+  line with an `actual_bid` / `actual_cost` snapshot dated when the firm acted. A line the tool never priced gets a
+  `source = "historical"` recommendation (no bid, no price; the dashboard, digest and portfolio exclude it, History shows
+  it as "not priced"); a solicitation the tool never ingested gets a stub solicitation + line in the public tables,
+  closed on the bid date. Imports are idempotent (no duplicate snapshots).
+- **Firm-reported outcomes are derived-grade data.** `import-outcomes` writes `award_history` rows with source
+  `pilot_import` only where award labeling has none, requires the organization's CAGE (won lines are recognised by the
+  awardee), and prices a won line at the firm's own bid when no price is given. The pilot evaluation trusts them for that
+  tenant; everywhere else (training, competitors, History, the track record) they are treated like award-listing prices:
+  kept only when they agree within 5x with the NSN's verified prices. They never enter `RELIABLE_SOURCES`.
+- **Regret in model promotion.** `train_and_maybe_promote` now bids every awarded pilot line that falls in the
+  candidate's held-out test window with both the candidate and the active model (their held-out twins, predicting from
+  the frame rows of those awards, through the same engine with each organization's rules, against the real landed cost)
+  and compares total regret (`metrics["pilot_regret"]`). **Threshold: 30 such lines** (`dibbs_ml.pilot.REGRET_MIN_LINES`);
+  below it pinball loss alone decides, as before. Above it a candidate that beats the active model on pinball loss is
+  still not promoted when its regret exceeds the active model's by more than 5% (`REGRET_TOLERANCE`): a better price
+  distribution that bids worse on the lines the firm actually fought over is not an improvement for the firm. Thirty is
+  where the sign of a profit difference stops flipping on one or two awards in the synthetic worlds; it is a starting
+  point to revisit with the first pilot's data, and the report says "too early to call" below it.
+- **Outputs.** `GET /api/history/pilot` and a "Pilot" section on the History page (verdict, profit per hour for both
+  policies, increment, regret, by confidence tier, caveats); `pilot-report --org <id>` writes `ml/reports/pilot_<org>.md`
+  with the same numbers, the per-line table and the caveats. The local database holds no pilot data, so no report is
+  committed; the first real one replaces this sentence.

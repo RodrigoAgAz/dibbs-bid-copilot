@@ -131,3 +131,23 @@ Two enrichment paths were added behind measured gates rather than assumed value:
 
 Local run on the Atlas demo organization (no catalog imported, no characteristics loaded): see the table printed by
 `coverage_lab.py`; the useful numbers appear once a pilot customer's price lists are imported.
+
+## Pilot loop (2026-10-15, step 7)
+
+`dibbs_ml.pilot` scores a firm's awarded lines where the tool had decided before the award: hindsight profit, the firm's
+profit at its own bid, the tool's counterfactual profit at the recommended bid (wins iff below the winning price, or at
+it when the firm itself won), each policy's regret and the increment, aggregated as completed profit per broker-hour
+(`pursuit_hours_per_line` per bid placed), by supply class and by confidence tier. The backend collects the lines, adds
+the cost model's leave-one-out table above and the contestability Brier score on the same tenant, and writes
+`ml/reports/pilot_<org>.md`:
+
+    python -m app.cli import-bids bids.csv --org 1          # solicitation, NSN, bid per unit, date
+    python -m app.cli import-costs costs.csv --org 1        # solicitation, NSN, cost per unit[, freight, date paid]
+    python -m app.cli import-outcomes outcomes.csv --org 1  # won/lost or awardee CAGE[, price, award date]
+    python -m app.cli pilot-report --org 1
+
+The same evaluation feeds model promotion: once 30 or more awarded pilot lines fall in a candidate's test window, the
+candidate must not leave more than 5% more profit on the table than the active model on those lines
+(`metrics["pilot_regret"]`, `dibbs_ml.train.should_promote`). No pilot data exists locally yet; the first report from a
+real firm replaces this paragraph, and its caveats (only winning prices are observed; estimated costs where none were
+recorded; hours cover bids placed only) travel with the numbers.

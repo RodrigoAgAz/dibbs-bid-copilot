@@ -70,6 +70,10 @@ class Recommendation(Base, TenantOwned):
     no_bid: Mapped[bool] = mapped_column(Boolean, default=False)
     no_bid_reason: Mapped[str | None] = mapped_column(String(300), nullable=True)
     explanation: Mapped[dict] = mapped_column(JSONType, default=dict)
+    # "engine": computed by the recommendation engine. "historical": created by a pilot import (pipelines/pilot_import.py)
+    # for a line the tool never priced, so the firm's own bid / cost / outcome can be kept; such rows carry no
+    # recommendation and are excluded from the dashboard, digest and portfolio.
+    source: Mapped[str] = mapped_column(String(16), default="engine", server_default="engine")
     actual_bid: Mapped[float | None] = mapped_column(Float, nullable=True)
     actual_bid_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     # What the broker actually paid per unit after the award (purchase order + freight etc.). Only this makes a

@@ -161,6 +161,13 @@ class PricingModel:
     cold_deltas: np.ndarray
     cold_widen: float = COLD_WIDEN
     cold_ref_mode: str = "fsc"  # v1 artifacts have no such attribute and fall back to this class default
+    # The deployed model is refit on (nearly) all data; this held-out twin (trained before the test window)
+    # is what later candidates are compared against, so the comparison never favors a model that saw the test.
+    eval_model: PricingModel | None = None
+    # New parts with part-number-family evidence: the evidence itself is the median (production, held-out NSNs:
+    # 64% median error vs 88% for the cold model and 91% for the model adjusted on top of the evidence); the
+    # model only supplies the spread. Older artifacts default to False.
+    anchor_family_evidence: bool = False
     trained_at: str = ""
     train_window: str = ""
     calib_window: str = ""
@@ -187,6 +194,7 @@ class PricingModel:
             warm_deltas=np.zeros(len(levels)),
             cold_deltas=np.zeros(len(levels)),
             cold_ref_mode=cold_ref_mode,
+            anchor_family_evidence=cold_ref_mode == "similar",
             model_version="lgbm_quantile_v2" if cold_ref_mode == "similar" else "lgbm_quantile_v1",
         )
         # Group-conditional split conformal on the calibration window.
@@ -228,6 +236,10 @@ class PricingModel:
                 q = self.cold.predict(c)
                 if kind == "model":
                     q = widen(apply_conformal(q, self.cold_deltas), self.cold_widen, self.levels)
+                if self.anchor_family_evidence and "sim_ref_price" in c:
+                    has = np.isfinite(pd.to_numeric(c["sim_ref_price"], errors="coerce").to_numpy(dtype=float))
+                    mid = list(self.levels).index(0.5)
+                    q[has] = q[has] - q[has, mid][:, None]  # median = the evidence (reference); keep the spread
             out[cold_idx] = np.log(c["cold_ref_used"].to_numpy(dtype=float))[:, None] + q
         return np.sort(out, axis=1), is_cold
 
@@ -261,8 +273,13 @@ class PricingModel:
 
 
 def time_windows(as_of: date) -> dict[str, tuple[date, date]]:
-    """Train: < T-6m. Calibrate: [T-6m, T-3m). Test: [T-3m, T]."""
+    """Train: < T-4m. Calibrate: [T-4m, T-3m). Test: [T-3m, T].
+
+    A one-month calibration window right before the test (instead of three months, with training ending at
+    T-6m) gave better pinball loss (0.209 vs 0.212) and honest coverage (80% interval: 84% vs 78%) on production
+    data: prices drift, and recent residuals calibrate better (app/services/research.py, 2026-10-15).
+    """
     t = pd.Timestamp(as_of)
-    t6 = (t - pd.DateOffset(months=6)).date()
+    t4 = (t - pd.DateOffset(months=4)).date()
     t3 = (t - pd.DateOffset(months=3)).date()
-    return {"train": (date(1900, 1, 1), t6), "calib": (t6, t3), "test": (t3, as_of)}
+    return {"train": (date(1900, 1, 1), t4), "calib": (t4, t3), "test": (t3, as_of)}

@@ -46,3 +46,21 @@ def test_training_ignores_synthetic_rows_once_real_history_exists(db):
     db.add_all(rows("rfq_pdf_history", 1, "2"))
     db.commit()
     assert "9" not in set(load_awards_frame(db)["contract_number"].str[1])
+
+
+def test_deployed_model_is_refit_on_recent_data_and_keeps_a_held_out_twin(db):
+    from app.services.training import load_awards_frame
+    from dibbs_ml.train import train_from_awards
+
+    build_world(db, n_nsns=80, n_open=4, seed=11)
+    awards = load_awards_frame(db)
+    as_of = today_et() - timedelta(days=1)
+    r = train_from_awards(awards, as_of)
+    deploy, held_out = r.model, r.model.eval_model
+    assert held_out is not None and held_out.eval_model is None
+    # The refit learns from data up to the last month; the held-out twin stops before the test window.
+    assert deploy.train_window.split("..")[1] > held_out.train_window.split("..")[1]
+    assert r.metrics["deploy_refit"]["calib_rows"] > 0
+    # Metrics describe the held-out twin, and the next candidate is compared against it (not the refit).
+    r2 = train_from_awards(awards, as_of, active_model=deploy)
+    assert r2.metrics["active_model_on_same_test"]["pinball_mean"] == r.metrics["pinball_mean"]

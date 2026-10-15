@@ -167,9 +167,15 @@ widening NSN coverage. At 1 request/second, 2,000 PDFs take about an hour.
 `make train` builds one training row per historical award, with features computed only from strictly
 earlier awards (`ml/tests/test_leakage.py` enforces this). It then splits by time:
 
-- **train** on everything up to T−6 months;
-- **calibrate** with split-conformal on T−6 to T−3 months;
+- **train** on everything up to T−4 months;
+- **calibrate** with split-conformal on T−4 to T−3 months (recent residuals calibrate better: prices drift);
 - **test** on the last 3 months.
+
+That held-out model decides promotion (it must beat the active model's held-out twin on pinball loss over the
+same test window). The model that is deployed is then refit on everything up to T−1 month and calibrated on
+the last month, so live prices reflect the latest awards. Accuracy is reported by history depth (no history,
+1, 2–4, 5+ awards). Research on production data runs in-cluster (`RESEARCH_RUN`, `app/services/research.py`);
+see `ml/research/README.md`.
 
 `ml/reports/latest_model.md` (plus PNG charts) reports the following, and the `/admin` model page shows the
 same metrics:

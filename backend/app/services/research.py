@@ -86,7 +86,7 @@ def run_research(db: Session, run_id: str, experiments: list[str] | None = None)
 
     if "recency" in experiments:
         # Same test window (last 3 months); train on data ending 6 / 4 / 3.5 months before T.
-        for name, calib_m in (("A: train<T-6m, calib 3m (production today)", 3.0), ("B: train<T-4m, calib 1m", 1.0),
+        for name, calib_m in (("A: train<T-6m, calib 3m (production until 2026-10-15)", 3.0), ("B: train<T-4m, calib 1m (production since)", 1.0),
                               ("C: train<T-3.5m, calib 0.5m", 0.5)):
             train, calib, test = _windows(frame, as_of, calib_m)
             m = PricingModel.train(train, calib)

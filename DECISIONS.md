@@ -236,6 +236,12 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
 - **Model code changes trigger one retrain** (`MODEL_CODE_VERSION`, queued by the worker at startup and the
   hourly ops check; the job sets its own marker so an outgoing worker with older code can't). Promotion still
   requires a better pinball loss than the active model on the same held-out window.
+- **Recent-data protocol and a deployed refit** (production research 2026-10-15): evaluate on train < T-4m,
+  calibrate T-4m..T-3m, test the last 3 months (pinball 0.209 vs 0.212, 80% coverage 84% vs 78%); then deploy a
+  refit on everything up to T-1m calibrated on the last month. The deployed artifact carries its held-out twin
+  (`eval_model`), and later candidates are compared against that twin, never against a model that saw the test.
+- **New parts with part-family evidence use the evidence as the median** (64% vs 88% median error), with the
+  model's spread around it.
 - **Accuracy is reported by history depth** (no history / 1 / 2-4 / 5+ awards) in the model metrics, the
   health endpoint and the landing page, because the overall median mixes two very different populations.
 

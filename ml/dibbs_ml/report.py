@@ -111,8 +111,9 @@ def write_model_report(metrics: dict, run_id, promoted: bool, promote_reason: st
         "",
         "## Data and time windows",
         "",
-        "Time-based split, never random: train on everything up to T-6 months, conformal calibration on "
-        "T-6..T-3 months, test on T-3 months..T.",
+        "Time-based split, never random: train on everything up to T-4 months, conformal calibration on "
+        "T-4..T-3 months, test on T-3 months..T. The deployed model is then refit on everything up to T-1 month "
+        "and calibrated on the last month.",
         "",
         "| Window | Dates | Rows |",
         "|---|---|---|",

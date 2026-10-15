@@ -38,3 +38,20 @@ active one on pinball loss over the same held-out window.
 Technical characteristics: DLA's public FLIS / PUB LOG data (dimensions, material, MRC characteristics,
 reference numbers) would let the model compare a new gasket with gaskets of the same size and material.
 Until then the product's answer for new parts is the right one: show the evidence and get a supplier quote.
+
+## Production run (2026-10-15, in-cluster, 49,434 verified awards across 4,874 NSNs; test = last 3 months, 1,982 rows)
+
+| Protocol | Pinball | MdAPE | 80% coverage | MdAPE 5+ awards | MdAPE 1 award | MdAPE no history |
+|---|---|---|---|---|---|---|
+| A: train < T-6m, calibrate 3 months (old) | 0.2124 | 25.7% | 78% | 12.7% | 23.2% | 78.9% |
+| **B: train < T-4m, calibrate 1 month (now)** | **0.2091** | 25.1% | 84% | 13.0% | 23.1% | 79.0% |
+| C: train < T-3.5m, calibrate 2 weeks | 0.2112 | 25.7% | 88% | 12.7% | 24.3% | 79.2% |
+| Last award + FSC residuals (baseline) | 0.2674 | 28.5% | 73% | 13.4% | 29.3% | 91.6% |
+
+- At production scale the model clearly beats the last-award baseline (unlike the small local sample).
+- B is now the evaluation protocol; the deployed model is refit up to T-1m and calibrated on the last month.
+- Median shrinkage toward the last award: lambda 0.4 trades pinball 0.121 -> 0.129 for MdAPE 14.0% -> 13.8%: rejected.
+- Capacity (15/31/63 leaves, 350-900 trees, min_child 25/100): no configuration better; defaults kept.
+- New parts, held-out NSNs (2,047 rows; part-family evidence on 6.7%): cold model 83%; where evidence exists the
+  evidence alone is 64% vs 88% (cold model) and 91% (model on top of evidence), so v2.2 anchors the median on the
+  evidence and keeps the model's spread.

@@ -18,6 +18,8 @@ from dibbs_ml.inflation import PPI, default_ppi
 from dibbs_ml.models import PricingModel, time_windows
 
 MIN_WINDOW_ROWS = 30
+# The deployed model is refit on everything except the most recent DEPLOY_CALIB_MONTHS, which calibrate its ranges.
+DEPLOY_CALIB_MONTHS = 1.0
 
 
 @dataclass
@@ -76,7 +78,14 @@ def train_from_awards(
     ppi: PPI | None = None,
     active_model: PricingModel | None = None,
     items=None,
+    refit: bool = True,
+    deploy_calib_months: float = DEPLOY_CALIB_MONTHS,
 ) -> TrainResult:
+    """Train, evaluate on the held-out window, then (refit=True) refit the deployable model on recent data.
+
+    Metrics always describe the held-out model (trained before the test window). The returned model is the refit,
+    carrying the held-out twin as `eval_model` for future comparisons.
+    """
     ppi = ppi or default_ppi()
     frame = build_training_frame(awards, ppi, items=items)
     if len(frame) < 3 * MIN_WINDOW_ROWS:
@@ -115,15 +124,31 @@ def train_from_awards(
     }
     if active_model is not None:
         try:
-            act_m, _ = evaluate_model(active_model, test, "model")
+            act_m, _ = evaluate_model(getattr(active_model, "eval_model", None) or active_model, test, "model")
             metrics["active_model_on_same_test"] = {
                 k: act_m[k] for k in ("pinball_mean", "mape_median", "median_abs_pct_error", "coverage_80",
                                       "coverage_90", "n", "warm", "cold", "by_history") if k in act_m
             }
         except Exception as exc:  # incompatible old artifact
             metrics["active_model_on_same_test"] = {"error": str(exc)[:300]}
+    deploy = model
+    if refit:
+        d = pd.to_datetime(frame["award_date"])
+        start = pd.Timestamp(as_of) - pd.DateOffset(days=int(deploy_calib_months * 30.4))
+        dtrain, dcalib = frame[d < start], frame[d >= start]
+        if len(dcalib) < MIN_WINDOW_ROWS or len(dtrain) < 3 * MIN_WINDOW_ROWS:
+            order = frame.sort_values("award_date")
+            k = int(len(order) * 0.9)
+            dtrain, dcalib = order.iloc[:k], order.iloc[k:]
+        deploy = PricingModel.train(dtrain, dcalib, QUANTILE_LEVELS, cold_ref_mode=model.cold_ref_mode)
+        deploy.trained_at = datetime.now(UTC).isoformat()
+        deploy.train_window = f"{dtrain['award_date'].min()}..{dtrain['award_date'].max()}"
+        deploy.calib_window = f"{dcalib['award_date'].min()}..{dcalib['award_date'].max()}"
+        deploy.eval_model = model
+        metrics["deploy_refit"] = {"train_rows": len(dtrain), "calib_rows": len(dcalib),
+                                   "train_window": deploy.train_window, "calib_window": deploy.calib_window}
     return TrainResult(
-        model=model,
+        model=deploy,
         metrics=json.loads(json.dumps(metrics, default=float)),
         train_window=model.train_window,
         test_window=f"{windows['test'][0]}..{windows['test'][1]}",

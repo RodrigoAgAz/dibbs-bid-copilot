@@ -6248,6 +6248,17 @@
           "since_days": {
             "type": "integer",
             "title": "Since Days"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
           }
         },
         "type": "object",

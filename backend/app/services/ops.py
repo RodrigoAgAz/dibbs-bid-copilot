@@ -34,6 +34,9 @@ STALE_INDEX_DAYS = 4
 STALE_RUN_HOURS = {"dibbs_rfq": 14, "dibbs_awards": 30}
 ALERT_EVERY = timedelta(hours=12)
 SYNTHETIC_PREFIX = "SPEZZ"  # demo solicitations (app/seed/demo.py)
+# The live track record measures the current pricing system: predictions made before this date used the
+# pre-fix pipeline (lines priced before their NSN history arrived; see DECISIONS.md) and are not counted.
+TRACK_RECORD_SINCE = date(2026, 10, 15)
 
 
 def hide_synthetic() -> bool:
@@ -131,7 +134,7 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
     }
 
 
-def live_track_record(db: Session, since_days: int = 180) -> dict:
+def live_track_record(db: Session, since_days: int = 180, since: date = TRACK_RECORD_SINCE) -> dict:
     """How the live predictions did once DLA posted the award (out of sample by construction).
 
     For real solicitations that have been awarded, take the last prediction made before BOTH the award date and
@@ -169,7 +172,8 @@ def live_track_record(db: Session, since_days: int = 180) -> dict:
         for line_id in chunk:
             cut, price = winners[line_id]
             cutoff = datetime.combine(cut, datetime.min.time(), tzinfo=UTC)  # strictly before that day
-            before = [p for p in preds.get(line_id, []) if p.created_at and p.created_at <= cutoff]
+            start = datetime.combine(since, datetime.min.time(), tzinfo=UTC)
+            before = [p for p in preds.get(line_id, []) if p.created_at and start <= p.created_at < cutoff]
             if not before:
                 continue
             q = before[-1].quantiles or {}
@@ -191,6 +195,7 @@ def live_track_record(db: Session, since_days: int = 180) -> dict:
         "median_abs_pct_error": round(errors[n // 2] if n % 2 else (errors[n // 2 - 1] + errors[n // 2]) / 2, 4)
         if n else None,
         "since_days": since_days,
+        "since": since.isoformat(),
     }
 
 

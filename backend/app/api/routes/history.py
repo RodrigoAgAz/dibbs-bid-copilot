@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
@@ -51,7 +53,11 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
                     margins.append((rec.actual_bid - rec.landed_cost_per_unit) / rec.actual_bid)
             else:
                 lost += 1
-        if a is not None and rec.recommended_bid is not None and not rec.no_bid:
+        # Only recommendations last computed before the award posted count (a fast award can post before the
+        # return-by date, and a recommendation recomputed after it could already know the winning price).
+        before_award = a is not None and rec.updated_at is not None and rec.updated_at < datetime.combine(
+            a.award_date, datetime.min.time(), tzinfo=UTC)
+        if a is not None and before_award and rec.recommended_bid is not None and not rec.no_bid:
             rec_decided += 1
             rec_would_win += int(rec.recommended_bid < a.unit_price)
         out.append(

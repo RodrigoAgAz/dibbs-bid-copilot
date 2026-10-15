@@ -342,8 +342,9 @@ def test_live_track_record_uses_only_predictions_made_before_close(db):
     db.add(AwardHistory(nsn=line.nsn, award_date=today - timedelta(days=3), unit_price=1.1, quantity=10,
                         contract_number="SPE-TR-1", solicitation_number=sol.solicitation_number, source="award_listing"))
     db.commit()
-    tr = live_track_record(db)
+    tr = live_track_record(db, since=today - timedelta(days=30))
     assert tr["n"] == 1 and tr["coverage_80"] == 1.0
+    assert live_track_record(db, since=today - timedelta(days=12))["n"] == 0  # only pre-fix predictions
     assert tr["median_abs_pct_error"] == pytest.approx(abs(1.0 - 1.1) / 1.1, abs=1e-4)
 
 

@@ -75,6 +75,7 @@ class TrackRecordOut(BaseModel):
     coverage_80: float | None
     median_abs_pct_error: float | None
     since_days: int
+    since: str | None = None
 
 
 class DataHealthOut(BaseModel):

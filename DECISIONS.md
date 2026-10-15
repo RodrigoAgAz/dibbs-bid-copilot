@@ -209,7 +209,11 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   Awarded/Cancelled now leave the dashboard, digest, demo, re-pricing and open-line counts
   (`services/biddable.py`). Before this, re-pricing folded a line's own winning price into its "prediction".
 - **The live track record only counts predictions made before the award date** (and before the return-by date).
-  The first version used the return-by date alone and showed a too-good-to-be-true 0.5% median error.
+  The first version used the return-by date alone and showed a too-good-to-be-true 0.5% median error. It also
+  starts on 2026-10-15 (`TRACK_RECORD_SINCE`): predictions before that came from the pre-fix pipeline (lines priced
+  before their history arrived) and scored a 56% median error on 63 awarded lines; the track record measures the
+  current system. History's "recommendation would win" likewise only counts recommendations last computed before
+  the award posted.
 - **Accuracy shown honestly.** On run 3's held-out window (830 real awards) the median absolute error of the
   model's median (17.3%) is no better than the inflation-adjusted last award (16.9%); the model's value is in
   calibrated ranges (80% / 90% coverage 76% / 89%) and the win-probability curve, and it wins on pinball loss.

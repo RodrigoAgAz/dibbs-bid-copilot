@@ -2128,6 +2128,8 @@ export interface components {
             median_abs_pct_error: number | null;
             /** Since Days */
             since_days: number;
+            /** Since */
+            since?: string | null;
         };
         /** UserOut */
         UserOut: {

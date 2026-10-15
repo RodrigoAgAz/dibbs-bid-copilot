@@ -139,9 +139,9 @@ export default function LandingPage() {
             </dl>
             {health.data.live_track_record && health.data.live_track_record.n >= 20 ? (
               <p className="text-xs text-muted-foreground sm:col-span-2" data-testid="live-track-record">
-                Live: of {num(health.data.live_track_record.n)} solicitations priced before they closed and since awarded, the winning price
-                fell inside the predicted 80% range {pct(health.data.live_track_record.coverage_80)} of the time (median error{" "}
-                {pct(health.data.live_track_record.median_abs_pct_error)}).
+                Live since {formatDate(health.data.live_track_record.since)}: of {num(health.data.live_track_record.n)} solicitations priced
+                before their award, the winning price fell inside the predicted 80% range {pct(health.data.live_track_record.coverage_80)}{" "}
+                of the time (median error {pct(health.data.live_track_record.median_abs_pct_error)}).
               </p>
             ) : null}
           </div>

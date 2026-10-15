@@ -30,11 +30,12 @@ export default function HistoryPage() {
         <div className="mb-4 rounded-lg border bg-card p-4" data-testid="track-record">
           <div className="text-sm font-semibold">Live track record (all solicitations, not just yours)</div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Every solicitation priced before it closed, checked against the winning price once DLA posted the award. No hindsight: only the
-            last prediction made before the return-by date counts.
+            Every solicitation priced before it was awarded, checked against the winning price once DLA posted the award. No hindsight: only
+            the last prediction made before the award (and before the return-by date) counts, from the current pricing system
+            {tr.since ? ` (since ${formatDate(tr.since)})` : ""}.
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2 md:max-w-xl">
-            <Stat label="Awarded lines checked" value={num(tr.n)} hint={`last ${tr.since_days} days`} />
+            <Stat label="Awarded lines checked" value={num(tr.n)} />
             <Stat label="Median price error" value={pct(tr.median_abs_pct_error)} />
             <Stat label="Winner inside 80% range" value={pct(tr.coverage_80)} tone="good" />
           </div>

@@ -8,7 +8,6 @@
  */
 import createClient from "openapi-fetch";
 import type { components, paths } from "./schema";
-import { AUTH_PAGES } from "@/lib/flags";
 
 export type Schemas = components["schemas"];
 
@@ -54,9 +53,8 @@ export async function authFetch(input: Request): Promise<Response> {
   const path = new URL(input.url, "http://x").pathname;
   if (res.status !== 401 || NO_REFRESH.some((p) => path.startsWith(p))) return res;
   if (await tryRefresh()) return fetch(withCsrf(retry));
-  const entry = AUTH_PAGES ? "/login" : "/enter";
-  if (typeof window !== "undefined" && !window.location.pathname.startsWith(entry)) {
-    window.location.href = `${entry}?next=${encodeURIComponent(window.location.pathname)}`;
+  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+    window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
   }
   return res;
 }

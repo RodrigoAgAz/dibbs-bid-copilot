@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -105,7 +106,17 @@ def signup(body: SignupIn, request: Request, response: Response, db: Session = D
 @router.post("/login", response_model=MeOut)
 def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)) -> MeOut:
     enforce(request, "login", str(body.email), limit=10, window_s=300)
-    user = db.execute(select(User).where(User.email == str(body.email).lower())).scalar_one_or_none()
+    s = get_settings()
+    login = body.email.strip().lower()
+    if s.simple_login_username and login == s.simple_login_username.strip().lower():
+        if not hmac.compare_digest(body.password.encode(), s.simple_login_password.encode()):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid username or password")
+        user = db.execute(select(User).where(User.email == s.simple_login_email.lower())).scalar_one_or_none()
+        if user is None or not user.is_active:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The account behind this login doesn't exist")
+        _issue_session(db, response, user)
+        return _me(db, user)
+    user = db.execute(select(User).where(User.email == login)).scalar_one_or_none()
     if user is None or not user.is_active or not verify_password(body.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
     _issue_session(db, response, user)

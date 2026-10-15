@@ -14,11 +14,9 @@ export function middleware(req: NextRequest) {
   const isPublic = PUBLIC.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const isAuth = AUTH.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  // Railway's deploy health check requests /login (host healthcheck.railway.app) and needs a 200, not a redirect.
-  const healthCheck = req.headers.get("host") === "healthcheck.railway.app";
-  if (!AUTH_PAGES && isAuth && !healthCheck && !(pathname === "/login" && req.nextUrl.searchParams.get("internal") === "1")) {
-    // Sign-in pages are off during development: straight into the app (the read-only demo).
-    return NextResponse.redirect(new URL(hasSession ? "/dashboard" : "/enter", req.url));
+  if (!AUTH_PAGES && isAuth && pathname !== "/login") {
+    // Sign-up and password reset are off during development: the login page is the only way in.
+    return NextResponse.redirect(new URL(hasSession ? "/dashboard" : "/login", req.url));
   }
 
   if (pathname === "/") {
@@ -26,7 +24,7 @@ export function middleware(req: NextRequest) {
     return hasSession ? NextResponse.redirect(new URL("/dashboard", req.url)) : NextResponse.next();
   }
   if (!isPublic && !hasSession) {
-    const url = new URL(AUTH_PAGES ? "/login" : "/enter", req.url);
+    const url = new URL("/login", req.url);
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }

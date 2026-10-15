@@ -82,6 +82,11 @@ class Settings(BaseSettings):
     # Pricing research on production data, in-cluster: set to a new id to run app/services/research.py once.
     research_run: str = ""
 
+    # Simple username login during development: SIMPLE_LOGIN_USERNAME / SIMPLE_LOGIN_PASSWORD sign in as the existing
+    # user SIMPLE_LOGIN_EMAIL (default: the Atlas demo org's owner). Empty username = off.
+    simple_login_username: str = ""
+    simple_login_password: str = ""
+    simple_login_email: str = "owner@atlas-demo.example.com"
     # Shown on the Terms and Privacy pages for questions, data export and deletion requests (empty = not shown).
     support_email: str = ""
     # Public demo: "Explore the demo" signs visitors in as a read-only viewer of the Atlas demo org.

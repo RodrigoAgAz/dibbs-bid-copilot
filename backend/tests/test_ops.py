@@ -434,3 +434,14 @@ def test_history_outcomes_and_would_win_use_only_verified_pre_award_prices(clien
     assert h["stats"]["lost"] == 1 and h["stats"]["won"] == 1
     # rec 1.0 beats 2.0, 2.0 and 1.5; the unverified $900 award doesn't count
     assert h["stats"]["recommendation_decided"] == 3 and h["stats"]["recommendation_would_have_won"] == 3
+
+
+def test_simple_username_login_signs_in_as_the_configured_owner(client, db, settings):
+    signup(client, "owner@atlas-demo.example.com", org="Atlas")
+    client.cookies.clear()
+    assert client.post("/api/auth/login", json={"email": "demo", "password": "demo"}).status_code == 401  # off
+    settings(simple_login_username="demo", simple_login_password="demo")
+    assert client.post("/api/auth/login", json={"email": "demo", "password": "nope"}).status_code == 401
+    r = client.post("/api/auth/login", json={"email": "Demo", "password": "demo"})
+    assert r.status_code == 200 and r.json()["user"]["email"] == "owner@atlas-demo.example.com"
+    assert r.json()["user"]["role"] == "owner"

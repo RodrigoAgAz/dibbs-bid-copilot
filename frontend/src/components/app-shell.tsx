@@ -81,12 +81,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="max-w-[180px] truncate">{me.user.email}</span>
               </div>
             )}
-            {AUTH_PAGES && (
             <Button variant="ghost" size="sm" onClick={logout} aria-label="Log out">
               <LogOut />
               <span className="hidden sm:inline">Log out</span>
             </Button>
-            )}
           </div>
         </div>
       </header>

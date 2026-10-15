@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FormError } from "@/components/form";
 import { api, errorMessage } from "@/lib/api/client";
+import { AUTH_PAGES } from "@/lib/flags";
 import { useAuthOptions } from "@/lib/hooks";
 
 export default function LoginPage() {
@@ -45,17 +46,17 @@ export default function LoginPage() {
     <Card>
       <CardHeader>
         <CardTitle as="h1" className="text-base">Log in</CardTitle>
-        <CardDescription>Welcome back. Today&apos;s solicitations are waiting.</CardDescription>
+        <CardDescription>Today&apos;s solicitations are waiting.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="grid gap-3">
-          <Field id="email" label="Email" type="email" autoComplete="email" required />
+          <Field id="email" label={AUTH_PAGES ? "Email" : "Username"} type={AUTH_PAGES ? "email" : "text"} autoComplete="username" required />
           <Field id="password" label="Password" type="password" autoComplete="current-password" required />
           <FormError message={error} />
           <Button type="submit" disabled={busy}>
             {busy ? "Logging in…" : "Log in"}
           </Button>
-          {options.data?.public_demo && (
+          {AUTH_PAGES && options.data?.public_demo && (
             <>
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
                 <span className="h-px flex-1 bg-border" />
@@ -67,7 +68,8 @@ export default function LoginPage() {
               </Button>
             </>
           )}
-          <div className="flex justify-between text-xs">
+          {AUTH_PAGES && (
+            <div className="flex justify-between text-xs">
             <Link className="text-primary hover:underline" href="/forgot-password">
               Forgot password?
             </Link>
@@ -75,6 +77,7 @@ export default function LoginPage() {
               Create an account
             </Link>
           </div>
+          )}
         </form>
       </CardContent>
     </Card>

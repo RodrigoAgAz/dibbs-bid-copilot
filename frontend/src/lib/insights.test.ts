@@ -47,4 +47,21 @@ describe("insights", () => {
   it("says so when there is no history", () => {
     expect(priceStory([], 10)[0]).toContain("No past awards on file");
   });
+
+  it("uses only verified prices and never doubles the period", () => {
+    const withDerived = [
+      a("2025-01-10", 7.0, 10, "1ABC2", "AEROMETALS, INC."),
+      a("2026-03-10", 7.2, 10, "1ABC2", "AEROMETALS, INC."),
+      { ...a("2026-06-10", 8473.53, 10, "1ABC2", "AEROMETALS, INC."), verified: false },
+    ];
+    const story = priceStory(withDerived, 10, new Date("2026-10-15"));
+    expect(story[0]).toContain("2 past awards");
+    expect(story[0]).toContain("$7.20");
+    expect(story.join(" ")).not.toContain("..");
+    expect(competitors(withDerived)[0]).toMatchObject({ wins: 3, lastPrice: 7.2 });
+    const onlyDerived = priceStory([{ ...a("2026-06-10", 900, 1, "9ZZZ9"), verified: false }], 1);
+    expect(onlyDerived[0]).toContain("aren't used for pricing");
+    expect(competitors([{ ...a("2026-06-10", 900, 1, "9ZZZ9"), verified: false }])[0].lastPrice).toBeNull();
+  });
 });
+

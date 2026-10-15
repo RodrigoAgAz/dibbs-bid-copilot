@@ -226,7 +226,7 @@ def _create_contacts(db, org: Organization, lines: list[SolicitationLine], rng: 
         ptype = rng.choice([PhoneType.landline, PhoneType.landline, PhoneType.mobile, PhoneType.unknown])
         db.add(
             SupplierContact(
-                organization_id=org.id, cage_code=cage, company_name=comp.name if comp else None,
+                organization_id=org.id, cage_code=cage, company_name=f"{comp.name if comp else cage} (demo)",
                 name=f"{rng.choice(first_names)} {rng.choice(['Lee', 'Patel', 'Garcia', 'Nguyen', 'Smith', 'Kim'])}",
                 email=f"quotes@{slug}.example.com" if i % 9 != 8 else None,
                 phone=f"+1555{rng.randint(1000000, 9999999)}", phone_type=ptype,
@@ -240,27 +240,28 @@ def _create_contacts(db, org: Organization, lines: list[SolicitationLine], rng: 
 
 # ----------------------------------------------------------------------------- mock replies
 def _reply_text(kind: str, pn: str | None, price: float, rng: random.Random) -> str:
-    pn = pn or "per NSN"
+    part = f"P/N {pn}" if pn else "this item to the NSN description"
     weeks = rng.randint(1, 8)
     if kind == "good":
-        return (f"Hi,\n\nThanks for the RFQ. We can supply P/N {pn}.\nUnit price: ${price:.2f} each, lead time "
+        return (f"Hi,\n\nThanks for the RFQ. We can supply {part}.\nUnit price: ${price:.2f} each, lead time "
                 f"{weeks} weeks ARO. Quote valid for 30 days. Freight: prepaid and add. CoC included with shipment."
                 "\n\nBest regards,\nSales")
     if kind == "detailed":
-        return (f"Quote for P/N {pn}: ${price:.2f}/ea, MOQ {rng.randint(1, 25)}, delivery {rng.randint(5, 20)} business "
+        return (f"Quote for {part}: ${price:.2f}/ea, MOQ {rng.randint(1, 25)}, delivery {rng.randint(5, 20)} business "
                 f"days. FOB origin, shipping ${rng.randint(15, 60)}.00. Certificate of conformance and full "
                 "traceability available.")
     if kind == "ambiguous":
         return (f"We have these in stock. Pricing is about ${price * 1.1:.2f} for small lots or ${price * 0.92:.2f} "
                 "for larger quantities. Let me know what works.")
     if kind == "outlier":
-        return f"Unit price: ${price * 8:.2f} each for P/N {pn}, lead time 16 weeks ARO."
+        return f"Unit price: ${price * 8:.2f} each for {part}, lead time 16 weeks ARO."
     if kind == "alternate":
         return f"We can't get the exact part but can offer an equivalent, P/N ALT-{rng.randint(1000, 9999)}, unit price ${price * 0.8:.2f} each, 3 weeks."
     return "Sorry, we are unable to quote this item at this time."
 
 
 def _simulate_quotes(db, org: Organization, lines: list[SolicitationLine], rng: random.Random, share: float) -> int:
+    from app.services.demo_refresh import backdate_thread
     from app.services.sourcing import process_inbound_email, send_quote_request
 
     n = 0
@@ -275,8 +276,10 @@ def _simulate_quotes(db, org: Organization, lines: list[SolicitationLine], rng: 
             if not qr.email_to:
                 continue
             send_quote_request(db, qr)
-            qr.sent_at = datetime.now(UTC) - timedelta(hours=rng.randint(3, 60))
+            hours = rng.randint(3, 60)
+            qr.sent_at = datetime.now(UTC) - timedelta(hours=hours)
             if rng.random() < 0.25:
+                backdate_thread(db, qr, qr.sent_at, None)
                 continue  # still waiting for a reply
             kind = rng.choices(["good", "detailed", "ambiguous", "outlier", "alternate", "decline"],
                                weights=[40, 25, 8, 4, 8 if ln.approved_source_only else 0, 10])[0]
@@ -284,6 +287,7 @@ def _simulate_quotes(db, org: Organization, lines: list[SolicitationLine], rng: 
             process_inbound_email(db, {"to": f"quotes+{qr.reply_token}@{get_settings().email_reply_domain}",
                                        "from": qr.email_to, "subject": f"RE: {qr.email_subject}",
                                        "text": _reply_text(kind, qr.part_number, price, rng)})
+            backdate_thread(db, qr, qr.sent_at, qr.sent_at + timedelta(hours=rng.uniform(1, hours - 1)))
             n += 1
     db.flush()
     return n
@@ -308,12 +312,16 @@ def _past_outcomes(db, org: Organization, rng: random.Random) -> int:
         if won:
             award.awardee_cage = org.cage_code
             award.unit_price = actual
+        elif actual < award.unit_price:
+            actual = round(award.unit_price * rng.uniform(1.01, 1.08), 2)  # a lost bid was above the winning price
+        bid_at = datetime.now(UTC) - timedelta(days=rng.randint(20, 70))
+        bid_at = min(bid_at, datetime.combine(award.award_date, datetime.min.time(), tzinfo=UTC) - timedelta(days=1))
         db.add(Recommendation(
             organization_id=org.id, solicitation_line_id=ln.id, landed_cost_per_unit=round(landed, 4), provisional=False,
             recommended_bid=rec_bid, p_win_at_recommended=round(rng.uniform(0.35, 0.65), 3),
             expected_profit=round((rec_bid - landed) * ln.quantity * 0.5, 2), no_bid=False,
-            explanation={"note": "historical demo line"}, actual_bid=actual,
-            actual_bid_at=datetime.now(UTC) - timedelta(days=rng.randint(20, 70)),
+            explanation={"note": "historical demo line"}, actual_bid=actual, actual_bid_at=bid_at,
+            created_at=bid_at, updated_at=bid_at,  # priced before the award, as it was
         ))
         n += 1
     db.flush()

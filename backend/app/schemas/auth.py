@@ -64,6 +64,7 @@ class PreferencesIn(BaseModel):
 
 class AuthOptionsOut(BaseModel):
     public_demo: bool
+    support_email: str | None = None
 
 
 class MeOut(BaseModel):

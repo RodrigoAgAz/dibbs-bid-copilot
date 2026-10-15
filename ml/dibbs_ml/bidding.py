@@ -49,8 +49,24 @@ class BidRecommendation:
         return d
 
 
+def price_decimals(x: float) -> int:
+    """Bid precision: cents from $1 up; 4 decimals below $1 (DLA awards sub-dollar items at prices like $0.0482,
+    where whole-cent steps would be up to 20% of the price)."""
+    return 2 if x >= 1.0 else 4
+
+
+def _ceil_to(x: float, d: int) -> float:
+    f = 10 ** d
+    return math.ceil(round(x * f, 6)) / f
+
+
+def _floor_to(x: float, d: int) -> float:
+    f = 10 ** d
+    return math.floor(round(x * f, 6)) / f
+
+
 def _ceil_cent(x: float) -> float:
-    return math.ceil(round(x * 100, 6)) / 100.0
+    return _ceil_to(x, 2)
 
 
 def recommend_bid(
@@ -69,10 +85,12 @@ def recommend_bid(
 ) -> BidRecommendation:
     landed = float(landed_cost)
     qty = max(float(quantity), 0.0)
-    lo = _ceil_cent(landed * (1.0 + max(min_margin_pct, 0.0)))
     floor_p = min(max(float(min_p_win), 0.05), 0.95)
-    # Floor to the cent so the top of the grid never dips below the minimum chance to win.
-    hi = math.floor(round(float(dist.ppf(1.0 - floor_p)) * 100, 6)) / 100.0
+    dp = price_decimals(min(landed * (1.0 + max(min_margin_pct, 0.0)), float(dist.ppf(1.0 - floor_p))))
+    step = 10.0 ** -dp
+    lo = _ceil_to(landed * (1.0 + max(min_margin_pct, 0.0)), dp)
+    # Floor to the price step so the top of the grid never dips below the minimum chance to win.
+    hi = _floor_to(float(dist.ppf(1.0 - floor_p)), dp)
     reasons: list[str] = []
 
     if lo > hi:
@@ -84,15 +102,16 @@ def recommend_bid(
             "cost too high: minimum-margin bid exceeds the 95th percentile of the expected winning price"
         )
     else:
-        grid = np.unique(np.round(np.linspace(lo, hi, grid_points), 2))
+        grid = np.unique(np.round(np.linspace(lo, hi, grid_points), dp))
         grid = grid[grid >= lo]  # rounding must never go below landed * (1 + margin)
 
     p = np.asarray(dist.sf(grid), dtype=float).reshape(-1)
     ep = p * (grid - landed) * qty
     i = int(np.argmax(ep))
-    # Refine the argmax to the cent between the neighbouring grid points.
+    # Refine the argmax to the price step between the neighbouring grid points.
     a, b = grid[max(i - 1, 0)], grid[min(i + 1, grid.size - 1)]
-    fine = np.round(np.arange(round(a * 100), round(b * 100) + 1) / 100.0, 2)
+    f = 10 ** dp
+    fine = np.round(np.arange(round(a * f), round(b * f) + 1) / f, dp)
     fine = fine[(fine >= lo) & (fine <= grid[-1])] if fine.size else fine
     if fine.size:
         pf = np.asarray(dist.sf(fine), dtype=float).reshape(-1)
@@ -110,14 +129,14 @@ def recommend_bid(
         grid_high=float(grid[-1]),
     )
 
-    # Conservative: the highest bid (highest margin) that still has P(win) >= 0.7, exact to the cent.
-    cons = math.floor(round(float(dist.ppf(1.0 - CONSERVATIVE_P_WIN)) * 100, 6)) / 100.0
+    # Conservative: the highest bid (highest margin) that still has P(win) >= 0.7, exact to the price step.
+    cons = _floor_to(float(dist.ppf(1.0 - CONSERVATIVE_P_WIN)), dp)
     while cons >= lo and float(dist.sf(cons)) < CONSERVATIVE_P_WIN:
-        cons = round(cons - 0.01, 2)
+        cons = round(cons - step, dp)
     if cons >= lo:
         rec.conservative_bid, rec.conservative_p_win = cons, float(dist.sf(cons))
     # Aggressive: the allowed bid whose P(win) is closest to 0.3.
-    agg = min(max(round(float(dist.ppf(1.0 - AGGRESSIVE_P_WIN)), 2), lo), max(lo, float(grid[-1])))
+    agg = min(max(round(float(dist.ppf(1.0 - AGGRESSIVE_P_WIN)), dp), lo), max(lo, float(grid[-1])))
     rec.aggressive_bid, rec.aggressive_p_win = float(agg), float(dist.sf(agg))
 
     # The alternatives must bracket the recommendation: "conservative" is safer (a lower bid, higher P(win)) and
@@ -130,7 +149,7 @@ def recommend_bid(
     # Curve for the UI: from landed cost to the 97.5th percentile (shows the full trade-off).
     c_lo = max(landed, float(dist.ppf(0.01)) * 0.9)
     c_hi = max(float(dist.ppf(0.975)), lo * 1.05)
-    xs = np.unique(np.round(np.linspace(c_lo, c_hi, curve_points), 2))
+    xs = np.unique(np.round(np.linspace(c_lo, c_hi, curve_points), dp))
     ps = np.asarray(dist.sf(xs), dtype=float).reshape(-1)
     rec.curve = [
         {"bid": float(b), "p_win": round(float(pw), 4), "expected_profit": round(float(pw * (b - landed) * qty), 2)}

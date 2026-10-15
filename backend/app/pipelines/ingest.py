@@ -162,8 +162,10 @@ def run_daily_ingest(db: Session, mode: str | None = None, only_date: date | Non
             .order_by(Solicitation.return_by_date)
         ).scalars().all()
         limit = get_settings().detail_fetch_limit if src.mode != "fixture" else len(sols)
+        detailed_lines: list[int] = []
         for sol in sols[:limit]:
             res = fetch_details(db, src, sol, errors)
+            detailed_lines += [ln.id for ln in sol.lines]
             summary["details_fetched"] += int(res["record"] or res["pdf"])
             summary["history_rows"] += res["history_rows"]
             db.commit()
@@ -172,6 +174,12 @@ def run_daily_ingest(db: Session, mode: str | None = None, only_date: date | Non
         db.commit()
         if make_recommendations and new_lines:
             summary.update(_predict_and_recommend(db, [ln.id for ln in new_lines]))
+        new_ids = {ln.id for ln in new_lines}
+        refetched = [i for i in detailed_lines if i not in new_ids]
+        if make_recommendations and refetched:
+            # Details (first article, inspection, approved-source-only, set-aside, PDF history) arrived after these
+            # lines were priced: re-price them so recommendations reflect the solicitation as it stands.
+            summary["detail_repriced"] = _predict_and_recommend(db, refetched)["predictions"]
         if make_recommendations:
             # Lines priced before their NSN's history arrived (PDFs fetched later, backfill, labeling).
             from app.services.recommendations import refresh_stale_predictions

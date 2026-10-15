@@ -67,6 +67,7 @@ class DashboardSummary(BaseModel):
     no_bid_lines: int
     needs_quote_lines: int = 0
     total_expected_profit: float
+    quoted_expected_profit: float = 0.0  # from lines priced against real supplier quotes (the rest is estimated)
     quotes_awaiting_reply: int
     needs_review: int
     last_ingest_at: datetime | None
@@ -88,6 +89,8 @@ class AwardOut(BaseModel):
     unit_price: float
     solicitation_number: str | None
     source: str
+    # False: derived from a contract total and not backed by verified prices; shown, but not used for pricing.
+    verified: bool = True
 
 
 class ApprovedSourceOut(BaseModel):
@@ -340,10 +343,14 @@ class HistoryRow(BaseModel):
     actual_bid: float | None
     landed_cost: float | None
     no_bid: bool
-    outcome: str  # won | lost | pending | no_award_data
+    outcome: str  # won | lost (you bid) | awarded (to someone else, no bid recorded) | pending | no_award_data
     winning_price: float | None
+    # False: derived from a contract total and not backed by the NSN's verified prices (not used in the stats)
+    winning_price_verified: bool = False
     awardee_cage: str | None
     award_date: date | None
+    # Counted in "recommendation would win": priced before the award, verified winning price, a bid recommended
+    counted: bool = False
 
 
 class HistoryStats(BaseModel):

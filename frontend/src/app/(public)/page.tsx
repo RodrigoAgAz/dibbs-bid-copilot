@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BadgeDollarSign, BarChart3, FileSearch, Inbox, Lock, MailCheck, ShieldCheck, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, errorMessage, unwrap } from "@/lib/api/client";
-import { formatDate, formatSolicitation, money, num, pct } from "@/lib/format";
+import { formatDate, formatSolicitation, money, num, pct, plural } from "@/lib/format";
 import { useAuthOptions, useDataHealth } from "@/lib/hooks";
 
 const STEPS = [
@@ -71,13 +71,13 @@ export default function LandingPage() {
     retry: false,
   });
 
-  async function exploreDemo() {
+  async function exploreDemo(target = "/dashboard") {
     setBusy(true);
     setError(null);
     const { error } = await api.POST("/api/auth/demo");
     setBusy(false);
     if (error) return setError(errorMessage(error));
-    router.replace("/dashboard");
+    router.replace(target);
     router.refresh();
   }
 
@@ -95,7 +95,7 @@ export default function LandingPage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {options.data?.public_demo && (
-              <Button size="lg" onClick={exploreDemo} disabled={busy} data-testid="landing-demo">
+              <Button size="lg" onClick={() => exploreDemo()} disabled={busy} data-testid="landing-demo">
                 {busy ? "Opening the demo…" : "Explore the live demo"}
               </Button>
             )}
@@ -164,14 +164,21 @@ export default function LandingPage() {
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {top.data.map((l) => (
-              <div key={l.solicitation_number} className="rounded-lg border bg-card p-4">
+              <button
+                type="button"
+                key={l.solicitation_number}
+                disabled={busy}
+                onClick={() => exploreDemo(`/rfq/${l.solicitation_number}`)}
+                className="group rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary/60 hover:bg-accent/30 disabled:opacity-60"
+                data-testid="live-card"
+              >
                 <div className="font-mono text-xs text-muted-foreground">{formatSolicitation(l.solicitation_number)}</div>
                 <div className="mt-1 truncate text-sm font-semibold" title={l.nomenclature ?? ""}>
                   {l.nomenclature}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {num(l.quantity)} {l.unit_of_issue} · due {formatDate(l.return_by_date)}
-                  {l.n_prior_awards ? ` · ${l.n_prior_awards} past awards` : ""}
+                  {l.n_prior_awards ? ` · ${plural(l.n_prior_awards, "past award")}` : ""}
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground">Winning price likely</div>
                 <div className="num text-lg font-semibold">{money(l.predicted_median)}</div>
@@ -183,7 +190,8 @@ export default function LandingPage() {
                 <div className="mt-3 rounded-md bg-muted/60 px-2 py-1.5 text-xs">
                   Recommended bid <b className="num">{money(l.recommended_bid)}</b> · {pct(l.p_win)} to win
                 </div>
-              </div>
+                <div className="mt-2 text-xs font-medium text-primary group-hover:underline">See the full analysis →</div>
+              </button>
             ))}
           </div>
         </section>
@@ -229,7 +237,7 @@ export default function LandingPage() {
             <Link href="/signup">Create your account</Link>
           </Button>
           {options.data?.public_demo && (
-            <Button variant="outline" onClick={exploreDemo} disabled={busy}>
+            <Button variant="outline" onClick={() => exploreDemo()} disabled={busy}>
               Explore the demo first
             </Button>
           )}

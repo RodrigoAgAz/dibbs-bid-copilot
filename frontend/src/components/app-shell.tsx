@@ -37,32 +37,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
-        <div className="mx-auto flex h-12 max-w-[1600px] items-center gap-4 px-4">
+        <div className="mx-auto flex h-12 max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-4">
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[10px] font-bold text-primary-foreground">
               DB
             </div>
             <span className="hidden text-sm font-semibold sm:inline">Bid Copilot</span>
           </Link>
-          <nav className="flex items-center gap-0.5 overflow-x-auto">
-            {nav.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                  (pathname === href || pathname.startsWith(`${href}/`) || (href === "/dashboard" && pathname.startsWith("/rfq"))) &&
-                    "bg-accent text-foreground",
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {label}
-              </Link>
-            ))}
+          <nav className="flex min-w-0 items-center gap-0.5" aria-label="Main">
+            {nav.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || pathname.startsWith(`${href}/`) || (href === "/dashboard" && pathname.startsWith("/rfq"));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  title={label}
+                  aria-label={label}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:px-2.5",
+                    active && "bg-accent text-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                  <span className="hidden sm:inline">{label}</span>
+                </Link>
+              );
+            })}
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <DataFreshness />
-            {me?.organization.plan === "demo" && <Badge variant="warning">Demo org</Badge>}
+            {me?.organization.plan === "demo" && (
+              <Badge variant="warning" className="hidden sm:inline-flex">
+                Demo org
+              </Badge>
+            )}
             {me && (
               <div className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex" data-testid="org-name">
                 <Building2 className="h-3.5 w-3.5" />

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildWaterfall, bestPoint, historyPoints, quantile } from "./charts";
+import { buildWaterfall, bestPoint, historyPoints, niceTicks, quantile } from "./charts";
 import { DEFAULT_FILTERS, filterLines, splitNoBid, statusOf, type DashboardLine } from "./dashboard";
-import { countdown, formatNsn, formatSolicitation, isDemoSolicitation, money, pct, timeAgo } from "./format";
+import { countdown, featureValue, formatNsn, formatPhone, formatSolicitation, isDemoSolicitation, modelLabel, money, pct, plural, timeAgo } from "./format";
 
 describe("format", () => {
   it("formats NSNs and solicitation numbers", () => {
@@ -50,7 +50,7 @@ describe("charts", () => {
       overhead: 0.2,
       landed: 4.5829,
     });
-    expect(steps.map((s) => s.name)).toEqual(["Supplier price", "Freight", "Packaging", "Financing", "Overhead", "Landed"]);
+    expect(steps.map((s) => s.name)).toEqual(["Supplier", "Freight", "Packaging", "Financing", "Overhead", "Landed"]);
     const last = steps[steps.length - 2];
     expect(last.base + last.value).toBeCloseTo(4.5829, 4);
     expect(steps[steps.length - 1]).toMatchObject({ total: true, value: 4.5829 });
@@ -162,5 +162,50 @@ describe("csv export", () => {
     expect(row).toContain('"SCREW, CAP, 1/4"" HEX"');
     expect(row).toContain(",0.44,0.623,");
     expect(row.endsWith("https://app.example.com/rfq/SPE4A627T0486")).toBe(true);
+  });
+});
+
+describe("readable model output", () => {
+  it("shows feature values in broker terms and hides internals", () => {
+    expect(featureValue("log_quantity", Math.log1p(228))).toBe("228");
+    expect(featureValue("n_approved_sources", 0)).toBe("0");
+    expect(featureValue("days_since_last_award", 1)).toBe("1 day");
+    expect(featureValue("inflation_change", Math.log(1.04))).toBe("+4%");
+    expect(featureValue("f_min", Math.log(0.8))).toBe("−20% vs last");
+    expect(featureValue("first_article", 1)).toBe("yes");
+    expect(featureValue("niin_country", "01")).toBe("US");
+    expect(featureValue("niin_country", "12")).toBe("non-US (12)");
+    expect(featureValue("fsc", "5330")).toBe("5330 Packing & gaskets");
+    expect(featureValue("unit_of_issue", "NA")).toBe("n/a");
+    expect(featureValue("ref_type", "last_award")).toBeNull();
+    expect(featureValue("volatility", null)).toBe("n/a");
+    expect(modelLabel("lgbm_quantile_v2")).toBe("pricing model v2");
+  });
+
+  it("pluralizes and formats phones", () => {
+    expect(plural(1, "past award")).toBe("1 past award");
+    expect(plural(3, "past award")).toBe("3 past awards");
+    expect(plural(1204, "line")).toBe("1,204 lines");
+    expect(formatPhone("+15551810111")).toBe("(555) 181-0111");
+    expect(formatPhone("555-181-0111")).toBe("(555) 181-0111");
+    expect(formatPhone("+44 20 7946 0958")).toBe("+44 20 7946 0958");
+  });
+
+  it("picks round axis ticks that cover the data", () => {
+    expect(niceTicks(880, 1163)).toEqual([800, 900, 1000, 1100, 1200]);
+    expect(niceTicks(0.0482, 0.306)).toEqual([0, 0.1, 0.2, 0.3, 0.4]);
+    const t = niceTicks(645.65, 1498.93);
+    expect(t[0]).toBeLessThanOrEqual(645.65);
+    expect(t[t.length - 1]).toBeGreaterThanOrEqual(1498.93);
+    expect(t.every((v) => Number.isInteger(v / 100) || Number.isInteger(v / 250))).toBe(true);
+    expect(niceTicks(5, 5).length).toBeGreaterThan(1);
+  });
+
+  it("marks derived award prices in the history points", () => {
+    const pts = historyPoints([
+      { award_date: "2026-01-01", unit_price: 2, quantity: 5, awardee_cage: "1ABC2" },
+      { award_date: "2026-02-01", unit_price: 900, quantity: 5, awardee_cage: "1ABC2", verified: false },
+    ]);
+    expect(pts.map((p) => p.verified)).toEqual([true, false]);
   });
 });

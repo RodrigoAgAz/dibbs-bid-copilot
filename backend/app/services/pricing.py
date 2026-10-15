@@ -174,6 +174,10 @@ def predict_line(
         "similar_items": evidence,
         "reference_price": round(cold_used if is_cold else ref, 4),
         "reference_type": cold_used_type if is_cold else ref_type,
+        # No award history for the NSN, its part family or its whole FSC (e.g. a newly watched FSC before its
+        # history loads): the distribution is a placeholder around $1 and must not be shown or optimized.
+        "no_reference": bool(is_cold and (cold_used_type if is_cold else ref_type) == "none"),
+        "recent_spread": _recent_spread(hist, line.fsc, as_of, ppi),
         "model": model_name,
         "as_of": as_of.isoformat(),
         "contributions": contributions,
@@ -184,6 +188,16 @@ def predict_line(
     if commit_row:
         db.flush()
     return pred
+
+
+def _recent_spread(hist: PriorAwards, fsc: str, as_of: date, ppi) -> float | None:
+    """max/min of the last 5 prior awards (inflation-adjusted to as_of); None with fewer than 2."""
+    prior = hist.before(as_of)
+    if len(prior) < 2:
+        return None
+    dates = prior.dates[-5:].astype("datetime64[D]").astype(object)
+    adj = prior.prices[-5:] * np.array([ppi.factor(fsc, d, as_of) for d in dates])
+    return round(float(adj.max() / max(adj.min(), 1e-12)), 3)
 
 
 def latest_prediction(db: Session, line_id: int) -> PricePrediction | None:

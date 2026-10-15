@@ -2263,6 +2263,17 @@
           "public_demo": {
             "type": "boolean",
             "title": "Public Demo"
+          },
+          "support_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Email"
           }
         },
         "type": "object",
@@ -2337,6 +2348,11 @@
           "source": {
             "type": "string",
             "title": "Source"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified",
+            "default": true
           }
         },
         "type": "object",
@@ -2862,6 +2878,11 @@
             "type": "number",
             "title": "Total Expected Profit"
           },
+          "quoted_expected_profit": {
+            "type": "number",
+            "title": "Quoted Expected Profit",
+            "default": 0.0
+          },
           "quotes_awaiting_reply": {
             "type": "integer",
             "title": "Quotes Awaiting Reply"
@@ -3292,6 +3313,11 @@
             ],
             "title": "Winning Price"
           },
+          "winning_price_verified": {
+            "type": "boolean",
+            "title": "Winning Price Verified",
+            "default": false
+          },
           "awardee_cage": {
             "anyOf": [
               {
@@ -3314,6 +3340,11 @@
               }
             ],
             "title": "Award Date"
+          },
+          "counted": {
+            "type": "boolean",
+            "title": "Counted",
+            "default": false
           }
         },
         "type": "object",

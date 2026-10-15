@@ -69,7 +69,7 @@ def test_bids_are_cents_and_never_below_landed_cost_plus_margin():
     rec = recommend_bid(d, landed, 10, min_margin_pct=0.07)
     for b in (rec.recommended_bid, rec.conservative_bid, rec.aggressive_bid):
         if b is not None:
-            assert round(b, 2) == b
+            assert round(b, 2 if b >= 1 else 4) == b
             assert b >= landed * 1.07 - 1e-9
 
 
@@ -104,7 +104,8 @@ def test_min_p_win_keeps_wide_distributions_out_of_the_tail():
     capped = recommend_bid(d, 0.10, 150_000, min_p_win=0.2)
     assert capped.p_win >= 0.2
     assert capped.recommended_bid <= float(d.ppf(0.8))
-    assert capped.grid_high == pytest.approx(math.floor(float(d.ppf(0.8)) * 100) / 100)
+    dp = 2 if float(d.ppf(0.8)) >= 1 else 4
+    assert capped.grid_high == pytest.approx(math.floor(float(d.ppf(0.8)) * 10**dp) / 10**dp)
     # When even the minimum-margin bid is a long shot, it's a no-bid with a clear reason.
     r = recommend_bid(PriceDistribution.lognormal(math.log(10), 0.2), 12.0, 10, min_p_win=0.3)
     assert r.no_bid and "less than a 30% chance" in r.no_bid_reason
@@ -122,3 +123,11 @@ def test_alternatives_bracket_the_recommendation(sigma, landed_frac, min_p):
         assert r.conservative_bid < r.recommended_bid and r.conservative_p_win > r.p_win
     if r.aggressive_bid is not None:
         assert r.aggressive_bid > r.recommended_bid and r.aggressive_p_win < r.p_win
+
+
+def test_sub_dollar_items_are_priced_below_the_cent():
+    d = PriceDistribution.lognormal(math.log(0.05), 0.15)
+    r = recommend_bid(d, 0.035, 150_000, min_p_win=0.2)
+    assert r.recommended_bid is not None and r.recommended_bid != round(r.recommended_bid, 2)
+    assert round(r.recommended_bid, 4) == r.recommended_bid
+    assert r.recommended_bid >= 0.035 * 1.10 - 1e-9

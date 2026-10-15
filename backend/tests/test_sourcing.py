@@ -175,3 +175,29 @@ def test_manual_quote_and_actual_bid(client, db):
     line = detail["lines"][0]
     assert line["recommendation"]["provisional"] is False
     assert any(qr_["quotes"] for c in line["candidates"] for qr_ in c["quote_requests"])
+
+
+def test_own_cage_is_never_a_supplier_candidate(client, db):
+    from app.models import AwardHistory, Organization
+
+    _, line_ids, org_id = _setup(client, db)
+    ln = _line_with_sources(db, line_ids)
+    org = db.get(Organization, org_id)
+    org.cage_code = "9OWN1"
+    db.add(AwardHistory(nsn=ln.nsn, award_date=datetime(2025, 5, 1).date(), unit_price=1.0, quantity=5,
+                        contract_number="SPE-OWN-1", awardee_cage="9OWN1", source="rfq_pdf_history"))
+    db.commit()
+    assert "9OWN1" not in {c.cage_code for c in candidate_suppliers(db, org_id, ln)}
+
+
+def test_duplicate_supplier_cage_and_reinvite(client, db):
+    _setup(client, db)
+    r = client.post("/api/suppliers", json={"cage_code": "1DUP1", "email": "a@dup.example.com"}, headers=csrf(client))
+    assert r.status_code == 201
+    r = client.post("/api/suppliers", json={"cage_code": "1dup1"}, headers=csrf(client))
+    assert r.status_code == 409 and "already in your supplier directory" in r.json()["detail"]
+    for _ in range(2):
+        assert client.post("/api/org/invitations", json={"email": "twice@broker.example.com", "role": "viewer"},
+                           headers=csrf(client)).status_code == 201
+    invites = client.get("/api/org/invitations").json()
+    assert [i["email"] for i in invites].count("twice@broker.example.com") == 1

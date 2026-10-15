@@ -16,7 +16,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
 import { useMe } from "@/lib/hooks";
 import { competitors, priceStory, type Award } from "@/lib/insights";
-import { countdown, formatDate, formatNsn, formatSolicitation, isDemoSolicitation, money, num, pct } from "@/lib/format";
+import { REFERENCE_LABELS, countdown, formatDate, formatNsn, formatSolicitation, isDemoSolicitation, modelLabel, money, num, pct, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Sol = Schemas["SolicitationDetail"];
@@ -147,6 +147,14 @@ function ActualBid({ line, sn }: { line: Line; sn: string }) {
   );
 }
 
+/** Parsed supplier quotes that wait for the broker's approval before they count as a cost. */
+function pendingReview(line: Line): number {
+  return line.candidates
+    .flatMap((c) => c.quote_requests)
+    .flatMap((q) => q.quotes ?? [])
+    .filter((q) => q.needs_review && !q.reviewed_at && !q.declined && q.unit_price != null).length;
+}
+
 function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
   const qc = useQueryClient();
   const r = line.recommendation;
@@ -156,6 +164,8 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
   });
   if (!r) return null;
   const ex = (r.explanation ?? {}) as Record<string, unknown>;
+  const review = pendingReview(line);
+  const range = Array.isArray(ex.price_range) ? (ex.price_range as number[]) : null;
   return (
     <Card data-testid="recommendation">
       <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -165,7 +175,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             Maximizes P(win) × (bid − landed cost) × quantity
             {typeof ex.confidence === "string" && ex.confidence !== "none" ? (
               <span className="ml-2 rounded border px-1.5 py-0.5 text-[11px]" data-testid="confidence">
-                {ex.confidence} confidence{typeof ex.n_prior_awards === "number" ? ` · ${ex.n_prior_awards} past awards` : ""}
+                {ex.confidence} confidence{typeof ex.n_prior_awards === "number" ? ` · ${plural(ex.n_prior_awards, "past award")}` : ""}
               </span>
             ) : null}
           </CardDescription>
@@ -182,7 +192,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             <div className="text-sm font-semibold text-destructive" data-testid="no-bid">No bid</div>
             <ul className="mt-1 list-disc pl-4 text-xs">
               {(r.no_bid_reason ?? "").split("; ").map((x) => (
-                <li key={x}>{x}</li>
+                <li key={x}>{x.charAt(0).toUpperCase() + x.slice(1)}</li>
               ))}
             </ul>
           </div>
@@ -201,7 +211,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
           </div>
           <div>
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Expected profit</div>
-            <div className="num text-xl font-semibold text-success">{money(r.expected_profit, { digits: 0 })}</div>
+            <div className={cn("num text-xl font-semibold", r.no_bid ? "text-muted-foreground" : "text-success")}>{money(r.expected_profit, { digits: 0 })}</div>
           </div>
           <div>
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Landed cost</div>
@@ -225,32 +235,54 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
               </span>
             </Tip>
           )}
-          <FlagBadges flags={{ provisional: r.provisional, low_data: Boolean(ex.low_data), cold_start: Boolean(ex.cold_start), approved_source_only: line.approved_source_only, needs_quote: Boolean(ex.needs_quote) }} />
+          <FlagBadges
+            empty={null}
+            flags={{ provisional: r.provisional, low_data: Boolean(ex.low_data), cold_start: Boolean(ex.cold_start), approved_source_only: line.approved_source_only, needs_quote: Boolean(ex.needs_quote) }}
+          />
         </div>
-        {ex.needs_quote ? (
+        {review > 0 && (
+          <p className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs" data-testid="review-pending">
+            {review === 1 ? "A parsed supplier quote is" : `${review} parsed supplier quotes are`} waiting for your review in Suppliers &amp; quotes
+            below. Approve {review === 1 ? "it" : "them"} to price this line against the real cost.
+          </p>
+        )}
+        {ex.no_reference ? (
+          <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-xs" data-testid="no-reference">
+            <div className="text-sm font-semibold">No price reference</div>
+            DLA has no usable award history for this NSN, its part family or its supply class, so there is no winning price to
+            predict.{" "}
+            {typeof ex.cost_plus_bid === "number" ? (
+              <>
+                At your minimum margin over the quoted cost, bid at least <b className="num">{money(ex.cost_plus_bid as number)}</b>.
+              </>
+            ) : (
+              "Get a supplier quote: the line is then priced at your minimum margin over cost."
+            )}
+          </div>
+        ) : ex.needs_quote ? (
           <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-xs" data-testid="quote-first">
             <div className="text-sm font-semibold">Quote first</div>
-            This NSN has no award history on file, so the winning price can only be estimated from similar items
-            {Array.isArray(ex.price_range) ? ` (80% range ${money((ex.price_range as number[])[0])}–${money((ex.price_range as number[])[1])})` : ""}. A
-            bid recommended from that guess would be a guess too: request supplier quotes below and the recommendation appears as
-            soon as one is in.
+            {range
+              ? `This NSN has no usable award history; similar items put the winning price roughly between ${money(range[0])} and ${money(range[1])} (80% range).`
+              : "This NSN has no usable award history, and similar items don't narrow the winning price down."}{" "}
+            A bid computed from that would be a guess: request supplier quotes below and the recommendation appears as soon as one is in.
           </div>
-        ) : r.provisional && typeof ex.max_landed_cost === "number" ? (
+        ) : r.provisional && !r.no_bid && typeof ex.max_landed_cost === "number" ? (
           <div className="rounded-md border bg-muted/50 p-3 text-xs" data-testid="target-cost">
             <div className="text-sm font-semibold">
               Target: get a landed supplier cost under <span className="num">{money(ex.max_landed_cost as number)}</span>
             </div>
-            No supplier quote yet, so this bid is the price likely to win (about {pct(ex.target_p_win as number)} or better), not an
-            optimum against a guessed cost. A supplier quote at or below the target keeps your minimum margin; once quotes are in,
-            the bid is optimized against your real cost.
+            No supplier quote yet, so this bid is set where it is likely to win ({pct(r.p_win_at_recommended)} chance), not optimized
+            against a guessed cost. A supplier quote at or below the target keeps your minimum margin; once quotes are in, the bid is
+            optimized against your real cost.
           </div>
-        ) : r.provisional && (
+        ) : r.provisional && !r.no_bid && (
           <p className="rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
             Provisional: no supplier quote yet. Landed cost is estimated from the predicted winning price. Send RFQ emails below to firm it up.
           </p>
         )}
         <div className="flex flex-wrap items-end justify-between gap-3 border-t pt-3">
-          <CopyBid value={r.recommended_bid} />
+          {r.no_bid ? <span /> : <CopyBid value={r.recommended_bid} />}
           <ActualBid line={line} sn={sn} />
         </div>
         <p className="text-[11px] text-muted-foreground">
@@ -263,10 +295,19 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
 
 function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; voiceEnabled: boolean; demo: boolean }) {
   const r = line.recommendation;
-  const ex = (r?.explanation ?? {}) as { curve?: { bid: number; p_win: number; expected_profit: number }[] };
+  const ex = (r?.explanation ?? {}) as {
+    curve?: { bid: number; p_win: number; expected_profit: number }[];
+    needs_quote?: boolean;
+    no_reference?: boolean;
+  };
   const p = line.prediction;
+  // Without a quote or any price history the curve and the cost waterfall would be drawn from a guess.
+  const guessOnly = Boolean(ex.needs_quote || ex.no_reference || !p);
+  const history = line.history as Award[];
+  const unverified = history.filter((a) => a.verified === false).length;
+  const basis = (r?.landed_breakdown as { basis?: string } | null)?.basis ?? "";
   return (
-    <section className="space-y-4" data-testid="line-section">
+    <section className="scroll-mt-16 space-y-4" data-testid="line-section" id={`line-${line.line_no}`}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="text-base font-semibold">
           Line {line.line_no}: {line.nomenclature}
@@ -292,23 +333,29 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
           <CardHeader>
             <CardTitle>P(win) vs bid</CardTitle>
             <CardDescription>
-              P(win) ≈ P(winning price &gt; bid), from the predicted distribution
-              {p ? ` (median ${money(p.median)}, ${p.model})` : ""}
+              Chance the winning price is above your bid, and the expected profit at each bid
+              {p && !guessOnly ? ` (predicted median ${money(p.median)}, ${modelLabel(p.model)})` : ""}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
-            <PWinChart
-              curve={ex.curve ?? []}
-              landed={r?.landed_cost_per_unit ?? null}
-              recommended={r?.recommended_bid ?? null}
-              conservative={r?.conservative_bid ?? null}
-              aggressive={r?.aggressive_bid ?? null}
-            />
+            {guessOnly ? (
+              <div className="flex h-56 items-center justify-center px-6 text-center text-xs text-muted-foreground" data-testid="pwin-hidden">
+                Appears once a supplier quote is in: without award history or a real cost, this curve would be drawn from a guess.
+              </div>
+            ) : (
+              <PWinChart
+                curve={ex.curve ?? []}
+                landed={r?.landed_cost_per_unit ?? null}
+                recommended={r?.recommended_bid ?? null}
+                conservative={r?.conservative_bid ?? null}
+                aggressive={r?.aggressive_bid ?? null}
+              />
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         <Card>
           <CardHeader>
             <CardTitle>Price story</CardTitle>
@@ -316,7 +363,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
           </CardHeader>
           <CardContent>
             <ul className="list-disc space-y-1.5 pl-4 text-sm" data-testid="price-story">
-              {priceStory(line.history as Award[], line.quantity).map((s) => (
+              {priceStory(history, line.quantity).map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ul>
@@ -338,14 +385,14 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
                 </tr>
               </THead>
               <TBody>
-                {competitors(line.history as Award[]).map((c) => (
+                {competitors(history).map((c) => (
                   <TR key={c.cage}>
                     <TD className="max-w-[200px] truncate" title={c.name ?? ""}>
                       {c.name ?? <span className="text-muted-foreground">Unknown</span>}
                       <div className="font-mono text-[11px] text-muted-foreground">{c.cage === "unknown" ? "—" : c.cage}</div>
                     </TD>
                     <TD className="num text-right">{c.wins}</TD>
-                    <TD className="num text-right">{money(c.lastPrice)}</TD>
+                    <TD className="num text-right">{c.lastPrice == null ? <span className="text-muted-foreground">unverified</span> : money(c.lastPrice)}</TD>
                     <TD>{formatDate(c.lastDate)}</TD>
                   </TR>
                 ))}
@@ -367,7 +414,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
           <CardHeader>
             <CardTitle>Similar parts DLA bought</CardTitle>
             <CardDescription>
-              Same part-number family or same manufacturer and item name. Prices adjusted for inflation and to this quantity
+              Same manufacturer part-number family. Prices adjusted for inflation and to this quantity
               {p?.cold_start ? "; with no history for this NSN, they are the best evidence of its price" : ""}.
             </CardDescription>
           </CardHeader>
@@ -419,20 +466,28 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
           <CardHeader>
             <CardTitle>Procurement history</CardTitle>
             <CardDescription>
-              {line.history.length} past award{line.history.length === 1 ? "" : "s"} for this NSN · shaded band = predicted 10–90% range
+              {history.length
+                ? `${plural(history.length, "past award")} for this NSN${unverified ? ` (${num(unverified)} unverified)` : ""}${p && !guessOnly ? " · shaded band = predicted 10–90% range" : ""}`
+                : "No past awards on file for this NSN"}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
-            <HistoryChart awards={line.history} levels={p?.levels} prices={p?.prices} quantity={line.quantity} />
+            <HistoryChart awards={history} levels={guessOnly ? undefined : p?.levels} prices={guessOnly ? undefined : p?.prices} quantity={line.quantity} />
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle>Landed cost per unit</CardTitle>
-            <CardDescription>{(r?.landed_breakdown as { basis?: string } | null)?.basis ?? ""}</CardDescription>
+            <CardDescription>{basis ? basis.charAt(0).toUpperCase() + basis.slice(1) : ""}</CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
-            <WaterfallChart breakdown={r?.landed_breakdown as Record<string, number> | null} />
+            {guessOnly && r?.provisional ? (
+              <div className="flex h-40 items-center justify-center px-6 text-center text-xs text-muted-foreground">
+                Appears once a supplier quote is in.
+              </div>
+            ) : (
+              <WaterfallChart breakdown={r?.landed_breakdown as Record<string, number> | null} />
+            )}
             {(r?.landed_breakdown as { moq_note?: string } | null)?.moq_note && (
               <p className="text-xs text-warning">{(r?.landed_breakdown as { moq_note?: string }).moq_note}</p>
             )}
@@ -445,8 +500,8 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
           <CardHeader>
             <CardTitle>Why this price</CardTitle>
             <CardDescription>
-              Feature effects on the predicted median vs the reference price
-              {p?.reference_price ? ` (${p.reference_type?.replace("_", " ")} ${money(p.reference_price)})` : ""}
+              What moves the predicted median away from the reference price
+              {p?.reference_price ? ` (${REFERENCE_LABELS[p.reference_type ?? ""] ?? p.reference_type} ${money(p.reference_price)})` : ""}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -515,6 +570,58 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
   );
 }
 
+function LinesSummary({ sol }: { sol: Sol }) {
+  if (sol.lines.length < 2) return null;
+  return (
+    <Card className="mb-6" data-testid="lines-summary">
+      <CardHeader>
+        <CardTitle>{sol.lines.length} lines on this solicitation</CardTitle>
+        <CardDescription>Each line is priced and quoted separately; jump to one below.</CardDescription>
+      </CardHeader>
+      <CardContent className="overflow-x-auto p-0">
+        <Table>
+          <THead>
+            <tr>
+              <TH>Line</TH>
+              <TH>Item</TH>
+              <TH className="text-right">Qty</TH>
+              <TH className="text-right">Rec. bid</TH>
+              <TH className="text-right">P(win)</TH>
+              <TH>Status</TH>
+            </tr>
+          </THead>
+          <TBody>
+            {sol.lines.map((l) => {
+              const r = l.recommendation;
+              const ex = (r?.explanation ?? {}) as { needs_quote?: boolean; no_reference?: boolean };
+              const status = !r ? "Not priced" : r.no_bid ? "No bid" : ex.no_reference ? "No reference" : ex.needs_quote ? "Quote first" : r.provisional ? "Bid (no quote yet)" : "Bid";
+              return (
+                <TR key={l.id}>
+                  <TD>
+                    <a className="text-primary hover:underline" href={`#line-${l.line_no}`}>
+                      Line {l.line_no}
+                    </a>
+                  </TD>
+                  <TD className="max-w-[260px] truncate" title={l.nomenclature ?? ""}>
+                    {l.nomenclature}
+                    <div className="font-mono text-[11px] text-muted-foreground">{formatNsn(l.nsn)}</div>
+                  </TD>
+                  <TD className="num text-right">
+                    {num(l.quantity)} {l.unit_of_issue}
+                  </TD>
+                  <TD className="num text-right">{money(r?.recommended_bid)}</TD>
+                  <TD className="num text-right">{pct(r?.p_win_at_recommended)}</TD>
+                  <TD className={cn("text-[12px]", r?.no_bid && "text-muted-foreground")}>{status}</TD>
+                </TR>
+              );
+            })}
+          </TBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function RfqPage() {
   const { solicitationNumber } = useParams<{ solicitationNumber: string }>();
   const sn = decodeURIComponent(solicitationNumber).toUpperCase();
@@ -535,6 +642,7 @@ export default function RfqPage() {
       ) : q.data ? (
         <>
           <Header sol={q.data} />
+          <LinesSummary sol={q.data} />
           <div className="space-y-10">
             {q.data.lines.map((line) => (
               <LineSection key={line.id} line={line} sol={q.data!} voiceEnabled={Boolean(me?.voice_globally_enabled)} demo={Boolean(me?.demo_mode)} />

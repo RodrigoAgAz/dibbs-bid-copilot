@@ -57,7 +57,7 @@ def quote_summaries(ctx: TenantContext, line_ids: list[int]) -> dict[int, QuoteS
         elif s.sent:
             s.label = f"{s.sent} sent"
         elif s.draft:
-            s.label = f"{s.draft} drafts"
+            s.label = f"{s.draft} draft{'s' if s.draft > 1 else ''}"
         elif s.declined:
             s.label = "declined"
         elif s.no_response:
@@ -117,7 +117,8 @@ def dashboard(
                 unit_of_issue=r.unit_of_issue,
                 set_aside=r.set_aside,
                 predicted_median=r.median,
-                landed_cost=r.landed_cost_per_unit,
+                # Quote-first lines: the "cost" is a placeholder derived from the same guess as the price.
+                landed_cost=None if r.needs_quote else r.landed_cost_per_unit,
                 recommended_bid=r.recommended_bid,
                 conservative_bid=r.conservative_bid,
                 aggressive_bid=r.aggressive_bid,
@@ -157,6 +158,8 @@ def dashboard(
             needs_quote_lines=sum(1 for d in lines if not d.no_bid and d.flags.needs_quote),
             no_bid_lines=sum(1 for d in lines if d.no_bid),
             total_expected_profit=round(sum((d.expected_profit or 0) for d in lines if not d.no_bid), 2),
+            quoted_expected_profit=round(sum((d.expected_profit or 0) for d in lines
+                                             if not d.no_bid and not d.flags.provisional), 2),
             quotes_awaiting_reply=awaiting,
             needs_review=sum(q.needs_review for q in summaries.values()),
             last_ingest_at=last,

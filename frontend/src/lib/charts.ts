@@ -23,7 +23,7 @@ const STEPS: [keyof LandedBreakdown, string][] = [
   ["freight_per_unit", "Freight"],
   ["packaging_per_unit", "Packaging"],
   ["inspection_allowance", "Inspection"],
-  ["first_article_allowance_per_unit", "First article"],
+  ["first_article_allowance_per_unit", "1st article"],
   ["financing_cost", "Financing"],
   ["overhead", "Overhead"],
 ];
@@ -32,7 +32,7 @@ const STEPS: [keyof LandedBreakdown, string][] = [
 export function buildWaterfall(b: LandedBreakdown | null | undefined): WaterfallStep[] {
   if (!b) return [];
   const start = b.effective_unit_price ?? b.supplier_unit_price ?? 0;
-  const out: WaterfallStep[] = [{ name: "Supplier price", base: 0, value: start, total: false }];
+  const out: WaterfallStep[] = [{ name: "Supplier", base: 0, value: start, total: false }];
   let running = start;
   for (const [key, name] of STEPS) {
     const v = Number(b[key] ?? 0);
@@ -61,10 +61,11 @@ export interface Award {
   quantity: number;
   unit_price: number;
   awardee_cage: string | null;
+  verified?: boolean;
 }
 
 /** Scatter points: x = timestamp, y = price, z = quantity (bubble size). */
-export function historyPoints(awards: Award[]): { x: number; y: number; z: number; cage: string; date: string }[] {
+export function historyPoints(awards: Award[]): { x: number; y: number; z: number; cage: string; date: string; verified: boolean }[] {
   return awards
     .map((a) => ({
       x: new Date(`${a.award_date}T12:00:00`).getTime(),
@@ -72,6 +73,7 @@ export function historyPoints(awards: Award[]): { x: number; y: number; z: numbe
       z: Math.max(a.quantity, 1),
       cage: a.awardee_cage ?? "?",
       date: a.award_date,
+      verified: a.verified !== false,
     }))
     .filter((p) => Number.isFinite(p.x) && p.y > 0)
     .sort((a, b) => a.x - b.x);
@@ -81,4 +83,21 @@ export function historyPoints(awards: Award[]): { x: number; y: number; z: numbe
 export function quantile(levels: number[], prices: number[], level: number): number | null {
   const i = levels.findIndex((l) => Math.abs(l - level) < 1e-9);
   return i >= 0 ? prices[i] : null;
+}
+
+/** Round tick values (1/2/2.5/5 x 10^k steps) covering [lo, hi]; the first and last ticks make a clean axis domain. */
+export function niceTicks(lo: number, hi: number, count = 5): number[] {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return [];
+  if (!(hi > lo)) {
+    const d = Math.abs(hi) * 0.1 || 1;
+    lo -= d;
+    hi += d;
+  }
+  const raw = (hi - lo) / Math.max(count - 1, 1);
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((x) => x >= raw * (1 - 1e-9)) ?? 10 * mag;
+  const start = Math.floor(lo / step + 1e-9) * step;
+  const out: number[] = [];
+  for (let v = start; v <= hi + step * (1 - 1e-9); v += step) out.push(Number(v.toPrecision(12)));
+  return out;
 }

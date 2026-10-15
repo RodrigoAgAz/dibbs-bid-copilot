@@ -50,9 +50,12 @@ def confidence_tier(q: dict) -> str:
     except (ValueError, ZeroDivisionError, IndexError):
         return "low"
     n = int(q.get("n_prior_awards") or 0)
-    if n >= 3 and width <= math.log(2.2):
+    # The NSN's own last awards must agree too (max/min of the last 5, inflation-adjusted): a narrow model range
+    # over scattered history (e.g. a unit-of-issue change) is not "high" confidence.
+    spread = q.get("recent_spread")
+    if n >= 3 and width <= math.log(2.2) and (spread is None or spread <= 2.5):
         return "high"
-    if n >= 2 and width <= math.log(4.5):
+    if n >= 2 and width <= math.log(4.5) and (spread is None or spread <= 6.0):
         return "medium"
     return "low"
 
@@ -100,9 +103,20 @@ def candidate_quotes(db: Session, org_id: int, line_id: int) -> list[SupplierQuo
 def best_landed_cost(
     db: Session, org_id: int, s: OrgSettings, line: SolicitationLine, median: float
 ) -> tuple[LandedCost, bool, int]:
-    """Best landed cost among usable quotes. Returns (landed, has_conforming_quote, n_quotes)."""
+    """Best landed cost among usable quotes. Returns (landed, has_conforming_quote, n_quotes).
+
+    Usable: conforming (approved-source-only lines), not expired, and able to deliver in time (lead time within
+    the line's required delivery days, when both are known). A quote that can't meet the delivery date would
+    otherwise set a cost the broker can't actually bid on.
+    """
     quotes = candidate_quotes(db, org_id, line.id)
     usable = [q for q in quotes if q.conforms_to_part_number] if line.approved_source_only else quotes
+    today = today_et()
+    usable = [
+        q for q in usable
+        if not (q.quote_valid_until and q.quote_valid_until < today)
+        and not (q.lead_time_days and line.delivery_days and q.lead_time_days > line.delivery_days)
+    ]
     best: LandedCost | None = None
     for q in usable:
         lc = compute_landed_cost(line, line.solicitation, s, q, median)
@@ -146,7 +160,7 @@ def upsert_recommendation(
 
     q = pred.quantiles
     confidence = confidence_tier(q)
-    if landed.provisional and q.get("cold_start"):
+    if (landed.provisional and q.get("cold_start")) or q.get("no_reference"):
         # Quote first: the cost is a placeholder derived from the same guess as the price, so cost-based no-bid
         # reasons ("cost too high", "expected profit below ...") would be invented too. Hard rules still apply.
         reasons = [r for r in reasons if not (r.startswith("cost too high") or "expected profit" in r)]
@@ -154,6 +168,11 @@ def upsert_recommendation(
     # the provisional cost (a fraction of that range's median) come from the same guess, so a "best bid" and its
     # expected profit would be invented (live: bids at ~10x the median). Show the range, ask for a quote.
     needs_quote = bool(landed.provisional and q.get("cold_start"))
+    # No reference at all (no history for the NSN, its family or its FSC): there is no price to show or optimize,
+    # with or without a quote; with a quote the broker gets a cost-plus figure instead of a bid.
+    no_reference = bool(q.get("no_reference"))
+    # Quote-first ranges spanning more than 20x (common: median 330x on live data) carry no information.
+    uninformative = needs_quote and float(dist.ppf(0.9)) > 20 * float(dist.ppf(0.1))
 
     row = db.execute(
         select(Recommendation).where(
@@ -168,7 +187,7 @@ def upsert_recommendation(
     row.landed_cost_per_unit = round(landed.landed, 4)
     row.landed_breakdown = landed.to_dict()
     row.provisional = landed.provisional
-    priced = not needs_quote
+    priced = not needs_quote and not no_reference
     row.recommended_bid = rec.recommended_bid if priced else None
     row.p_win_at_recommended = rec.p_win if priced else None
     row.expected_profit = rec.expected_profit if priced else None
@@ -188,8 +207,9 @@ def upsert_recommendation(
             "n_quotes": n_quotes,
         },
         "landed": landed.to_dict(),
-        "distribution": {"levels": q["levels"], "prices": q["prices"], "median": q.get("median")},
-        "curve": rec.curve,
+        "distribution": {"levels": q["levels"], "prices": q["prices"],
+                         "median": None if (no_reference or uninformative) else q.get("median")},
+        "curve": [] if no_reference else rec.curve,
         "conservative_p_win": rec.conservative_p_win,
         "aggressive_p_win": rec.aggressive_p_win,
         "grid": [rec.grid_low, rec.grid_high],
@@ -198,7 +218,12 @@ def upsert_recommendation(
         "cold_start": q.get("cold_start", False),
         "provisional": landed.provisional,
         "needs_quote": needs_quote,
-        "price_range": [round(float(dist.ppf(0.1)), 4), round(float(dist.ppf(0.9)), 4)],
+        "no_reference": no_reference,
+        "cost_plus_bid": (round(landed.landed * (1.0 + s.min_margin_pct), 4)
+                          if no_reference and not landed.provisional else None),
+        "price_range": None if (no_reference or uninformative)
+        else [round(float(dist.ppf(0.1)), 4), round(float(dist.ppf(0.9)), 4)],
+        "uninformative_range": uninformative,
         "confidence": confidence,
         "n_prior_awards": q.get("n_prior_awards"),
         "target_p_win": target_p,
@@ -264,8 +289,9 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
 # Bump when the recommendation rules change: the next boot re-computes every open line once
 # (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first,
 # 4 = provisional bids target the likely winning price + confidence tiers, 5 = alternatives bracket the bid,
-# 6 = no cost-based no-bid reasons on quote-first lines.
-ENGINE_VERSION = "6"
+# 6 = no cost-based no-bid reasons on quote-first lines, 7 = no price shown without any reference,
+# 8 = sub-dollar precision, recent-spread confidence, late/expired quotes ignored, uninformative ranges hidden.
+ENGINE_VERSION = "8"
 
 
 def refresh_all_recommendations(db: Session) -> dict:
@@ -318,7 +344,7 @@ def refresh_stale_predictions(db: Session, limit: int | None = None) -> dict:
     for ln in lines:
         q = latest.get(ln.id)
         used = None if q is None else q.get("history_rows", q.get("n_prior_awards", 0))
-        if used is None or counts.get(ln.nsn, 0) > used:
+        if used is None or counts.get(ln.nsn, 0) > used or q.get("no_reference"):
             stale.append(ln)
     todo = stale[:limit] if limit else stale
     if todo:

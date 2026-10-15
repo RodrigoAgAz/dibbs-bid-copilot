@@ -103,7 +103,7 @@ def _cage(rng: np.random.Generator, used: set[str]) -> str:
 
 def _company_name(rng, used: set[str]) -> str:
     while True:
-        n = f"{rng.choice(ADJ)} {rng.choice(NOUN)} {rng.choice(SUFFIX)}"
+        n = f"{rng.choice(ADJ)} {rng.choice(NOUN)} {rng.choice(SUFFIX)}".replace("Supply Supply", "Supply")
         if n not in used:
             used.add(n)
             return n

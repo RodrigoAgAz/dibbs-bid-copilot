@@ -50,7 +50,7 @@ def test_provisional_landed_cost_without_quote():
     line, sol = _line(qty=100)
     lc = compute_landed_cost(line, sol, _settings(), None, predicted_median=10.0)
     assert lc.provisional and lc.supplier_unit_price == pytest.approx(7.0)
-    assert "provisional" in lc.basis
+    assert "no supplier quote" in lc.basis
 
 
 def test_org_recommendations_use_org_settings_and_set_aside(client, db):
@@ -243,3 +243,77 @@ def test_lines_awarded_before_their_return_date_are_no_longer_opportunities(clie
     other.status = "Cancelled"
     db.commit()
     assert all(x["solicitation_number"] != other.solicitation_number for x in client.get("/api/dashboard").json()["lines"])
+
+
+def test_lines_with_no_price_reference_show_no_price(client, db):
+    from datetime import date
+
+    from app.models import PricePrediction, Solicitation
+    from app.services.recommendations import refresh_stale_predictions
+
+    build_world(db, n_open=6)
+    me = signup(client, "noref@broker.example.com", org="No Ref Org")
+    client.put("/api/settings", json={"fsc_watchlist": ["5305", "5306", "5310", "5330", "5340", "4730", "6145", "5365"]},
+               headers=csrf(client))
+    line = db.execute(
+        select(SolicitationLine).join(Solicitation).where(Solicitation.return_by_date >= date.today())
+        .order_by(SolicitationLine.id)
+    ).scalars().first()
+    # A line in a supply class with no award history at all (e.g. a newly watched FSC).
+    line.nsn, line.niin, line.fsc, line.dod_standard_price = "5365999999997", "999999997", "5365", None
+    db.query(PricePrediction).filter(PricePrediction.solicitation_line_id == line.id).delete()
+    db.commit()
+    refresh_stale_predictions(db)
+    db.commit()
+    rec = db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line.id,
+                                                  Recommendation.organization_id == me["organization"]["id"])).scalar_one()
+    assert rec.recommended_bid is None and rec.explanation["no_reference"] and rec.explanation["curve"] == []
+    row = next(x for x in client.get("/api/dashboard").json()["lines"] if x["line_id"] == line.id)
+    assert row["predicted_median"] is None and row["recommended_bid"] is None
+    detail = client.get(f"/api/rfq/{line.solicitation.solicitation_number}").json()
+    assert next(x for x in detail["lines"] if x["id"] == line.id)["prediction"] is None
+    # Placeholder predictions are re-priced on every refresh until a reference exists.
+    assert refresh_stale_predictions(db)["repredicted"] >= 1
+
+
+def test_scattered_recent_prices_cap_confidence():
+    from app.services.recommendations import confidence_tier
+
+    levels = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+    tight = {"levels": levels, "prices": [0.9, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.4, 1.6, 1.8],
+             "n_prior_awards": 12, "cold_start": False}
+    assert confidence_tier(tight) == "high"
+    assert confidence_tier({**tight, "recent_spread": 3.0}) == "medium"
+    assert confidence_tier({**tight, "recent_spread": 8.0}) == "low"
+
+
+def test_expired_or_late_quotes_do_not_set_the_cost(client, db):
+    from datetime import date, timedelta
+
+    from app.models import Solicitation
+
+    build_world(db, n_open=6)
+    me = signup(client, "late@broker.example.com", org="Late Quote Org")
+    line = db.execute(
+        select(SolicitationLine).join(Solicitation).where(Solicitation.return_by_date >= date.today(),
+                                                          SolicitationLine.approved_source_only.is_(False))
+        .order_by(SolicitationLine.id)
+    ).scalars().first()
+    line.delivery_days = 30
+    db.commit()
+    qr = client.post(f"/api/rfq/lines/{line.id}/quote-requests", json={"cage_code": "1LATE"}, headers=csrf(client)).json()
+
+    def rec():
+        db.expire_all()
+        return db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line.id,
+                                                       Recommendation.organization_id == me["organization"]["id"])).scalar_one()
+
+    r = client.post(f"/api/quote-requests/{qr['id']}/quotes", headers=csrf(client),
+                    json={"unit_price": 1.0, "lead_time_days": 90})  # can't deliver in 30 days
+    assert r.status_code == 201 and rec().provisional
+    r = client.post(f"/api/quote-requests/{qr['id']}/quotes", headers=csrf(client),
+                    json={"unit_price": 1.0, "quote_valid_until": (date.today() - timedelta(days=1)).isoformat()})
+    assert r.status_code == 201 and rec().provisional  # expired
+    r = client.post(f"/api/quote-requests/{qr['id']}/quotes", headers=csrf(client),
+                    json={"unit_price": 1.0, "lead_time_days": 14})
+    assert r.status_code == 201 and not rec().provisional

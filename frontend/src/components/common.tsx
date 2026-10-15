@@ -86,13 +86,14 @@ export type LineFlags = {
   confidence?: string;
 };
 
-export function FlagBadges({ flags, compact }: { flags: LineFlags; compact?: boolean }) {
+export function FlagBadges({ flags, compact, empty = <span className="text-muted-foreground">—</span> }: { flags: LineFlags; compact?: boolean; empty?: React.ReactNode }) {
   const items: { key: string; label: string; short: string; tip: string; variant: "default" | "secondary" | "warning" | "destructive" | "outline" }[] = [];
   if (flags.fast_award)
     items.push({ key: "fa", label: "Fast award", short: "FA", tip: "Fast Award candidate: micro-purchase quotes may be awarded before the return date.", variant: "default" });
   if (flags.approved_source_only)
     items.push({ key: "aso", label: "Approved source only", short: "ASO", tip: "Only quotes for an approved part number count toward the cost floor.", variant: "destructive" });
-  if (flags.low_data)
+  // "Quote first" already says the NSN has no history: don't also show "No history".
+  if (flags.low_data && !(flags.cold_start && flags.needs_quote))
     items.push({
       key: "ld",
       label: flags.cold_start ? "No history" : "Low data",
@@ -112,7 +113,7 @@ export function FlagBadges({ flags, compact }: { flags: LineFlags; compact?: boo
     items.push({ key: "pv", label: "Provisional", short: "PROV", tip: "No supplier quote yet: landed cost is estimated from the predicted price.", variant: "secondary" });
   if (flags.first_article) items.push({ key: "fat", label: "First article", short: "FAT", tip: "First article testing required.", variant: "outline" });
   if (flags.aidc) items.push({ key: "aidc", label: "AIDC", short: "AIDC", tip: "Automated Indefinite Delivery Contract.", variant: "outline" });
-  if (!items.length) return <span className="text-muted-foreground">—</span>;
+  if (!items.length) return <>{empty}</>;
   return (
     <span className="inline-flex flex-wrap gap-1">
       {items.map((i) => (

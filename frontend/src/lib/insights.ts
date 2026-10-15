@@ -7,6 +7,7 @@ export interface Award {
   quantity: number;
   awardee_cage: string | null;
   awardee_name?: string | null;
+  verified?: boolean; // false: derived from a contract total; who won is known, the unit price is not reliable
 }
 
 export interface Competitor {
@@ -14,8 +15,8 @@ export interface Competitor {
   name: string | null;
   wins: number;
   lastDate: string;
-  lastPrice: number;
-  medianPrice: number;
+  lastPrice: number | null; // null when none of this awardee's prices is verified
+  medianPrice: number | null;
 }
 
 const median = (xs: number[]): number => {
@@ -25,6 +26,8 @@ const median = (xs: number[]): number => {
 };
 
 const byDate = (a: Award, b: Award) => a.award_date.localeCompare(b.award_date);
+/** Ends with exactly one period ("... to AEROMETALS, INC." must not become "INC.."). */
+const sentence = (s: string) => (s.endsWith(".") ? s : `${s}.`);
 
 /** Who wins this NSN: awardees by number of wins, most recent first on ties. */
 export function competitors(awards: Award[], max = 5): Competitor[] {
@@ -37,6 +40,7 @@ export function competitors(awards: Award[], max = 5): Competitor[] {
     .map(([cage, list]) => {
       const sorted = [...list].sort(byDate);
       const last = sorted[sorted.length - 1];
+      const priced = sorted.filter((a) => a.verified !== false);
       return {
         cage,
         name:
@@ -46,8 +50,8 @@ export function competitors(awards: Award[], max = 5): Competitor[] {
             .pop() ?? null,
         wins: list.length,
         lastDate: last.award_date,
-        lastPrice: last.unit_price,
-        medianPrice: median(list.map((a) => a.unit_price)),
+        lastPrice: priced.length ? priced[priced.length - 1].unit_price : null,
+        medianPrice: priced.length ? median(priced.map((a) => a.unit_price)) : null,
       };
     })
     .sort((a, b) => b.wins - a.wins || b.lastDate.localeCompare(a.lastDate))
@@ -55,7 +59,14 @@ export function competitors(awards: Award[], max = 5): Competitor[] {
 }
 
 /** A few plain-English sentences a broker can read in ten seconds. */
-export function priceStory(awards: Award[], quantity: number, today: Date = new Date()): string[] {
+export function priceStory(allAwards: Award[], quantity: number, today: Date = new Date()): string[] {
+  const awards = allAwards.filter((a) => a.verified !== false);
+  if (!awards.length && allAwards.length) {
+    return [
+      `${allAwards.length} past award${allAwards.length === 1 ? "" : "s"} on file, but the unit prices were derived from contract totals and don't match verified prices, so they aren't used for pricing.`,
+      "Get a supplier quote before bidding.",
+    ];
+  }
   if (!awards.length) {
     return [
       "No past awards on file for this NSN, so the price is estimated from similar items in the same supply class.",
@@ -68,8 +79,10 @@ export function priceStory(awards: Award[], quantity: number, today: Date = new 
   const out: string[] = [];
   const who = last.awardee_name || (last.awardee_cage ? `CAGE ${last.awardee_cage}` : null);
   out.push(
-    `${sorted.length} past award${sorted.length === 1 ? "" : "s"} since ${first.award_date.slice(0, 4)}. ` +
-      `The last was ${money(last.unit_price)} each for ${num(last.quantity)} on ${formatDate(last.award_date)}${who ? ` to ${who}` : ""}.`,
+    sentence(
+      `${sorted.length} past award${sorted.length === 1 ? "" : "s"} since ${first.award_date.slice(0, 4)}. ` +
+        `The last was ${money(last.unit_price)} each for ${num(last.quantity)} on ${formatDate(last.award_date)}${who ? ` to ${who}` : ""}`,
+    ),
   );
   const recent = sorted.slice(-5).map((a) => a.unit_price);
   if (recent.length >= 3) {

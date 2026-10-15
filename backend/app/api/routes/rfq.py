@@ -54,6 +54,19 @@ def dibbs_url(sol_number: str) -> str:
     return f"https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn={sol_number.replace('-', '')}"
 
 
+def _verified(a, awards) -> bool:
+    """Same rule as training (services/data_quality.py): a price derived from a contract total counts only when
+    it agrees with the NSN's verified prices."""
+    from statistics import median
+
+    from app.services.data_quality import MAX_RATIO, RELIABLE_SOURCES
+
+    if a.source in RELIABLE_SOURCES:
+        return True
+    ref = [x.unit_price for x in awards if x.source in RELIABLE_SOURCES and x.unit_price]
+    return bool(ref) and 1 / MAX_RATIO <= a.unit_price / median(ref) <= MAX_RATIO
+
+
 def _named(ctx: TenantContext, items: list[dict]) -> list[dict]:
     """Add item names to similar-item evidence (public catalog data)."""
     if not items:
@@ -190,7 +203,7 @@ def _line_detail(ctx: TenantContext, line: SolicitationLine, org: Organization) 
             similar_items=_named(ctx, q.get("similar_items") or []),
             created_at=pred.created_at,
         )
-        if pred
+        if pred and not q.get("no_reference")
         else None,
         recommendation=RecommendationOut(
             landed_cost_per_unit=rec.landed_cost_per_unit,
@@ -219,6 +232,7 @@ def _line_detail(ctx: TenantContext, line: SolicitationLine, org: Organization) 
                 unit_price=a.unit_price,
                 solicitation_number=a.solicitation_number,
                 source=a.source,
+                verified=_verified(a, awards),
             )
             for a in awards
         ],

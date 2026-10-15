@@ -10,7 +10,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { WriteGuard } from "@/components/common";
 import { FormError } from "@/components/form";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
-import { formatDateTime, money, num, pct } from "@/lib/format";
+import { formatDate, formatDateTime, formatPhone, money, num, pct, plural } from "@/lib/format";
 import { useMe } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,8 @@ const REASON: Record<string, string> = {
   manual: "Added manually",
   voice: "Voice",
 };
+
+const EMAIL_KIND: Record<string, string> = { rfq: "RFQ", followup: "Follow-up", reply: "Reply" };
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "success" | "warning" | "destructive" | "outline"> = {
   draft: "secondary",
@@ -69,14 +71,22 @@ function QuoteRow({ q, sn }: { q: Quote; sn: string }) {
         )}
         <span>Lead {q.lead_time_days != null ? `${q.lead_time_days} d` : "—"}</span>
         <span>MOQ {q.min_order_qty != null ? num(q.min_order_qty) : "—"}</span>
-        <span>P/N {q.quoted_part_number ?? "—"}</span>
-        <span>Valid {q.quote_valid_until ?? "—"}</span>
-        <span>Freight {q.freight_cost != null ? money(q.freight_cost) : q.freight_terms ?? "—"}</span>
-        {q.certs_offered.length > 0 && <span>{q.certs_offered.join(", ")}</span>}
-        <Badge variant={q.conforms_to_part_number ? "success" : "destructive"}>{q.conforms_to_part_number ? "Conforming" : "Non-conforming"}</Badge>
-        <Tip content="Extraction confidence">
-          <span className="text-muted-foreground">conf. {pct(q.extraction_confidence)}</span>
-        </Tip>
+        {!q.declined && (
+          <>
+            <span>P/N {q.quoted_part_number ?? "—"}</span>
+            <span>Valid until {q.quote_valid_until ? formatDate(q.quote_valid_until) : "—"}</span>
+            <span>Freight {q.freight_cost != null ? money(q.freight_cost) : q.freight_terms ?? "—"}</span>
+            {q.certs_offered.length > 0 && <span>{q.certs_offered.join(", ")}</span>}
+            <Tip content={q.conforms_to_part_number ? "Quoted part number matches an approved part number" : "Quoted part number is not an approved part number"}>
+              <span>
+                <Badge variant={q.conforms_to_part_number ? "success" : "destructive"}>{q.conforms_to_part_number ? "Conforming" : "Non-conforming"}</Badge>
+              </span>
+            </Tip>
+            <Tip content="How sure the parser is about the fields it read from the reply">
+              <span className="text-muted-foreground">read with {pct(q.extraction_confidence)} confidence</span>
+            </Tip>
+          </>
+        )}
         <span className="text-muted-foreground">via {q.source}</span>
         {q.needs_review && !q.reviewed_at && (
           <Tip content={q.review_reason ?? "Needs review"}>
@@ -149,6 +159,7 @@ function QuoteRequestDetail({ qr, sn, demo }: { qr: QR; sn: string; demo: boolea
   const [reply, setReply] = useState("");
   const [manualPrice, setManualPrice] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [polished, setPolished] = useState(false);
   const id = qr.id;
   const run = useMutation({
     mutationFn: async (fn: () => Promise<unknown>) => fn(),
@@ -161,6 +172,8 @@ function QuoteRequestDetail({ qr, sn, demo }: { qr: QR; sn: string; demo: boolea
   const path = { params: { path: { qr_id: id } } };
   const saveDraft = () => run.mutate(async () => unwrap(await api.PATCH("/api/quote-requests/{qr_id}", { ...path, body: { email_to: to || null, email_subject: subject, email_body: body } })));
   const isDraft = qr.status === "draft";
+  // A follow-up only makes sense while the supplier hasn't answered.
+  const canFollowUp = qr.status === "sent" || qr.status === "no_response";
 
   return (
     <div className="space-y-3 rounded-md border bg-muted/30 p-3">
@@ -197,6 +210,7 @@ function QuoteRequestDetail({ qr, sn, demo }: { qr: QR; sn: string; demo: boolea
                       const r = unwrap(await api.POST("/api/quote-requests/{qr_id}/draft", path));
                       setSubject(r.email_subject ?? "");
                       setBody(r.email_body ?? "");
+                      setPolished(true);
                     })
                   }
                   disabled={run.isPending}
@@ -205,19 +219,24 @@ function QuoteRequestDetail({ qr, sn, demo }: { qr: QR; sn: string; demo: boolea
                 </Button>
               </>
             )}
-            <Button
-              size="sm"
-              onClick={() =>
-                run.mutate(async () => {
-                  if (isDraft) unwrap(await api.PATCH("/api/quote-requests/{qr_id}", { ...path, body: { email_to: to || null, email_subject: subject, email_body: body } }));
-                  return unwrap(await api.POST("/api/quote-requests/{qr_id}/send", path));
-                })
-              }
-              disabled={run.isPending || !to}
-              data-testid="send-rfq"
-            >
-              <Send /> {isDraft ? "Send RFQ email" : "Send follow-up"}
-            </Button>
+            {(isDraft || canFollowUp) && (
+              <Button
+                size="sm"
+                onClick={() =>
+                  run.mutate(async () => {
+                    if (isDraft) unwrap(await api.PATCH("/api/quote-requests/{qr_id}", { ...path, body: { email_to: to || null, email_subject: subject, email_body: body } }));
+                    return unwrap(await api.POST("/api/quote-requests/{qr_id}/send", path));
+                  })
+                }
+                disabled={run.isPending || !to}
+                title={!to ? "Add the supplier's email address first" : undefined}
+                data-testid="send-rfq"
+              >
+                <Send /> {isDraft ? "Send RFQ email" : "Send follow-up"}
+              </Button>
+            )}
+            {polished && !run.isPending && <span className="self-center text-[11px] text-success">Draft rewritten: review it before sending.</span>}
+            {isDraft && !to && <span className="self-center text-[11px] text-muted-foreground">Add the supplier&apos;s email to send.</span>}
           </div>
         </div>
       )}
@@ -251,7 +270,7 @@ function QuoteRequestDetail({ qr, sn, demo }: { qr: QR; sn: string; demo: boolea
           {emails.map((e) => (
             <details key={e.id} className={cn("rounded-md border p-2 text-xs", e.direction === "inbound" ? "bg-card" : "bg-background")}>
               <summary className="cursor-pointer">
-                <Badge variant={e.direction === "inbound" ? "success" : "secondary"}>{e.direction === "inbound" ? "Reply" : e.kind}</Badge>{" "}
+                <Badge variant={e.direction === "inbound" ? "success" : "secondary"}>{e.direction === "inbound" ? "Reply" : (EMAIL_KIND[e.kind] ?? e.kind)}</Badge>{" "}
                 {formatDateTime(e.created_at)} · {e.direction === "inbound" ? e.from_addr : e.to_addr} · {e.subject}
               </summary>
               <pre className="mt-2 whitespace-pre-wrap text-[11px]">{e.body}</pre>
@@ -356,6 +375,7 @@ export function SupplierPanel({
     onError: (e) => setErr(errorMessage(e)),
   });
   const undrafted = candidates.filter((c) => !c.quote_requests.some((q) => q.channel === "email"));
+  const unsendable = candidates.filter((c) => c.quote_requests.some((q) => q.channel === "email" && q.status === "draft" && !q.email_to)).length;
   const { data: me } = useMe();
   const call = useMutation({
     mutationFn: async (c: Candidate) =>
@@ -380,15 +400,25 @@ export function SupplierPanel({
       {undrafted.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>
-            {undrafted.length} candidate supplier{undrafted.length === 1 ? "" : "s"} without a quote request. Drafts are only sent when
-            you click Send.
+            {undrafted.length === 1 ? "1 supplier has" : `${num(undrafted.length)} suppliers have`} no quote request yet. Drafts are only
+            sent when you click Send.
           </span>
           <Button size="xs" variant="outline" disabled={draft.isPending} onClick={() => draft.mutate(null)} data-testid="draft-all">
             <Plus /> Draft requests for all {undrafted.length}
           </Button>
         </div>
       )}
-      <div className="overflow-hidden rounded-md border">
+      {unsendable > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {unsendable === 1 ? "1 draft has" : `${num(unsendable)} drafts have`} no email address: open the row and add one to send it.
+        </p>
+      )}
+      {!candidates.length && (
+        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground" data-testid="no-candidates">
+          No approved sources or past awardees on file for this NSN. Add a supplier by CAGE code below.
+        </p>
+      )}
+      <div className={cn("overflow-x-auto rounded-md border", !candidates.length && "hidden")}>
         <Table>
           <THead>
             <tr>
@@ -406,6 +436,8 @@ export function SupplierPanel({
             {candidates.map((c) => {
               const quotes = c.quote_requests.flatMap((q) => q.quotes ?? []).filter((q) => q.unit_price != null && !q.declined);
               const best = quotes.length ? Math.min(...quotes.map((q) => q.unit_price!)) : null;
+              const reviewing = quotes.some((q) => q.needs_review && !q.reviewed_at);
+              const draftTo = c.quote_requests.find((q) => q.email_to)?.email_to;
               const isOpen = open === c.cage_code;
               return (
                 <FragmentRow key={c.cage_code}>
@@ -418,14 +450,21 @@ export function SupplierPanel({
                     </TD>
                     <TD>
                       <Badge variant={c.reason === "approved_source" ? "default" : "secondary"}>{REASON[c.reason] ?? c.reason}</Badge>
-                      {c.historical_awards > 0 && <span className="ml-1 text-[11px] text-muted-foreground">{c.historical_awards} wins</span>}
+                      {c.historical_awards > 0 && <span className="ml-1 text-[11px] text-muted-foreground">{plural(c.historical_awards, "win")}</span>}
                     </TD>
                     <TD className="text-[12px]">
-                      {c.email ?? <span className="text-muted-foreground">no email</span>}
-                      {c.phone && <div className="text-[11px] text-muted-foreground">{c.phone} · {c.phone_type}</div>}
+                      {c.email ?? draftTo ?? <span className="text-muted-foreground">no email</span>}
+                      {c.phone && (
+                        <div className="text-[11px] text-muted-foreground">
+                          {formatPhone(c.phone)}
+                          {c.phone_type && c.phone_type !== "unknown" ? ` · ${c.phone_type}` : ""}
+                        </div>
+                      )}
                     </TD>
                     <TD>
-                      {c.quote_requests.length ? (
+                      {reviewing ? (
+                        <Badge variant="warning">Needs review</Badge>
+                      ) : c.quote_requests.length ? (
                         c.quote_requests.map((q) => (
                           <Badge key={q.id} variant={STATUS_VARIANT[q.status] ?? "secondary"} className="mr-1">
                             {q.channel === "voice" ? "call " : ""}

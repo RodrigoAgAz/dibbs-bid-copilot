@@ -82,6 +82,8 @@ class Settings(BaseSettings):
     # Pricing research on production data, in-cluster: set to a new id to run app/services/research.py once.
     research_run: str = ""
 
+    # Shown on the Terms and Privacy pages for questions, data export and deletion requests (empty = not shown).
+    support_email: str = ""
     # Public demo: "Explore the demo" signs visitors in as a read-only viewer of the Atlas demo org.
     public_demo: bool = False
     # False = the seeded demo accounts (DEMO_CREDENTIALS.md) cannot log in with their published passwords;

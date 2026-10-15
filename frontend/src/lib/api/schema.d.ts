@@ -965,6 +965,8 @@ export interface components {
         AuthOptionsOut: {
             /** Public Demo */
             public_demo: boolean;
+            /** Support Email */
+            support_email?: string | null;
         };
         /** AwardOut */
         AwardOut: {
@@ -989,6 +991,11 @@ export interface components {
             solicitation_number: string | null;
             /** Source */
             source: string;
+            /**
+             * Verified
+             * @default true
+             */
+            verified: boolean;
         };
         /** CallIn */
         CallIn: {
@@ -1125,6 +1132,11 @@ export interface components {
             needs_quote_lines: number;
             /** Total Expected Profit */
             total_expected_profit: number;
+            /**
+             * Quoted Expected Profit
+             * @default 0
+             */
+            quoted_expected_profit: number;
             /** Quotes Awaiting Reply */
             quotes_awaiting_reply: number;
             /** Needs Review */
@@ -1297,10 +1309,20 @@ export interface components {
             outcome: string;
             /** Winning Price */
             winning_price: number | null;
+            /**
+             * Winning Price Verified
+             * @default false
+             */
+            winning_price_verified: boolean;
             /** Awardee Cage */
             awardee_cage: string | null;
             /** Award Date */
             award_date: string | null;
+            /**
+             * Counted
+             * @default false
+             */
+            counted: boolean;
         };
         /** HistoryStats */
         HistoryStats: {

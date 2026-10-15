@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Download, RefreshCw, Search } from "lucide-react";
 import { Empty, ErrorState, FlagBadges, Loading, PageHeader, Stat } from "@/components/common";
@@ -20,6 +20,12 @@ import { downloadCsv, linesToCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 
 const PAGE = 100;
+const TYPE_LABELS: Record<string, string> = {
+  T: "Automated solicitation (T): priced and awarded automatically",
+  U: "Automated IDC / AIDC (U): a long-term contract",
+  Q: "Manual solicitation (Q): reviewed by a buyer",
+};
+const NO_BID_PAGE = 100;
 const FLAG_OPTIONS: { key: FlagKey; label: string }[] = [
   { key: "fast_award", label: "Fast award" },
   { key: "approved_source_only", label: "Approved source only" },
@@ -83,10 +89,60 @@ function ConfidenceDot({ level }: { level?: string | null }) {
   );
 }
 
+/** Phone layout: one card per line with the numbers that matter (the table needs ~1,100px). */
+function LineCards({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean }) {
+  return (
+    <ul className="divide-y md:hidden" data-testid="rfq-cards">
+      {lines.map((l) => {
+        const c = countdown(l.days_left);
+        return (
+          <li key={l.line_id}>
+            <Link href={`/rfq/${l.solicitation_number}`} className={cn("block px-3 py-2.5 hover:bg-accent/50", noBid && "text-muted-foreground")}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-mono text-[12px] text-primary">{l.solicitation_number}</span>
+                <span
+                  className={cn(
+                    "num text-[12px] font-medium",
+                    c.tone === "danger" && "text-destructive",
+                    c.tone === "warn" && "text-warning",
+                  )}
+                >
+                  {c.label}
+                </span>
+              </div>
+              <div className="truncate text-sm">{l.nomenclature}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {num(l.quantity)} {l.unit_of_issue} · NSN {formatNsn(l.nsn)}
+              </div>
+              {noBid ? (
+                <div className="mt-1 line-clamp-2 text-[12px]">{l.no_bid_reason}</div>
+              ) : (
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+                  <span>
+                    Bid <b className="num">{money(l.recommended_bid)}</b>
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    {pct(l.p_win)} <ConfidenceDot level={l.flags.confidence} />
+                  </span>
+                  <span className={cn("num", (l.expected_profit ?? 0) > 0 && "text-success")}>{money(l.expected_profit, { digits: 0 })}</span>
+                  <QuoteCell line={l} />
+                  <FlagBadges flags={l.flags} compact />
+                </div>
+              )}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean }) {
   const router = useRouter();
   return (
-    <Table>
+    <>
+    <LineCards lines={lines} noBid={noBid} />
+    <Table className="hidden md:table">
       <THead>
         <tr>
           <TH>Due</TH>
@@ -118,7 +174,11 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
               <Link href={`/rfq/${l.solicitation_number}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
                 {l.solicitation_number}
               </Link>
-              <span className="ml-1 text-[10px] text-muted-foreground">{l.type_code}</span>
+              {l.type_code && (
+                <Tip content={TYPE_LABELS[l.type_code] ?? `Solicitation type ${l.type_code}`}>
+                  <span className="ml-1 cursor-help text-[10px] text-muted-foreground">{l.type_code}</span>
+                </Tip>
+              )}
             </TD>
             <TD className="font-mono text-[12px]">{formatNsn(l.nsn)}</TD>
             <TD className="max-w-[240px] truncate" title={l.nomenclature ?? ""}>
@@ -155,6 +215,7 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
         ))}
       </TBody>
     </Table>
+    </>
   );
 }
 
@@ -162,6 +223,8 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
   const [page, setPage] = useState(0);
   const [showNoBid, setShowNoBid] = useState(false);
+  const [noBidShown, setNoBidShown] = useState(NO_BID_PAGE);
+  const tableTop = useRef<HTMLDivElement>(null);
   const [sort, setSort] = useState<SortKey>("best");
   const q = useQuery({ queryKey: ["dashboard"], queryFn: async () => unwrap(await api.GET("/api/dashboard")) });
 
@@ -175,7 +238,16 @@ export default function DashboardPage() {
   function update(f: Partial<DashboardFilters>) {
     setFilters((cur) => ({ ...cur, ...f }));
     setPage(0);
+    setNoBidShown(NO_BID_PAGE);
   }
+  function goPage(p: number) {
+    setPage(p);
+    tableTop.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+  const filtersActive = JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS);
+  // Same definitions as the quote-status filter, so the stats and the filtered lists always agree.
+  const awaiting = allLines.filter((l) => statusOf(l) === "sent").length;
+  const needsReview = allLines.filter((l) => statusOf(l) === "needs_review").length;
 
   const s = q.data?.summary;
   return (
@@ -197,7 +269,7 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={!bid.length}
+              disabled={!filtered.length}
               onClick={() => downloadCsv(`dibbs-lines-${s?.as_of ?? "today"}.csv`, linesToCsv([...bid, ...noBid], window.location.origin))}
               data-testid="export-csv"
             >
@@ -214,10 +286,15 @@ export default function DashboardPage() {
       {s && (
         <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
           <Stat label="Matched lines" value={num(s.lines)} hint={`${num(s.bid_lines)} worth bidding${s.needs_quote_lines ? ` · ${num(s.needs_quote_lines)} need a quote` : ""}`} />
-          <Stat label="Expected profit" value={money(s.total_expected_profit, { compact: true, digits: 0 })} hint="sum over bid lines" tone="good" />
+          <Stat
+            label="Expected profit"
+            value={money(s.total_expected_profit, { compact: true, digits: 0 })}
+            hint={`${money(s.quoted_expected_profit ?? 0, { compact: true, digits: 0 })} on quoted lines; the rest uses estimated costs`}
+            tone="good"
+          />
           <Stat label="No-bid" value={num(s.no_bid_lines)} hint="collapsed below" />
-          <Stat label="Awaiting replies" value={num(s.quotes_awaiting_reply)} hint="supplier quote requests sent" />
-          <Stat label="Needs review" value={num(s.needs_review)} hint="parsed quotes to check" tone={s.needs_review ? "warn" : undefined} />
+          <Stat label="Awaiting replies" value={num(awaiting)} hint={`line${awaiting === 1 ? "" : "s"} with quote requests out`} />
+          <Stat label="Needs review" value={num(needsReview)} hint="lines with a parsed quote to check" tone={needsReview ? "warn" : undefined} />
         </div>
       )}
 
@@ -278,7 +355,7 @@ export default function DashboardPage() {
             />
           ))}
         </div>
-        {(filters !== DEFAULT_FILTERS) && (
+        {filtersActive && (
           <Button variant="ghost" size="xs" onClick={() => update(DEFAULT_FILTERS)}>
             Clear
           </Button>
@@ -295,7 +372,7 @@ export default function DashboardPage() {
         </Empty>
       ) : (
         <>
-          <div className="overflow-hidden rounded-lg border bg-card shadow-sm" data-testid="rfq-table">
+          <div ref={tableTop} className="scroll-mt-16 overflow-hidden rounded-lg border bg-card shadow-sm" data-testid="rfq-table">
             {pageLines.length ? <LinesTable lines={pageLines} /> : <div className="p-4"><Empty title="No bid-worthy lines match these filters" /></div>}
             {pages > 1 && (
               <div className="flex items-center justify-between border-t px-3 py-2 text-xs text-muted-foreground">
@@ -303,10 +380,10 @@ export default function DashboardPage() {
                   {page * PAGE + 1}–{Math.min((page + 1) * PAGE, bid.length)} of {bid.length}
                 </span>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="xs" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                  <Button variant="outline" size="xs" disabled={page === 0} onClick={() => goPage(page - 1)}>
                     Previous
                   </Button>
-                  <Button variant="outline" size="xs" disabled={page >= pages - 1} onClick={() => setPage((p) => p + 1)}>
+                  <Button variant="outline" size="xs" disabled={page >= pages - 1} onClick={() => goPage(page + 1)}>
                     Next
                   </Button>
                 </div>
@@ -325,7 +402,14 @@ export default function DashboardPage() {
               </button>
               {showNoBid && (
                 <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-                  <LinesTable lines={noBid} noBid />
+                  <LinesTable lines={noBid.slice(0, noBidShown)} noBid />
+                  {noBid.length > noBidShown && (
+                    <div className="border-t px-3 py-2 text-center">
+                      <Button variant="outline" size="xs" onClick={() => setNoBidShown((n) => n + NO_BID_PAGE)}>
+                        Show {Math.min(NO_BID_PAGE, noBid.length - noBidShown)} more of {num(noBid.length - noBidShown)}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

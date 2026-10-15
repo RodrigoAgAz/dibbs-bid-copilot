@@ -47,7 +47,8 @@ def compute_landed_cost(
     if quote is not None and quote.unit_price is not None:
         unit = float(quote.unit_price)
         provisional = False
-        basis = f"supplier quote #{quote.id} ({quote.quote_request.cage_code if quote.quote_request else 'n/a'})"
+        cage = quote.quote_request.cage_code if quote.quote_request else None
+        basis = f"supplier quote from CAGE {cage}" if cage else "supplier quote"
         effective = unit
         if quote.min_order_qty and quote.min_order_qty > qty:
             effective = unit * float(quote.min_order_qty) / qty
@@ -62,7 +63,7 @@ def compute_landed_cost(
         unit = float(predicted_median or 0.0) * s.provisional_cost_fraction
         effective = unit
         provisional = True
-        basis = f"provisional: no supplier quote yet ({s.provisional_cost_fraction:.0%} of predicted median)"
+        basis = f"estimate: no supplier quote yet ({s.provisional_cost_fraction:.0%} of the predicted median price)"
         freight = s.default_freight_per_line / qty
 
     packaging = s.packaging_cost_per_line / qty

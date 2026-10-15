@@ -115,7 +115,8 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
 @router.get("/options", response_model=AuthOptionsOut)
 def options() -> AuthOptionsOut:
     """What the login page should offer (public)."""
-    return AuthOptionsOut(public_demo=get_settings().public_demo)
+    s = get_settings()
+    return AuthOptionsOut(public_demo=s.public_demo, support_email=s.support_email or None)
 
 
 @router.post("/demo", response_model=MeOut)

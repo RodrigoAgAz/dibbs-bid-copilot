@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  LabelList,
   Legend,
   Line,
   ReferenceArea,
@@ -18,8 +19,8 @@ import {
   YAxis,
   ZAxis,
 } from "recharts";
-import { buildWaterfall, historyPoints, quantile, type Award, type CurvePoint, type LandedBreakdown } from "@/lib/charts";
-import { FEATURE_LABELS, money, num, pct } from "@/lib/format";
+import { buildWaterfall, historyPoints, niceTicks, quantile, type Award, type CurvePoint, type LandedBreakdown } from "@/lib/charts";
+import { FEATURE_LABELS, featureValue, money, num, pct } from "@/lib/format";
 
 const C = {
   primary: "hsl(var(--chart-1))",
@@ -32,6 +33,8 @@ const C = {
 };
 const AXIS = { fontSize: 11, fill: "hsl(var(--muted-foreground))" };
 const TT = { contentStyle: { fontSize: 12, borderRadius: 6, borderColor: "hsl(var(--border))" } };
+/** Axis money: no cents on big numbers, 4 decimals below a dollar. */
+const axisMoney = (v: number) => money(v, { digits: Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 1 ? 2 : 4 });
 
 export function HistoryChart({
   awards,
@@ -52,7 +55,17 @@ export function HistoryChart({
     return <div className="flex h-56 items-center justify-center text-xs text-muted-foreground">No past awards on file for this NSN.</div>;
   }
   const now = Date.now();
-  const xMin = pts[0].x;
+  const xMin = Math.min(pts[0].x, now - 1000 * 86400 * 60);
+  const verified = pts.filter((p) => p.verified);
+  const derived = pts.filter((p) => !p.verified);
+  // Explicit, round y domain covering the points and the predicted range (bubbles need headroom at the top).
+  const ys = [...pts.map((p) => p.y), ...(q10 !== null && q90 !== null ? [q10, q90] : [])];
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const pad = (hi - lo) * 0.12 || hi * 0.2;
+  const yTicks = niceTicks(Math.max(0, lo - pad), hi + pad);
+  // The band marks "now" (the prediction): the last 15% of the time axis, at least 45 days.
+  const bandFrom = now - Math.max((now - xMin) * 0.15, 1000 * 86400 * 45);
   return (
     <ResponsiveContainer width="100%" height={240}>
       <ScatterChart margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
@@ -68,13 +81,24 @@ export function HistoryChart({
           tick={AXIS}
           scale="time"
         />
-        <YAxis type="number" dataKey="y" tickFormatter={(v) => money(v, { digits: 2 })} tick={AXIS} width={64} />
+        <YAxis type="number" dataKey="y" domain={[yTicks[0], yTicks[yTicks.length - 1]]} ticks={yTicks} tickFormatter={axisMoney} tick={AXIS} width={64} />
         <ZAxis type="number" dataKey="z" range={[25, 400]} name="Quantity" />
         {q10 !== null && q90 !== null && (
-          <ReferenceArea x1={now - 1000 * 86400 * 20} x2={now} y1={q10} y2={q90} fill={C.primary} fillOpacity={0.12} ifOverflow="extendDomain" />
+          <ReferenceArea
+            x1={bandFrom}
+            x2={now}
+            y1={q10}
+            y2={q90}
+            fill={C.primary}
+            fillOpacity={0.15}
+            stroke={C.primary}
+            strokeOpacity={0.3}
+            ifOverflow="hidden"
+            label={{ value: "predicted 10–90%", position: "insideTop", fontSize: 10, fill: C.primary }}
+          />
         )}
         {q50 !== null && (
-          <ReferenceLine y={q50} stroke={C.primary} strokeDasharray="4 3" label={{ value: `predicted median ${money(q50)}`, position: "insideTopLeft", fontSize: 10, fill: C.primary }} />
+          <ReferenceLine y={q50} stroke={C.primary} strokeDasharray="4 3" ifOverflow="hidden" label={{ value: `predicted median ${money(q50)}`, position: "insideBottomLeft", fontSize: 10, fill: C.primary }} />
         )}
         <Tooltip
           {...TT}
@@ -82,7 +106,7 @@ export function HistoryChart({
           formatter={(v: number, name: string) => (name === "Quantity" ? num(v) : name === "x" ? "" : money(v))}
           labelFormatter={() => ""}
           content={({ payload }) => {
-            const p = payload?.[0]?.payload as { date: string; y: number; z: number; cage: string } | undefined;
+            const p = payload?.[0]?.payload as { date: string; y: number; z: number; cage: string; verified: boolean } | undefined;
             if (!p) return null;
             return (
               <div className="rounded-md border bg-card px-2 py-1 text-xs shadow">
@@ -90,12 +114,22 @@ export function HistoryChart({
                 <div>
                   {money(p.y)} × {num(p.z)} · CAGE {p.cage}
                 </div>
+                {!p.verified && <div className="text-muted-foreground">Derived from a contract total: not used for pricing</div>}
               </div>
             );
           }}
         />
-        <Scatter isAnimationActive={false} data={pts} fill={C.primary} fillOpacity={0.65} name="Past awards" />
-        <Legend wrapperStyle={{ fontSize: 11 }} payload={[{ value: `Past awards (bubble = quantity; this RFQ: ${num(quantity)})`, type: "circle", color: C.primary }]} />
+        <Scatter isAnimationActive={false} data={verified} fill={C.primary} fillOpacity={0.65} name="Past awards" />
+        {derived.length > 0 && (
+          <Scatter isAnimationActive={false} data={derived} fill="transparent" stroke={C.muted} strokeDasharray="2 2" name="Unverified" />
+        )}
+        <Legend
+          wrapperStyle={{ fontSize: 11 }}
+          payload={[
+            { value: `Past awards (bubble = quantity; this RFQ: ${num(quantity)})`, type: "circle", color: C.primary },
+            ...(derived.length ? [{ value: "Unverified price (not used)", type: "circle" as const, color: C.muted }] : []),
+          ]}
+        />
       </ScatterChart>
     </ResponsiveContainer>
   );
@@ -115,6 +149,10 @@ export function PWinChart({
   aggressive: number | null;
 }) {
   if (!curve?.length) return <div className="flex h-56 items-center justify-center text-xs text-muted-foreground">No curve available.</div>;
+  const bids = curve.map((c) => c.bid);
+  const xLo = Math.min(...bids);
+  const xHi = Math.max(...bids);
+  const xTicks = niceTicks(xLo, xHi).filter((t) => t >= xLo && t <= xHi);
   const marks: { x: number | null; label: string; color: string }[] = [
     { x: landed, label: "landed", color: C.red },
     { x: conservative, label: "conservative", color: C.green },
@@ -122,10 +160,11 @@ export function PWinChart({
     { x: aggressive, label: "aggressive", color: C.amber },
   ];
   return (
+    <div>
     <ResponsiveContainer width="100%" height={240}>
-      <ComposedChart data={curve} margin={{ top: 16, right: 8, bottom: 4, left: 4 }}>
+      <ComposedChart data={curve} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
         <CartesianGrid stroke={C.grid} strokeDasharray="3 3" />
-        <XAxis dataKey="bid" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(v) => money(v, { digits: 2 })} tick={AXIS} />
+        <XAxis dataKey="bid" type="number" domain={[xLo, xHi]} ticks={xTicks} tickFormatter={axisMoney} tick={AXIS} />
         <YAxis yAxisId="p" domain={[0, 1]} tickFormatter={(v) => pct(v)} tick={AXIS} width={40} />
         <YAxis yAxisId="e" orientation="right" tickFormatter={(v) => money(v, { compact: true, digits: 0 })} tick={AXIS} width={56} />
         <Tooltip
@@ -145,13 +184,26 @@ export function PWinChart({
               stroke={m.color}
               strokeDasharray={m.label === "recommended" ? undefined : "3 3"}
               strokeWidth={m.label === "recommended" ? 2 : 1}
-              label={{ value: m.label, position: "top", fontSize: 10, fill: m.color }}
               ifOverflow="extendDomain"
             />
           ) : null,
         )}
       </ComposedChart>
     </ResponsiveContainer>
+      <div className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px]" data-testid="pwin-marks">
+        {marks
+          .filter((m) => m.x)
+          .map((m) => (
+            <span key={m.label} className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block h-0 w-4 border-t-2"
+                style={{ borderColor: m.color, borderStyle: m.label === "recommended" ? "solid" : "dashed" }}
+              />
+              {m.label} <b className="num">{money(m.x)}</b>
+            </span>
+          ))}
+      </div>
+    </div>
   );
 }
 
@@ -160,16 +212,24 @@ export function WaterfallChart({ breakdown }: { breakdown: LandedBreakdown | nul
   if (!steps.length) return null;
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={steps} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
+      <BarChart data={steps} margin={{ top: 18, right: 8, bottom: 4, left: 4 }}>
         <CartesianGrid stroke={C.grid} strokeDasharray="3 3" vertical={false} />
-        <XAxis dataKey="name" tick={{ ...AXIS, fontSize: 10 }} interval={0} />
-        <YAxis tickFormatter={(v) => money(v, { digits: 2 })} tick={AXIS} width={64} />
+        <XAxis
+          dataKey="name"
+          tick={{ ...AXIS, fontSize: 10 }}
+          interval={0}
+          angle={steps.length > 5 ? -30 : 0}
+          textAnchor={steps.length > 5 ? "end" : "middle"}
+          height={steps.length > 5 ? 48 : 24}
+        />
+        <YAxis tickFormatter={axisMoney} tick={AXIS} width={64} />
         <Tooltip {...TT} formatter={(v: number, n: string) => (n === "base" ? null : money(v))} labelFormatter={(l) => String(l)} />
         <Bar dataKey="base" stackId="w" fill="transparent" isAnimationActive={false} />
         <Bar isAnimationActive={false} dataKey="value" stackId="w" name="Cost per unit" radius={[3, 3, 0, 0]}>
           {steps.map((s, i) => (
             <Cell key={i} fill={s.total ? C.red : i === 0 ? C.primary : C.amber} />
           ))}
+          <LabelList dataKey="value" position="top" fontSize={10} fill={C.muted} formatter={(v: number) => money(v)} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -177,15 +237,16 @@ export function WaterfallChart({ breakdown }: { breakdown: LandedBreakdown | nul
 }
 
 export function Contributions({ items }: { items: { feature: string; value: unknown; effect_pct: number }[] }) {
-  if (!items?.length) return <p className="text-xs text-muted-foreground">No feature explanation (heuristic or cold-start prediction).</p>;
-  const max = Math.max(...items.map((i) => Math.abs(i.effect_pct)), 1);
+  const rows = (items ?? []).map((i) => ({ ...i, shown: featureValue(i.feature, i.value) })).filter((i) => i.shown !== null);
+  if (!rows.length) return <p className="text-xs text-muted-foreground">No feature explanation (heuristic or cold-start prediction).</p>;
+  const max = Math.max(...rows.map((i) => Math.abs(i.effect_pct)), 1);
   return (
-    <ul className="space-y-1.5">
-      {items.map((i) => (
-        <li key={i.feature} className="grid grid-cols-[150px_1fr_56px] items-center gap-2 text-xs">
-          <span className="truncate" title={`${i.feature} = ${String(i.value ?? "n/a")}`}>
+    <ul className="space-y-2">
+      {rows.map((i) => (
+        <li key={i.feature} className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_52px] items-center gap-2 text-xs">
+          <span className="leading-tight">
             {FEATURE_LABELS[i.feature] ?? i.feature}
-            <span className="ml-1 text-[10px] text-muted-foreground">{formatValue(i.value)}</span>
+            <span className="block text-[11px] text-muted-foreground">{i.shown}</span>
           </span>
           <div className="relative h-2 rounded bg-muted">
             <div
@@ -208,8 +269,3 @@ export function Contributions({ items }: { items: { feature: string; value: unkn
   );
 }
 
-function formatValue(v: unknown): string {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "number") return Math.abs(v) >= 100 ? num(v) : v.toFixed(2);
-  return String(v);
-}

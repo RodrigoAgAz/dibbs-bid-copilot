@@ -24,7 +24,9 @@ export function DemoGuide({ lines }: { lines: DashboardLine[] }) {
 
   const real = lines.filter((l) => !l.no_bid && !l.solicitation_number.startsWith("SPEZZ"));
   const quoted = real.find((l) => statusOf(l) === "quoted" || statusOf(l) === "needs_review");
-  const story = real.find((l) => l.flags.confidence === "high" && l.recommended_bid != null) ?? real.find((l) => l.recommended_bid != null);
+  const unquoted = real.filter((l) => l.solicitation_number !== quoted?.solicitation_number && statusOf(l) === "not_started");
+  const story =
+    unquoted.find((l) => l.flags.confidence === "high" && l.recommended_bid != null) ?? unquoted.find((l) => l.recommended_bid != null);
   const quoteFirst = real.filter((l) => l.flags.needs_quote).length;
 
   function dismiss() {

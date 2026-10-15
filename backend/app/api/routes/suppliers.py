@@ -107,6 +107,9 @@ def create_supplier(body: SupplierIn, ctx: TenantContext = Depends(get_tenant)) 
     data = body.model_dump()
     data["cage_code"] = _clean_cage(data["cage_code"])
     data["email"] = str(data["email"]) if data["email"] else None
+    if ctx.db.execute(select(SupplierContact.id).where(SupplierContact.cage_code == data["cage_code"])).first():
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            f"CAGE {data['cage_code']} is already in your supplier directory: edit that entry instead")
     row = ctx.add(SupplierContact(**data))
     ctx.db.commit()
     return _out(ctx, row)

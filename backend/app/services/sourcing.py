@@ -93,6 +93,11 @@ def candidate_suppliers(db: Session, org_id: int, line: SolicitationLine) -> lis
     for cage, c in contacts.items():
         if cage not in out and line.fsc in (c.fsc_tags or []):
             out[cage] = Candidate(cage, "saved", [], c, c.company_name or company(cage))
+    # Never the broker's own company (it shows up as a past awardee once they win).
+    org = db.get(Organization, org_id)
+    own = (org.cage_code or "").upper() if org else ""
+    if own:
+        out.pop(own, None)
     return list(out.values())[:MAX_CANDIDATES]
 
 

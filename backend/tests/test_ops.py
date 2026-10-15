@@ -185,14 +185,14 @@ def _demo_org(db):
 
 def test_public_demo_is_off_by_default(client, db):
     _demo_org(db)
-    assert client.get("/api/auth/options").json() == {"public_demo": False}
+    assert client.get("/api/auth/options").json() == {"public_demo": False, "support_email": None}
     assert client.post("/api/auth/demo").status_code == 404
 
 
 def test_public_demo_signs_in_a_read_only_viewer(client, db, settings):
     settings(public_demo=True)
     org = _demo_org(db)
-    assert client.get("/api/auth/options").json() == {"public_demo": True}
+    assert client.get("/api/auth/options").json()["public_demo"] is True
     r = client.post("/api/auth/demo")
     assert r.status_code == 200, r.text
     me = r.json()
@@ -395,3 +395,42 @@ def test_new_model_code_queues_exactly_one_retrain(db, monkeypatch):
     calls.clear()
     tasks.queue_retrain_if_model_code_changed()
     assert calls == []
+
+
+def test_history_outcomes_and_would_win_use_only_verified_pre_award_prices(client, db):
+    signup(client, "hist@broker.example.com", org="Hist Org")
+    org = db.query(Organization).filter_by(name="Hist Org").one()
+    org.cage_code = "1ABC5"
+    today = date.today()
+    early = datetime.combine(today - timedelta(days=40), datetime.min.time(), tzinfo=UTC)
+
+    def closed(n, *, bid=None, rec=1.0, award=None, source="award_pdf", cage="9ZZZ9"):
+        sol = Solicitation(solicitation_number=f"SPE7M026H{n:04d}", return_by_date=today - timedelta(days=20))
+        db.add(sol)
+        db.flush()
+        nsn = f"5305001{n:06d}"
+        line = SolicitationLine(solicitation_id=sol.id, line_no=1, nsn=nsn, fsc="5305", niin=nsn[4:], quantity=10)
+        db.add(line)
+        db.flush()
+        db.add(Recommendation(organization_id=org.id, solicitation_line_id=line.id, recommended_bid=rec, actual_bid=bid,
+                              created_at=early, updated_at=early))
+        if award is not None:
+            db.add(AwardHistory(nsn=nsn, award_date=today - timedelta(days=5), unit_price=award, quantity=10,
+                                contract_number=f"SPE-H-{n}", solicitation_number=sol.solicitation_number,
+                                awardee_cage=cage, source=source))
+        return sol.solicitation_number
+
+    no_bid_by_us = closed(1, award=2.0)  # someone else won; we never bid: "awarded", not "lost"
+    lost = closed(2, bid=3.0, award=2.0)
+    won = closed(3, bid=1.5, award=1.5, cage="1ABC5")
+    derived = closed(4, award=900.0, source="award_listing")  # contract total / qty, no verified prices: ignored
+    db.commit()
+
+    h = client.get("/api/history").json()
+    by_sol = {r["solicitation_number"]: r for r in h["rows"]}
+    assert by_sol[no_bid_by_us]["outcome"] == "awarded"
+    assert by_sol[lost]["outcome"] == "lost" and by_sol[won]["outcome"] == "won"
+    assert by_sol[derived]["winning_price_verified"] is False and by_sol[derived]["counted"] is False
+    assert h["stats"]["lost"] == 1 and h["stats"]["won"] == 1
+    # rec 1.0 beats 2.0, 2.0 and 1.5; the unverified $900 award doesn't count
+    assert h["stats"]["recommendation_decided"] == 3 and h["stats"]["recommendation_would_have_won"] == 3

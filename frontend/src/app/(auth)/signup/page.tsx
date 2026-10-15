@@ -7,12 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FormError } from "@/components/form";
 import { api, errorMessage } from "@/lib/api/client";
+import { useAuthOptions } from "@/lib/hooks";
 
 export default function SignupPage() {
   const router = useRouter();
   const invite = useSearchParams().get("invite");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const options = useAuthOptions();
+
+  async function exploreDemo() {
+    setBusy(true);
+    setError(null);
+    const { error } = await api.POST("/api/auth/demo");
+    setBusy(false);
+    if (error) return setError(errorMessage(error));
+    router.replace("/dashboard");
+    router.refresh();
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,7 +54,7 @@ export default function SignupPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{invite ? "Join your team" : "Create your account"}</CardTitle>
+        <CardTitle as="h1" className="text-base">{invite ? "Join your team" : "Create your account"}</CardTitle>
         <CardDescription>
           {invite
             ? "Set a password to accept the invitation."
@@ -83,6 +95,11 @@ export default function SignupPage() {
             </Link>
             .
           </p>
+          {!invite && options.data?.public_demo && (
+            <Button type="button" variant="outline" disabled={busy} onClick={exploreDemo} data-testid="explore-demo">
+              Not ready? Explore the live demo first
+            </Button>
+          )}
           <p className="text-center text-xs text-muted-foreground">
             Already have an account?{" "}
             <Link className="text-primary hover:underline" href="/login">

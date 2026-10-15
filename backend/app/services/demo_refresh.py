@@ -16,13 +16,14 @@ import random
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.core.timeutil import today_et
 from app.models import (
     Channel,
+    EmailMessage,
     Organization,
     QuoteRequest,
     QuoteRequestStatus,
@@ -30,6 +31,7 @@ from app.models import (
     Solicitation,
     SolicitationLine,
     SupplierContact,
+    SupplierQuote,
 )
 from app.services.biddable import not_awarded
 from app.services.recommendations import org_settings
@@ -81,13 +83,13 @@ def _draft(db: Session, org_id: int, line: SolicitationLine, s, contact: Supplie
 
 
 def _reply(kind: str, price: float, pn: str | None, rng: random.Random) -> str:
-    pn = pn or "per NSN"
+    part = f"P/N {pn}" if pn else "this item to the NSN description"
     if kind == "good":
-        return (f"Hi,\n\nThanks for the RFQ. We can supply P/N {pn}.\nUnit price: ${price:.2f} each, lead time "
+        return (f"Hi,\n\nThanks for the RFQ. We can supply {part}.\nUnit price: ${price:.2f} each, lead time "
                 f"{rng.randint(1, 6)} weeks ARO. Quote valid for 30 days. Freight prepaid and add. CoC included."
                 "\n\nBest regards,\nSales")
     if kind == "detailed":
-        return (f"Quote for P/N {pn}: ${price:.2f}/ea, MOQ {rng.randint(1, 25)}, delivery {rng.randint(5, 20)} business "
+        return (f"Quote for {part}: ${price:.2f}/ea, MOQ {rng.randint(1, 25)}, delivery {rng.randint(5, 20)} business "
                 f"days. FOB origin, shipping ${rng.randint(15, 60)}.00. Certificate of conformance available.")
     if kind == "ambiguous":
         return (f"We have these in stock. Pricing is about ${price * 1.1:.2f} for small lots or ${price * 0.92:.2f} "
@@ -95,11 +97,57 @@ def _reply(kind: str, price: float, pn: str | None, rng: random.Random) -> str:
     return "Sorry, we are unable to quote this item at this time."
 
 
+def backdate_thread(db: Session, qr: QuoteRequest, sent_at: datetime, replied_at: datetime | None) -> None:
+    """Simulated threads happen in one instant: give the RFQ email its send time and the reply a later one, so the
+    request header, the thread and the parsed quote tell the same story."""
+    db.flush()
+    db.execute(update(EmailMessage).where(EmailMessage.quote_request_id == qr.id, EmailMessage.direction == "outbound")
+               .values(created_at=sent_at))
+    if replied_at is not None:
+        db.execute(update(EmailMessage).where(EmailMessage.quote_request_id == qr.id, EmailMessage.direction == "inbound")
+                   .values(created_at=replied_at))
+        db.execute(update(SupplierQuote).where(SupplierQuote.quote_request_id == qr.id).values(parsed_at=replied_at))
+
+
+def tidy_demo_org(db: Session, org: Organization) -> int:
+    """One-time clean-up of demo data written by older code (idempotent; demo orgs only): seeded suppliers get the
+    "(demo)" label, "P/N per" parses are cleared, and simulated threads get consistent timestamps."""
+    if org.plan != "demo":
+        return 0
+    n = 0
+    for c in db.execute(select(SupplierContact).where(SupplierContact.organization_id == org.id)).scalars():
+        name = (c.company_name or c.cage_code).replace("Supply Supply", "Supply")
+        if c.notes in ("Synthetic demo supplier", "Fictional demo supplier") and not name.endswith("(demo)"):
+            name = f"{name} (demo)"
+        if name != c.company_name:
+            c.company_name, n = name, n + 1
+    for q in db.execute(select(SupplierQuote).where(SupplierQuote.organization_id == org.id,
+                                                    SupplierQuote.quoted_part_number == "per")).scalars():
+        q.quoted_part_number, n = None, n + 1
+    now = datetime.now(UTC)
+    for qr in db.execute(select(QuoteRequest).where(QuoteRequest.organization_id == org.id,
+                                                    QuoteRequest.sent_at.is_not(None))).scalars():
+        msgs = db.execute(select(EmailMessage).where(EmailMessage.quote_request_id == qr.id)).scalars().all()
+        out = [m for m in msgs if m.direction == "outbound" and m.kind == "rfq"]
+        if not out or abs((out[0].created_at - qr.sent_at).total_seconds()) < 120:
+            continue  # consistent already
+        replies = [m for m in msgs if m.direction == "inbound" and abs((m.created_at - out[0].created_at).total_seconds()) < 120]
+        replied_at = min(qr.sent_at + timedelta(hours=1 + qr.id % 20), now - timedelta(minutes=5)) if replies else None
+        backdate_thread(db, qr, qr.sent_at, replied_at)
+        n += 1
+    if n:
+        db.flush()
+    return n
+
+
 def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None = None) -> dict:
     """Top the demo org up to TARGET_QUOTED_LINES open lines with simulated supplier quotes."""
     from app.services.sourcing import process_inbound_email, send_quote_request
 
     rng = rng or random.Random(today_et().toordinal())
+    tidied = tidy_demo_org(db, org)
+    if tidied:
+        db.commit()
     s = org_settings(db, org.id)
     suppliers = ensure_demo_suppliers(db, org.id)
     today = today_et()
@@ -115,7 +163,7 @@ def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None =
     }
     need = TARGET_QUOTED_LINES - len(open_quoted)
     if need <= 0:
-        return {"org": org.id, "lines": 0, "replies": 0}
+        return {"org": org.id, "lines": 0, "replies": 0, "tidied": tidied}
     rows = db.execute(
         select(Recommendation, SolicitationLine)
         .join(SolicitationLine, Recommendation.solicitation_line_id == SolicitationLine.id)
@@ -145,17 +193,20 @@ def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None =
         for contact in rng.sample(suppliers, QUOTES_PER_LINE):
             qr = _draft(db, org.id, ln, s, contact)
             send_quote_request(db, qr)
-            qr.sent_at = datetime.now(UTC) - timedelta(hours=rng.randint(2, 40))
+            hours = rng.randint(2, 40)
+            qr.sent_at = datetime.now(UTC) - timedelta(hours=hours)
             if rng.random() < 0.2:
+                backdate_thread(db, qr, qr.sent_at, None)
                 continue  # still waiting for this supplier
             kind = rng.choices(["good", "detailed", "ambiguous", "decline"], weights=[55, 25, 8, 12])[0]
             price = median * rng.uniform(0.55, 0.85)
             process_inbound_email(db, {"to": f"quotes+{qr.reply_token}@{reply_domain}", "from": qr.email_to,
                                        "subject": f"RE: {qr.email_subject}", "text": _reply(kind, price, qr.part_number, rng)})
+            backdate_thread(db, qr, qr.sent_at, qr.sent_at + timedelta(hours=rng.uniform(0.5, hours - 0.5)))
             replies += 1
         db.flush()
     db.commit()
-    return {"org": org.id, "lines": min(need, len(picks)), "replies": replies}
+    return {"org": org.id, "lines": min(need, len(picks)), "replies": replies, "tidied": tidied}
 
 
 def refresh_demo_orgs(db: Session) -> list[dict]:

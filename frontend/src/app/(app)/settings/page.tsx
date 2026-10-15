@@ -27,11 +27,28 @@ const SET_ASIDES = [
 
 function NumberField({ label, value, onChange, step = "0.01", suffix, hint }: { label: string; value: number; onChange: (v: number) => void; step?: string; suffix?: string; hint?: string }) {
   const id = label.replace(/\W+/g, "-").toLowerCase();
+  // The text is kept while typing: clearing the field must not snap it to 0. Invalid/empty reverts on blur.
+  const [text, setText] = useState(Number.isFinite(value) ? String(value) : "");
+  useEffect(() => setText(Number.isFinite(value) ? String(value) : ""), [value]);
   return (
-    <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+    <div className="grid content-start gap-1.5">
+      <Label htmlFor={id} className="flex min-h-[2rem] items-end leading-tight">
+        {label}
+      </Label>
       <div className="flex items-center gap-1.5">
-        <Input id={id} type="number" step={step} min="0" className="h-8 w-32 text-xs" value={Number.isFinite(value) ? value : ""} onChange={(e) => onChange(Number(e.target.value))} />
+        <Input
+          id={id}
+          type="number"
+          step={step}
+          min="0"
+          className="h-8 w-28 text-xs sm:w-32"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            if (e.target.value.trim() !== "" && Number.isFinite(Number(e.target.value))) onChange(Number(e.target.value));
+          }}
+          onBlur={() => setText(Number.isFinite(value) ? String(value) : "")}
+        />
         {suffix && <span className="text-xs text-muted-foreground">{suffix}</span>}
       </div>
       {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
@@ -107,7 +124,7 @@ function Team() {
           >
             <div className="grid gap-1">
               <Label htmlFor="invite-email">Invite by email</Label>
-              <Input id="invite-email" type="email" required className="h-8 w-64 text-xs" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="invite-email" type="email" required className="h-8 w-full text-xs sm:w-64" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <NativeSelect value={role} onChange={(e) => setRole(e.target.value as "member" | "owner" | "viewer")} aria-label="Role">
               <option value="member">Member</option>
@@ -136,6 +153,7 @@ export default function SettingsPage() {
   const q = useQuery({ queryKey: ["settings"], queryFn: async () => unwrap(await api.GET("/api/settings")) });
   const [s, setS] = useState<S | null>(null);
   const [fscInput, setFscInput] = useState("");
+  const [fscError, setFscError] = useState<string | null>(null);
   useEffect(() => {
     if (q.data) setS(q.data);
   }, [q.data]);
@@ -150,9 +168,12 @@ export default function SettingsPage() {
   if (q.isLoading || !s) return q.error ? <ErrorState error={q.error} /> : <Loading />;
   const set = <K extends keyof S>(k: K, v: S[K]) => setS((cur) => (cur ? { ...cur, [k]: v } : cur));
   const addFsc = () => {
-    const parts = fscInput.split(/[,\s]+/).filter((x) => /^\d{4}$/.test(x));
+    const tokens = fscInput.split(/[,\s]+/).filter(Boolean);
+    const parts = tokens.filter((x) => /^\d{4}$/.test(x));
+    const bad = tokens.filter((x) => !/^\d{4}$/.test(x));
     if (parts.length) set("fsc_watchlist", Array.from(new Set([...s.fsc_watchlist, ...parts])).sort());
-    setFscInput("");
+    setFscError(bad.length ? `Not a 4-digit FSC: ${bad.join(", ")}` : null);
+    setFscInput(bad.join(" "));
   };
 
   return (
@@ -188,7 +209,11 @@ export default function SettingsPage() {
               {s.fsc_watchlist.map((f) => (
                 <span key={f} className="inline-flex items-center gap-1 rounded-md border bg-muted px-2 py-0.5 text-xs">
                   <b>{f}</b> {FSC_NAMES[f] ?? ""}
-                  <button aria-label={`Remove ${f}`} onClick={() => set("fsc_watchlist", s.fsc_watchlist.filter((x) => x !== f))}>
+                  <button
+                    aria-label={`Remove ${f}`}
+                    className="rounded hover:text-destructive disabled:pointer-events-none disabled:opacity-40"
+                    onClick={() => set("fsc_watchlist", s.fsc_watchlist.filter((x) => x !== f))}
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -200,6 +225,7 @@ export default function SettingsPage() {
                 Add
               </Button>
             </div>
+            {fscError && <p className="text-xs text-destructive" data-testid="fsc-error">{fscError}</p>}
           </CardContent>
         </Card>
 
@@ -208,7 +234,7 @@ export default function SettingsPage() {
             <CardTitle>Margins &amp; limits</CardTitle>
             <CardDescription>Bids are never recommended below landed cost × (1 + minimum margin).</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <NumberField label="Minimum margin" value={Math.round(s.min_margin_pct * 1000) / 10} onChange={(v) => set("min_margin_pct", v / 100)} step="0.5" suffix="%" />
             <NumberField label="Max line value" value={s.max_line_value} onChange={(v) => set("max_line_value", v)} step="100" suffix="$" hint="No-bid above this" />
             <NumberField label="Minimum expected profit" value={s.min_expected_profit} onChange={(v) => set("min_expected_profit", v)} step="1" suffix="$" hint="No-bid below this" />
@@ -236,7 +262,7 @@ export default function SettingsPage() {
             <CardTitle>Cost inputs</CardTitle>
             <CardDescription>landed = supplier price + freight + packaging + inspection + first article + financing + overhead</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <NumberField label="Overhead" value={Math.round(s.default_overhead_pct * 1000) / 10} onChange={(v) => set("default_overhead_pct", v / 100)} step="0.5" suffix="% of supplier price" />
             <NumberField label="Packaging per line" value={s.packaging_cost_per_line} onChange={(v) => set("packaging_cost_per_line", v)} suffix="$" />
             <NumberField label="Default freight per line" value={s.default_freight_per_line} onChange={(v) => set("default_freight_per_line", v)} suffix="$" hint="When the quote has no freight" />
@@ -253,7 +279,7 @@ export default function SettingsPage() {
             <CardTitle>Set-aside eligibility</CardTitle>
             <CardDescription>Lines set aside for programs you&apos;re not eligible for are marked no-bid.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2">
+          <CardContent className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {SET_ASIDES.map(([code, label]) => (
               <Checkbox
                 key={code}

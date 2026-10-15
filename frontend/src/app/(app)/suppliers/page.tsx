@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Empty, ErrorState, Loading, PageHeader, WriteGuard } from "@/components/common";
+import { formatPhone } from "@/lib/format";
+import { useReadOnly } from "@/lib/hooks";
 import { Field, FormError } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -91,6 +93,7 @@ function SupplierForm({ initial, onDone }: { initial?: Supplier; onDone: () => v
 export default function SuppliersPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const readOnly = useReadOnly();
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [adding, setAdding] = useState(false);
   const q = useQuery({
@@ -122,10 +125,12 @@ export default function SuppliersPage() {
         <Loading />
       ) : q.error ? (
         <ErrorState error={q.error} />
+      ) : !q.data?.length && search ? (
+        <Empty title={`No suppliers match “${search}”`}>Search looks at CAGE code, company, contact name and email.</Empty>
       ) : !q.data?.length ? (
         <Empty title="No suppliers yet">Add the distributors and manufacturers you buy from. Approved sources and past awardees show up on each RFQ automatically.</Empty>
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
+        <div className="overflow-x-auto rounded-lg border bg-card shadow-sm">
           <Table>
             <THead>
               <tr>
@@ -149,13 +154,15 @@ export default function SuppliersPage() {
                   <TD>{s.name ?? "—"}</TD>
                   <TD className="text-[12px]">{s.email ?? <span className="text-muted-foreground">missing</span>}</TD>
                   <TD className="text-[12px]">
-                    {s.phone ?? "—"} {s.phone && <span className="text-muted-foreground">({s.phone_type})</span>}
+                    {s.phone ? formatPhone(s.phone) : "—"}{" "}
+                    {s.phone && s.phone_type !== "unknown" && <span className="text-muted-foreground">({s.phone_type})</span>}
                   </TD>
                   <TD>
                     {s.phone_type === "landline" || s.call_consent ? <Badge variant="success">Allowed</Badge> : <Badge variant="outline">No</Badge>}
                   </TD>
                   <TD className="text-[12px]">{s.fsc_tags.join(", ") || "—"}</TD>
-                  <TD className="text-right">
+                  <TD className="whitespace-nowrap text-right">
+                    {!readOnly && (
                     <WriteGuard className="inline-flex w-auto">
                     <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => setEditing(s)}>
                       <Pencil />
@@ -171,6 +178,7 @@ export default function SuppliersPage() {
                       <Trash2 />
                     </Button>
                     </WriteGuard>
+                    )}
                   </TD>
                 </TR>
               ))}

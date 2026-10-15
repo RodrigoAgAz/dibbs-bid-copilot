@@ -54,6 +54,12 @@ def invite_member(body: InviteIn, ctx: TenantContext = Depends(require_owner)) -
     ).first()
     if existing:
         raise HTTPException(status.HTTP_409_CONFLICT, "That email already has an account")
+    pending = ctx.db.execute(
+        select(Invitation).where(Invitation.email == email, Invitation.accepted_at.is_(None))
+    ).scalars().first()
+    if pending is not None:
+        ctx.db.delete(pending)  # re-inviting replaces the pending invitation (new link, new expiry)
+        ctx.db.flush()
     token = new_opaque_token()
     inv = ctx.add(
         Invitation(

@@ -6,8 +6,17 @@ from datetime import date
 
 from sqlalchemy import select
 
-from app.models import Organization, QuoteRequest, Recommendation, Solicitation, SupplierContact, SupplierQuote
-from app.services.demo_refresh import DEMO_SUPPLIERS, refresh_demo_orgs
+from app.models import (
+    EmailMessage,
+    Organization,
+    QuoteRequest,
+    Recommendation,
+    Solicitation,
+    SolicitationLine,
+    SupplierContact,
+    SupplierQuote,
+)
+from app.services.demo_refresh import DEMO_SUPPLIERS, refresh_demo_orgs, tidy_demo_org
 from tests.conftest import signup
 from tests.helpers import build_world
 
@@ -50,6 +59,15 @@ def test_demo_refresh_quotes_real_lines_with_fictional_suppliers(client, db):
     assert qrs and {q.cage_code for q in qrs} <= fictional
     assert all(q.email_to.endswith(".example.com") for q in qrs)
     assert db.query(SupplierQuote).filter(SupplierQuote.organization_id == org.id).count() > 0
+    assert not db.query(SupplierQuote).filter(SupplierQuote.quoted_part_number == "per").count()
+    # Simulated threads read in order: RFQ email at the request's send time, the reply later (not the same instant).
+    for q in qrs:
+        if q.sent_at is None:
+            continue
+        msgs = db.execute(select(EmailMessage).where(EmailMessage.quote_request_id == q.id)).scalars().all()
+        out_ = [m for m in msgs if m.direction == "outbound"]
+        assert out_ and all(abs((m.created_at - q.sent_at).total_seconds()) < 2 for m in out_)
+        assert all(m.created_at > q.sent_at for m in msgs if m.direction == "inbound")
     contacts = db.execute(select(SupplierContact).where(SupplierContact.organization_id == org.id)).scalars().all()
     assert all("(demo)" in (c.company_name or "") for c in contacts if c.cage_code in fictional)
     # Some lines now have a firm (quoted) recommendation.
@@ -59,3 +77,46 @@ def test_demo_refresh_quotes_real_lines_with_fictional_suppliers(client, db):
     # The real customer is untouched.
     assert db.query(QuoteRequest).filter(QuoteRequest.organization_id == real["organization"]["id"]).count() == 0
     assert db.query(SupplierContact).filter(SupplierContact.organization_id == real["organization"]["id"]).count() == 0
+
+
+def test_tidy_labels_seeded_demo_suppliers_and_fixes_old_threads(db):
+    from datetime import UTC, datetime, timedelta
+
+    org = Organization(name="Atlas Federal Supply (demo)", plan="demo")
+    other = Organization(name="Real Broker")
+    db.add_all([org, other])
+    db.flush()
+    db.add_all([
+        SupplierContact(organization_id=org.id, cage_code="1AAA1", company_name="Northfield Supply Supply Co.",
+                        notes="Synthetic demo supplier"),
+        SupplierContact(organization_id=other.id, cage_code="1AAA1", company_name="Northfield Supply Supply Co.",
+                        notes="Synthetic demo supplier"),
+    ])
+    sol = Solicitation(solicitation_number="SPE7M026T7777", return_by_date=date.today() + timedelta(days=5))
+    db.add(sol)
+    db.flush()
+    line = SolicitationLine(solicitation_id=sol.id, line_no=1, nsn="5305000077777", fsc="5305", niin="000077777",
+                            quantity=10)
+    db.add(line)
+    db.flush()
+    sent = datetime.now(UTC) - timedelta(hours=30)
+    qr = QuoteRequest(organization_id=org.id, solicitation_line_id=line.id, cage_code="1AAA1", channel="email",
+                      status="parsed", reply_token="tidy-1", sent_at=sent)
+    db.add(qr)
+    db.flush()
+    now = datetime.now(UTC)
+    for direction, kind in (("outbound", "rfq"), ("inbound", "reply")):
+        db.add(EmailMessage(organization_id=org.id, quote_request_id=qr.id, direction=direction, kind=kind,
+                            from_addr="a@example.com", to_addr="b@example.com", subject="s", body="b", created_at=now))
+    db.add(SupplierQuote(organization_id=org.id, quote_request_id=qr.id, unit_price=5.0, quoted_part_number="per",
+                         source="email"))
+    db.flush()
+    assert tidy_demo_org(db, org) > 0
+    names = {c.organization_id: c.company_name for c in db.query(SupplierContact)}
+    assert names[org.id] == "Northfield Supply Co. (demo)"
+    assert names[other.id] == "Northfield Supply Supply Co."  # real customers untouched
+    assert db.query(SupplierQuote).one().quoted_part_number is None
+    msgs = {m.direction: m.created_at for m in db.query(EmailMessage)}
+    assert abs((msgs["outbound"] - sent).total_seconds()) < 2 and sent < msgs["inbound"] < now
+    assert tidy_demo_org(db, org) == 0  # idempotent
+    assert tidy_demo_org(db, other) == 0

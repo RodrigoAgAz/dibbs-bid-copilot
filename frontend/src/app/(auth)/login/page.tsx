@@ -44,7 +44,7 @@ export default function LoginPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Log in</CardTitle>
+        <CardTitle as="h1" className="text-base">Log in</CardTitle>
         <CardDescription>Welcome back. Today&apos;s solicitations are waiting.</CardDescription>
       </CardHeader>
       <CardContent>

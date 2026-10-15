@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from statistics import median
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -12,6 +13,7 @@ from app.core.tenancy import TenantContext
 from app.core.timeutil import today_et
 from app.models import AwardHistory, Organization, Recommendation, Solicitation, SolicitationLine
 from app.schemas.rfq import HistoryOut, HistoryRow, HistoryStats
+from app.services.data_quality import MAX_RATIO, RELIABLE_SOURCES
 from app.services.ops import SYNTHETIC_PREFIX, hide_synthetic
 
 router = APIRouter(prefix="/api", tags=["history"])
@@ -34,6 +36,24 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
     if sols:
         for a in ctx.db.execute(select(AwardHistory).where(AwardHistory.solicitation_number.in_(sols))).scalars():
             awards[(a.solicitation_number, a.nsn)] = a
+    # Verified price level per NSN (services/data_quality.py): a winning price derived from a contract total
+    # (award listing / record page) is shown but only counts when it agrees with the NSN's verified prices.
+    nsns = {a.nsn for a in awards.values() if a.source not in RELIABLE_SOURCES}
+    verified_median: dict[str, float] = {}
+    if nsns:
+        by_nsn: dict[str, list[float]] = {}
+        for nsn, price in ctx.db.execute(
+            select(AwardHistory.nsn, AwardHistory.unit_price).where(
+                AwardHistory.nsn.in_(nsns), AwardHistory.source.in_(RELIABLE_SOURCES), AwardHistory.unit_price > 0)
+        ).all():
+            by_nsn.setdefault(nsn, []).append(price)
+        verified_median = {k: median(v) for k, v in by_nsn.items()}
+
+    def price_verified(a: AwardHistory) -> bool:
+        if a.source in RELIABLE_SOURCES:
+            return True
+        ref = verified_median.get(a.nsn)
+        return bool(ref and a.unit_price and 1 / MAX_RATIO <= a.unit_price / ref <= MAX_RATIO)
 
     out: list[HistoryRow] = []
     won = lost = rec_decided = rec_would_win = 0
@@ -44,8 +64,10 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
             outcome = "pending" if (sol.return_by_date and (today - sol.return_by_date).days < 60) else "no_award_data"
         elif org and org.cage_code and a.awardee_cage == org.cage_code:
             outcome = "won"
-        else:
+        elif rec.actual_bid is not None:
             outcome = "lost"
+        else:
+            outcome = "awarded"  # awarded to someone else; you didn't record a bid, so it isn't a loss
         if rec.actual_bid is not None and outcome in ("won", "lost"):
             if outcome == "won":
                 won += 1
@@ -57,7 +79,9 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
         # return-by date, and a recommendation recomputed after it could already know the winning price).
         before_award = a is not None and rec.updated_at is not None and rec.updated_at < datetime.combine(
             a.award_date, datetime.min.time(), tzinfo=UTC)
-        if a is not None and before_award and rec.recommended_bid is not None and not rec.no_bid:
+        verified = a is not None and price_verified(a)
+        counted = bool(a is not None and before_award and verified and rec.recommended_bid is not None and not rec.no_bid)
+        if counted:
             rec_decided += 1
             rec_would_win += int(rec.recommended_bid < a.unit_price)
         out.append(
@@ -74,8 +98,10 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
                 no_bid=rec.no_bid,
                 outcome=outcome,
                 winning_price=a.unit_price if a else None,
+                winning_price_verified=verified,
                 awardee_cage=a.awardee_cage if a else None,
                 award_date=a.award_date if a else None,
+                counted=counted,
             )
         )
     decided = won + lost

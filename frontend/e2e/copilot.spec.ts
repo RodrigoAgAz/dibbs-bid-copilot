@@ -22,7 +22,10 @@ test("sign up, log in, see today's RFQs, open one, see a recommendation", async 
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
 
-  // Today's RFQ lines (seeded) are listed for the new organization.
+  // The home page shows work lanes; the full list has today's RFQ lines (seeded) for the new organization.
+  await expect(page.getByTestId("quick-find")).toBeVisible();
+  await page.getByRole("link", { name: "All lines" }).first().click();
+  await expect(page).toHaveURL(/\/lines/);
   const rows = page.getByTestId("rfq-row");
   await expect(rows.first()).toBeVisible();
   expect(await rows.count()).toBeGreaterThan(0);

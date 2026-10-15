@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, CalendarClock, Eye, History, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
+import { Building2, CalendarClock, Eye, History, ListChecks, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
 import { Brand, HandMark } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Badge, Tip } from "@/components/ui/misc";
@@ -15,6 +15,7 @@ import { AUTH_PAGES } from "@/lib/flags";
 
 const NAV = [
   { href: "/dashboard", label: "Today", icon: CalendarClock },
+  { href: "/lines", label: "All lines", icon: ListChecks },
   { href: "/history", label: "History", icon: History },
   { href: "/suppliers", label: "Suppliers", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },

@@ -50,10 +50,10 @@ export function DemoGuide({ lines }: { lines: DashboardLine[] }) {
       </div>
       <ol className="grid gap-3 text-sm md:grid-cols-3">
         <li>
-          <div className="font-medium">1. Today&apos;s best bets</div>
+          <div className="font-medium">1. Where to start</div>
           <p className="text-xs text-muted-foreground">
-            Real DIBBS solicitations from the last few days, ranked by expected profit weighted by how well the price is known (the dot next
-            to P(win): green = high confidence).
+            Real DIBBS solicitations from the last few days, sorted into work lanes: closing soon, ready to bid, worth quoting. Pick a
+            lane to see the most pressing lines and why they matter.
           </p>
         </li>
         <li>

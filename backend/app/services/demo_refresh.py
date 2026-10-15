@@ -183,7 +183,7 @@ def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None =
         (rec, ln) for rec, ln in rows
         if ln.id not in open_quoted and (rec.explanation or {}).get("confidence") in ("high", "medium")
     ]
-    picks.sort(key=lambda r: -((r[0].explanation or {}).get("rank_score") or 0))
+    picks.sort(key=lambda r: -(((r[0].explanation or {}).get("rank_score") or (r[0].explanation or {}).get("provisional_rank")) or 0))
     replies = 0
     reply_domain = get_settings().email_reply_domain
     for rec, ln in picks[:need]:

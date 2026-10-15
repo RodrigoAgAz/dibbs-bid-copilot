@@ -67,7 +67,7 @@ def top_lines(db: Session = Depends(get_db)) -> list[TopLine]:
         )
     ).all()
     good = [r for r in rows if (r[0].explanation or {}).get("confidence") == "high"]
-    good.sort(key=lambda r: -((r[0].explanation or {}).get("rank_score") or 0))
+    good.sort(key=lambda r: -(((r[0].explanation or {}).get("rank_score") or (r[0].explanation or {}).get("provisional_rank")) or 0))
     out = []
     for rec, ln, sol in good[:3]:
         ex = rec.explanation or {}

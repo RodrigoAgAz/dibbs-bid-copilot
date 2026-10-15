@@ -95,6 +95,13 @@ class SupplierQuote(Base, TenantOwned):
     quote_request_id: Mapped[int] = mapped_column(ForeignKey("quote_requests.id", ondelete="CASCADE"), index=True)
     unit_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     currency: Mapped[str] = mapped_column(String(3), default="USD")
+    # The unit the supplier's price is per, as stated ("EA", "HD" = per hundred, "M" = per thousand, "BX", ...), and
+    # how many of the line's units of issue that price covers ("$12.50 per 100" on an EA line -> "HD", 100). Both
+    # None = the supplier did not say, and the price is assumed to be per unit of issue (evidence "inferred").
+    price_unit: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    price_basis_qty: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # What the supplier actually confirmed: {"part_number"|"unit"|"lead_time"|"validity"|"freight": confirmed|inferred|unknown}
+    evidence: Mapped[dict | None] = mapped_column(JSONType, nullable=True)
     quoted_part_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     min_order_qty: Mapped[float | None] = mapped_column(Float, nullable=True)
     lead_time_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -113,6 +120,30 @@ class SupplierQuote(Base, TenantOwned):
     parsed_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     quote_request: Mapped[QuoteRequest] = relationship(back_populates="quotes")
+
+
+class CatalogPrice(Base, TenantOwned):
+    """A distributor's catalog or price-list row the organization imported: a current price for an exact manufacturer
+    part number, the best cost evidence before anyone has quoted (cost model tier "catalog")."""
+
+    __tablename__ = "catalog_prices"
+    __table_args__ = (UniqueConstraint("organization_id", "supplier_cage", "manufacturer_cage", "part_number_norm"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), index=True)
+    supplier_cage: Mapped[str] = mapped_column(String(5), index=True)  # who sells at this price
+    manufacturer_cage: Mapped[str | None] = mapped_column(String(5), nullable=True, index=True)
+    part_number: Mapped[str] = mapped_column(String(100))
+    part_number_norm: Mapped[str] = mapped_column(String(100), index=True)
+    unit_price: Mapped[float] = mapped_column(Float)
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    price_unit: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    price_basis_qty: Mapped[float | None] = mapped_column(Float, nullable=True)
+    min_order_qty: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lead_time_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    in_stock: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    source_file: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    loaded_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
 class EmailMessage(Base, TenantOwned):

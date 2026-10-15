@@ -52,7 +52,9 @@ class DashboardLine(BaseModel):
     aggressive_bid: float | None
     p_win: float | None
     expected_profit: float | None
-    rank_score: float | None = None  # expected profit x confidence weight (default sort)
+    rank_score: float | None = None  # expected profit x confidence weight (default sort; quoted lines only)
+    # Unquoted lines: profit if sourced x P(sourceable) x P(quote in time) x P(winnable) - pursuit cost
+    triage_score: float | None = None
     no_bid: bool
     no_bid_reason: str | None
     actual_bid: float | None
@@ -76,6 +78,32 @@ class DashboardSummary(BaseModel):
 class DashboardOut(BaseModel):
     summary: DashboardSummary
     lines: list[DashboardLine]
+
+
+class PortfolioOut(BaseModel):
+    """The open book against the firm's limits (services/portfolio.py). Line ids name what each limit holds back."""
+
+    quoted_lines: int
+    expected_awards: float
+    expected_profit: float
+    capital_in_flight: float
+    capital_if_all_won: float
+    capital_days: float
+    p_no_award: float
+    working_capital_limit: float | None
+    capital_hold: list[int]
+    max_open_awards: int | None
+    awards_hold: list[int]
+    pursue_candidates: int
+    pursuit_hours_needed: float
+    weekly_sourcing_hours: float | None
+    pursue_now: list[int]
+    deferred_capacity: list[int]
+    pursuit_cost_committed: float
+    supplier_shares: list[dict[str, Any]]
+    max_supplier_share: float
+    concentrated_supplier: str | None
+    notes: list[str]
 
 
 class AwardOut(BaseModel):
@@ -105,6 +133,11 @@ class SupplierQuoteOut(BaseModel):
     quote_request_id: int
     unit_price: float | None
     currency: str
+    # What the supplier's price is per, and how many of the line's units of issue it covers (None = not stated)
+    price_unit: str | None = None
+    price_basis_qty: float | None = None
+    # confirmed | inferred | unknown per fact: part_number, unit, lead_time, validity, freight
+    evidence: dict[str, str] | None = None
     quoted_part_number: str | None
     min_order_qty: float | None
     lead_time_days: int | None
@@ -215,7 +248,23 @@ class RecommendationOut(BaseModel):
     explanation: dict[str, Any]
     actual_bid: float | None
     actual_bid_at: datetime | None
+    actual_cost_per_unit: float | None = None
+    actual_cost_at: datetime | None = None
     updated_at: datetime
+
+
+class SnapshotOut(BaseModel):
+    """One decision snapshot: what the tool showed (or the broker recorded) at that moment."""
+
+    id: int
+    kind: str
+    engine_version: str | None
+    created_at: datetime
+    payload: dict[str, Any]
+
+
+class ActualCostIn(BaseModel):
+    actual_cost_per_unit: float | None = Field(default=None, ge=0)
 
 
 class LineDetail(BaseModel):
@@ -273,6 +322,8 @@ class ActualBidIn(BaseModel):
 
 class ManualQuoteIn(BaseModel):
     unit_price: float = Field(gt=0)
+    price_unit: str | None = Field(default=None, max_length=8)
+    price_basis_qty: float | None = Field(default=None, gt=0)
     quoted_part_number: str | None = Field(default=None, max_length=100)
     min_order_qty: float | None = Field(default=None, ge=0)
     lead_time_days: int | None = Field(default=None, ge=0, le=2000)
@@ -284,6 +335,8 @@ class ManualQuoteIn(BaseModel):
 
 class QuotePatch(BaseModel):
     unit_price: float | None = Field(default=None, gt=0)
+    price_unit: str | None = Field(default=None, max_length=8)
+    price_basis_qty: float | None = Field(default=None, gt=0)
     quoted_part_number: str | None = Field(default=None, max_length=100)
     min_order_qty: float | None = Field(default=None, ge=0)
     lead_time_days: int | None = Field(default=None, ge=0, le=2000)
@@ -340,8 +393,11 @@ class HistoryRow(BaseModel):
     nomenclature: str | None
     quantity: float
     recommended_bid: float | None
+    # The bid the tool recommended in the last snapshot taken before the award posted (None: no such snapshot)
+    snapshot_bid: float | None = None
     actual_bid: float | None
     landed_cost: float | None
+    actual_cost: float | None = None
     no_bid: bool
     outcome: str  # won | lost (you bid) | awarded (to someone else, no bid recorded) | pending | no_award_data
     winning_price: float | None
@@ -349,18 +405,22 @@ class HistoryRow(BaseModel):
     winning_price_verified: bool = False
     awardee_cage: str | None
     award_date: date | None
-    # Counted in "recommendation would win": priced before the award, verified winning price, a bid recommended
+    # Counted in "recommendation would win": a snapshot before the award, verified winning price, a bid recommended
     counted: bool = False
 
 
 class HistoryStats(BaseModel):
     tracked: int
     with_actual_bid: int
+    with_actual_cost: int = 0
     decided: int
     won: int
     lost: int
     win_rate: float | None
+    # (bid - actual cost) / bid on wins where the broker recorded what they actually paid
     realized_margin_pct: float | None
+    # (bid - estimated landed cost) / bid on wins: the margin the bid was priced for, not the one earned
+    estimated_margin_pct: float | None = None
     recommendation_would_have_won: int
     recommendation_decided: int
 

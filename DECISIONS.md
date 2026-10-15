@@ -285,3 +285,132 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
 - **Demo data hygiene**: demo-org suppliers always carry "(demo)", simulated email threads get consistent
   timestamps, and `tidy_demo_org` repairs older demo rows idempotently (demo orgs only) on each demo refresh.
 - **`SUPPORT_EMAIL`** is shown on the Terms and Privacy pages; until it is set they show no contact line.
+
+## Defensible outputs (2026-10-15, engine v9)
+Two independent reviews agreed the product's financial conclusions were stronger than the evidence behind them.
+These changes make every shown number traceable to what was actually confirmed, and make decisions reconstructible.
+- **No part-number fallback.** `store_extraction` used the part number *we asked for* when the supplier's reply did
+  not name one, so "yes, $4.20 each" counted as a conforming approved-source quote. Only a part number the supplier
+  stated can conform; a quote without one on an approved-source-only line is non-conforming with the reason
+  "supplier did not state the part number". Manual entries (the broker typing a phoned quote) keep the requested part
+  number, but the quote's evidence marks it `inferred`.
+- **Quotes carry their pricing unit.** `price_unit` (what the supplier's price is per: EA, HD, M, BX, ...) and
+  `price_basis_qty` (how many of the line's units of issue that price covers). `landed_cost.price_per_issue_unit`
+  normalizes to the line's unit of issue: a stated basis divides, count units (EA/HD/M/DZ/GR/PR) convert, no stated
+  unit is assumed per unit of issue (evidence `inferred`), and anything else (per box with no pack size) cannot be a
+  cost: the quote needs review and cannot be approved until a basis is set. The mock LLM reads "per 100", "/C",
+  "per M", "each", "for 25 pcs"; the Anthropic prompt asks for both fields.
+- **Evidence states on quotes.** `supplier_quotes.evidence` = {part_number, unit, lead_time, validity, freight:
+  confirmed | inferred | unknown}. Editing a field during review confirms it. The supplier panel shows "Assumed: ..."
+  and "Not stated: ..." badges, and the recommendation shows the evidence behind the landed cost it uses.
+- **No rank from an assumed cost.** Expected profit on an unquoted line is P(win) × (bid − 0.7 × median) × qty, so
+  ranking by it ranked by order size. `rank_score` is now None unless the cost comes from a supplier quote; provisional
+  lines carry `provisional_rank` (order size × confidence weight) and `expected_profit_basis = "assumed_cost"`, and
+  the UI labels the figure "Profit if sourced ... if landed cost ≤ $X". The dashboard "best" sort puts quoted lines
+  first and the rest by order size. (The triage score of the next step replaces the order-size fallback.)
+- **Decision snapshots.** `recommendation_snapshots` (tenant-owned, append-only) records the recommendation whenever a
+  decision-relevant value changes (bid, landed cost, P(win), no-bid, provisional, best quote, alternatives) and when
+  the broker records an actual bid or actual cost: prediction id and quantiles, landed breakdown, quotes used, bids,
+  P(win), expected profit and its basis, reasons, confidence, engine version. History judges "recommendation would
+  win" on the last snapshot before the award date; lines from before snapshots existed fall back to `updated_at`.
+  `GET /api/rfq/lines/{id}/snapshots` lists them ("Decision history" on the RFQ page).
+- **Realized vs priced-for margin.** `recommendations.actual_cost_per_unit` (POST `/actual-cost`, shown on won lines)
+  is the only basis for a realized margin; (bid − estimated landed) / bid is reported separately as the margin the bid
+  was priced for.
+- **Fair backtest.** The naive policies now face the same rules as the engine (no bid under cost + margin, none under
+  the minimum P(win)), and every bid placed is charged a pursuit cost ($15 default), so the table compares pricing
+  rules rather than a policy that protects itself against two that don't. `net_profit_per_line` charges the effort
+  over every line looked at.
+
+## Tenant cost model and triage score (2026-10-15, engine v10)
+- **The provisional cost comes from the tenant's own quotes, not a flat fraction.** `dibbs_ml.cost_model.TenantCostModel`
+  estimates the supplier price before anyone has quoted, from the first tier with enough observations: the tenant's
+  quotes for this NSN (quantity-adjusted with the measured elasticity), then for other parts by the same approved-source
+  manufacturer, then the same FSC and then all its quotes as a ratio to the predicted winning price, and finally the
+  org's `provisional_cost_fraction` as a labelled assumption with a wide spread. Every estimate says its tier, count
+  and basis; the landed-cost breakdown and the RFQ page repeat it. Nothing pools quotes across organizations: the
+  product promises per-org isolation, and a pooled prior is a consent question, not a modelling one.
+- **Leave-one-out is the evidence.** `TenantCostModel.leave_one_out()` scores each quote from the tenant's other
+  quotes by tier; `ml/research/cost_lab.py` prints it per organization against the flat assumption. The local database
+  only holds simulated demo quotes, so the numbers in `ml/research/README.md` show the method, not the market.
+- **Triage score for unquoted lines** (`services/triage.py`): profit if sourced at the estimated cost × P(a supplier
+  price lands under the target, from the cost estimate) × P(at least one candidate answers before the return-by date,
+  from the tenant's own response rates and times, smoothed toward a 30% / 2-day prior) × P(winnable by a broker,
+  `services/contestability.py`) − `pursuit_cost_per_line` (new org setting, default $15). The dashboard orders quoted
+  lines by rank score, then unquoted lines by triage score, then by order size; the "Worth quoting" lane uses it too.
+  The RFQ page shows every factor.
+- **Contestability v1 is a rule** on the NSN's awards: a manufacturer (approved source or manufacturer guess) that won
+  ≥ 80% of ≥ 3 awards leaves a reseller a 25% chance; a non-manufacturer incumbent at that share leaves 60%; otherwise
+  100%. The competitor model of the next step replaces the rule behind the same interface.
+- The candidate suppliers are computed once per line during the refresh and reused for the cost tier (which
+  manufacturers), the response probability (who can be asked) and the drafts.
+
+## Competitor model (2026-10-15, engine v11)
+- **Contestability is the reseller share, not a rule.** `dibbs_ml.competitors.FscCompetitors` profiles every repeat
+  winner per supply class from public awards (wins, parts, recency, price vs the inflation-adjusted previous award) and
+  classifies CAGEs as manufacturers (approved source for any NSN, or DLA's manufacturer flag) or resellers. P(winnable)
+  for a line = the part's reseller share of awards shrunk toward the supply class's share (three awards of prior),
+  floored at 5%; the broker's own CAGE counts as a reseller. It replaces the v1 rule behind the same interface and
+  carries the incumbents and the top supply-class players into the explanation.
+- **Competitor view of P(win) is shown, not used.** prod_i (1 − p_i F_i(bid)) with incumbents bidding at their share
+  of the part's awards and supply-class players at half theirs, each with a lognormal win-price ratio around the
+  reference (shrunk to the class's pooled ratio, σ floor 0.15). Winning prices only are observed, so the view is biased
+  low; the calibrated price model keeps the bid, and the RFQ page shows both with that caveat.
+- The index is per supply class, built from verified prices (`data_quality`) and cached in-process for six hours
+  (public data, the same for every tenant); the per-org part (own CAGE) is applied at query time.
+- `ml/research/competitor_lab.py` scores the shrunk reseller share against the constant class share (Brier) and lists
+  the top winners per class; the local synthetic run is in `ml/research/README.md`.
+
+## DLA evaluation rules (2026-10-15, engine v12)
+- **Source.** DLA's Master Solicitation for Automated Simplified Acquisitions, Part I "Automated Award Evaluation
+  Information". dla.mil refuses non-browser downloads (HTTP 403), so the text was read from a PTAC presentation of
+  revision 46 (2018) and cross-checked against search snippets of revision 104 (Feb 2026) and the DIBBS FAQ; every
+  automated RFQ PDF links the current revision (105, May 2026). `services/evaluation.py` quotes the rules it encodes.
+  A human should re-read Part I §3 of the current revision before trusting the details below in production.
+- **Automated buys are price-only.** The program "evaluates all qualified quotations on the basis of price alone"
+  after "price reasonableness logic and other automated filters"; past performance is not an automated factor. So the
+  calibrated price model keeps P(win), and the bid search is capped at the band DLA has actually awarded within: the
+  95th percentile of winning price / inflation-adjusted previous award on T/U solicitations in the supply class
+  (`FscCompetitors.automated_ratio_p95`, needs 30 awards; falls back to all the class's awards, else no cap). The cap
+  is data, not a guessed threshold; the explanation names it and whether it bound the bid, and a line whose
+  minimum-margin bid is above it is a no-bid with that reason.
+- **Qualified = bid without exception.** The chosen quote is checked for what would make the bid ineligible for
+  automated award (alternate part number when approved parts exist; FOB origin terms on an FOB destination buy) and
+  the evaluation factors DLA adds are listed (+$2,500 origin inspection on a destination buy, +$200 surplus).
+- **Delivery is feasibility, not odds.** A supplier quote is usable only if lead time + the org's `handling_days`
+  (new setting, default 3) fits the required delivery days; a longer delivery "is not an exception" but "can become an
+  evaluation factor", so it is shown as a warning rather than modelled as a probability.
+- **First article → manual; Q → manual.** The P(win) note says the price-only estimate is an approximation there.
+- **Fast auto evaluation moves the deadline.** Evaluation starts 3 business days after issue and may award before the
+  return date, so the triage's sourcing deadline is the earlier of the two.
+
+## Enrichment behind coverage gates (2026-10-15)
+- **PUB LOG characteristics are loaded from a file, format UNVERIFIED.** dla.mil refuses non-browser downloads, so the
+  loader matches columns by name (NSN or NIIN+FSC, MRC, value, name) and the exact export layout is to be recorded in
+  docs/data_sources.md §13 once a sample is in hand. Characteristics feed the similar-items index: same-name parts in a
+  supply class agreeing on ≥ 2 characteristics are neighbours (reason "matching characteristics") and count as price
+  evidence at their similarity weight. Their signal is unmeasured until data exists; part-number families remain the
+  measured evidence.
+- **Distributor price lists are per tenant and a cost tier, not an integration.** An imported price for the exact
+  approved part number is the "catalog" tier (after the tenant's own NSN quotes, before ratio tiers; σ floor 0.10).
+  No API integration was built: `coverage_lab.py` first measures what share of open lines a price list would match
+  (electronics distributors such as Arrow would touch almost none of a fastener broker's lines). Catalog rows without
+  a manufacturer CAGE match by part number alone.
+
+## Portfolio, risk and sensitivity (2026-10-15, engine v13)
+- **Fulfilment losses come off every won line.** `fulfilment_loss_pct` (org setting, default 2% of the bid) enters the
+  engine: profit per unit is bid × (1 − loss) − landed and the minimum margin is net of it. Rejections, expediting
+  and replacements are real costs the per-line EV ignored.
+- **Sensitivity is part of the recommendation.** Every priced line is re-run through the same engine for three
+  scenarios (supplier price +10%, competitors 5% lower, competitors 5% higher); `fragile` is set when a scenario flips
+  bid ↔ no-bid or moves the bid by more than 15%, and the RFQ page opens the table when it is. A bid that a 10% supplier
+  move overturns is shown as such rather than as a point optimum.
+- **Portfolio limits hold lines back, they never drop them.** `services/portfolio.py` (`GET /api/portfolio`) sets the
+  open book against the firm's limits: expected capital in flight (Σ P(win) × landed × qty, tied up for lead time +
+  handling + payment terms) against `working_capital_limit`; expected awards (Σ P(win)) against `max_open_awards`;
+  sourcing hours (pursue candidates × `pursuit_hours_per_line`) against `weekly_sourcing_hours`, pursuing the best
+  triage scores first; and the share of expected capital on one supplier against `max_supplier_share`. Each limit
+  returns the line ids it holds back and a note in plain words; the home page shows the book and the notes. Lines win
+  independently in these sums: an assumption, stated in the module.
+- Downside shown as such: the effort committed to lines being pursued (what is lost if none wins) and the chance that
+  none of the quoted lines is won.

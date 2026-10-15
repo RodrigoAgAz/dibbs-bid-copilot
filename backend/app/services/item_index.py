@@ -10,7 +10,7 @@ import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import ApprovedSource, AwardHistory, SolicitationLine
+from app.models import ApprovedSource, AwardHistory, ItemCharacteristic, SolicitationLine
 from app.services.data_quality import filter_awards
 from dibbs_ml.features import PriorAwards
 from dibbs_ml.items import Item, ItemIndex, modifier_tokens, noun, pn_family
@@ -47,7 +47,12 @@ def build_item_index(db: Session) -> ItemIndex:
         db.execute(select(ApprovedSource.nsn, ApprovedSource.cage_code, ApprovedSource.part_number)).all(),
         columns=["nsn", "cage_code", "part_number"],
     )
-    return ItemIndex.from_frames(lines, sources)
+    # FLIS / PUB LOG characteristics, when imported (app/pipelines/enrichment.py).
+    chars = pd.DataFrame(
+        db.execute(select(ItemCharacteristic.nsn, ItemCharacteristic.mrc, ItemCharacteristic.value)).all(),
+        columns=["nsn", "mrc", "value"],
+    )
+    return ItemIndex.from_frames(lines, sources, characteristics=chars if len(chars) else None)
 
 
 def item_index(db: Session) -> ItemIndex:

@@ -244,6 +244,40 @@ def followups() -> None:
         typer.echo(json.dumps(run_followups(db), indent=2))
 
 
+@cli.command("import-characteristics")
+def import_characteristics_cmd(path: str, source: str = typer.Option("pub_log", help="label stored on each row")) -> None:
+    """Load FLIS / PUB LOG item characteristics from a CSV/TSV export (NSN or NIIN+FSC, MRC, value[, name])."""
+    from app.db import session_scope
+    from app.pipelines.enrichment import import_characteristics, read_text
+    from app.services.item_index import clear_item_index
+
+    _setup_logging()
+    with session_scope() as db:
+        out = import_characteristics(db, read_text(path), source=source)
+        db.commit()
+    clear_item_index()
+    typer.echo(json.dumps(out))
+
+
+@cli.command("import-catalog")
+def import_catalog_cmd(
+    path: str,
+    org: int = typer.Option(..., help="organization id the price list belongs to"),
+    supplier: str = typer.Option(..., help="CAGE of the distributor selling at these prices"),
+    manufacturer: str = typer.Option("", help="manufacturer CAGE when the file has no CAGE column"),
+) -> None:
+    """Load a distributor's price list (part number, price[, CAGE, UOM, per, MOQ, lead time, stock]) for one organization."""
+    from app.db import session_scope
+    from app.pipelines.enrichment import import_catalog, read_text
+
+    _setup_logging()
+    with session_scope() as db:
+        out = import_catalog(db, org, supplier, read_text(path), source_file=Path(path).name,
+                             default_manufacturer_cage=manufacturer or None)
+        db.commit()
+    typer.echo(json.dumps(out))
+
+
 @cli.command("create-superadmin")
 def create_superadmin(email: str, password: str = typer.Option(..., prompt=True, hide_input=True)) -> None:
     """Create (or promote) a global superadmin user."""

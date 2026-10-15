@@ -19,7 +19,10 @@ backend/            FastAPI app (Python 3.12, SQLAlchemy 2, Alembic, Pydantic v2
     api/routes/     one router per area (auth, org+settings, suppliers, dashboard, rfq, quotes, history, admin, webhooks)
     connectors/     one module per external source (fixture + live modes, rate limiting, raw cache)
     pipelines/      backfill, daily ingest, award labeling, FSC volume report
-    services/       pricing (model inference), recommendations, landed cost, sourcing, email, llm, voice, training
+    services/       pricing (model inference), recommendations, landed cost, cost_model (tenant cost tiers), triage,
+                    contestability + competitors, evaluation (DLA rules), sensitivity, portfolio, sourcing, email,
+                    llm, voice, training
+    pipelines/      also enrichment.py: FLIS/PUB LOG characteristics and distributor catalog imports
     jobs/           RQ queue/worker, APScheduler schedules, task functions
     seed/           synthetic history + demo orgs (make seed)
     cli.py          `python -m app.cli <cmd>`: migrate, seed, backfill, ingest, labels, train, fsc-report, ...
@@ -27,6 +30,7 @@ backend/            FastAPI app (Python 3.12, SQLAlchemy 2, Alembic, Pydantic v2
   tests/            pytest; fixtures/ holds REAL captured DIBBS samples
 ml/
   dibbs_ml/         features (leakage-safe), baseline, LightGBM quantiles, conformal, CDF, bidding engine,
+                    cost_model (tenant cost tiers), competitors (profiles, reseller-share contestability),
                     evaluation, backtest, reports. Pure Python, no DB models (reads via SQL / DataFrames).
   data/             static PPI CSV (+ scripts/refresh_ppi.py)
   reports/          generated: latest_model.md, fsc_volume.md, PNG charts

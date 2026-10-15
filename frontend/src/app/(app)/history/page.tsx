@@ -71,15 +71,20 @@ export default function HistoryPage() {
         <Empty title="Nothing to show yet">Lines appear here after their return-by date, or as soon as you record what you bid.</Empty>
       ) : (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+          <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-6">
             <Stat label="Tracked lines" value={num(s!.tracked)} hint={`${num(s!.with_actual_bid)} with your bid recorded`} />
             <Stat label="Win rate" value={pct(s!.win_rate)} hint={`${num(s!.won)} won / ${num(s!.decided)} decided`} tone="good" />
-            <Stat label="Realized margin" value={pct(s!.realized_margin_pct, 1)} hint="(bid − landed) / bid on wins" />
+            <Stat
+              label="Realized margin"
+              value={pct(s!.realized_margin_pct, 1)}
+              hint={s!.with_actual_cost ? `(bid − what you paid) / bid on ${plural(s!.with_actual_cost, "win")} with a recorded cost` : "record what you paid on a won line to see it"}
+            />
+            <Stat label="Priced-for margin" value={pct(s!.estimated_margin_pct, 1)} hint="(bid − estimated landed cost) / bid on wins: the margin the bid assumed" />
             <Stat label="Lost" value={num(s!.lost)} hint="lines you bid on that went to someone else" />
             <Stat
               label="Recommendation would win"
               value={s!.recommendation_decided ? pct(s!.recommendation_would_have_won / s!.recommendation_decided) : "—"}
-              hint={`${num(s!.recommendation_would_have_won)} of ${plural(s!.recommendation_decided, "awarded line")} priced before the award (verified prices)`}
+              hint={`${num(s!.recommendation_would_have_won)} of ${plural(s!.recommendation_decided, "awarded line")}: the bid shown before the award vs the verified winning price`}
             />
           </div>
           <div className="mb-2 flex flex-wrap items-center gap-1.5">
@@ -133,10 +138,14 @@ export default function HistoryPage() {
                       <TD className="num text-right">{num(r.quantity)}</TD>
                       <TD className="num text-right">{money(r.landed_cost)}</TD>
                       <TD className="num text-right">
-                        {r.no_bid ? (
+                        {r.counted && r.snapshot_bid != null ? (
+                          <Tip content={`The bid shown before the award posted${r.recommended_bid != null && Math.abs(r.recommended_bid - r.snapshot_bid) > 1e-6 ? ` (now ${money(r.recommended_bid)} after a recompute)` : ""}`}>
+                            <span>{money(r.snapshot_bid)}</span>
+                          </Tip>
+                        ) : r.no_bid ? (
                           <span className="text-muted-foreground">no bid</span>
                         ) : r.winning_price != null && r.recommended_bid != null && !r.counted && r.winning_price_verified ? (
-                          <Tip content="Recomputed after the award posted: not counted in “Recommendation would win”">
+                          <Tip content="No snapshot from before the award posted: not counted in “Recommendation would win”">
                             <span className="text-muted-foreground">{money(r.recommended_bid)}*</span>
                           </Tip>
                         ) : (
@@ -171,7 +180,7 @@ export default function HistoryPage() {
             )}
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            * Recommendation recomputed after the award posted (not counted). Struck-through winning prices come from contract totals
+            * No decision snapshot from before the award posted (not counted). Struck-through winning prices come from contract totals
             that don&apos;t match the NSN&apos;s verified prices.
           </p>
         </>

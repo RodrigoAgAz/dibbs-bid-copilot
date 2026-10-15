@@ -81,7 +81,11 @@ def test_dashboard_lists_ranked_lines(client, db):
     d = client.get("/api/dashboard").json()
     assert d["summary"]["lines"] == len(d["lines"]) > 0
     bids = [x for x in d["lines"] if not x["no_bid"]]
-    assert [x["expected_profit"] for x in bids] == sorted([x["expected_profit"] for x in bids], reverse=True)
+    # Default order: lines priced against a quote by rank score, then unquoted lines by triage score (engine v10).
+    order = sorted(bids, key=lambda x: (x["rank_score"] is None, -(x["rank_score"] or 0),
+                                        x["triage_score"] is None, -(x["triage_score"] or 0)))
+    assert [x["line_id"] for x in bids] == [x["line_id"] for x in order]
+    assert any(x["triage_score"] is not None for x in bids)
     # Values extracted from the explanation JSON in SQL (the dashboard doesn't load whole explanations).
     assert all(isinstance(x["predicted_median"], float) and x["predicted_median"] > 0 for x in d["lines"])
     assert all(isinstance(x["flags"]["cold_start"], bool) for x in d["lines"])
@@ -211,10 +215,14 @@ def test_provisional_bids_target_the_likely_winning_price(client, db):
         assert r.p_win_at_recommended >= 0.5 and ex["target_p_win"] == 0.5
         assert r.recommended_bid <= ex["distribution"]["median"] + 0.01
         assert ex["max_landed_cost"] == pytest.approx(r.recommended_bid / 1.10, abs=1e-3)
-        assert ex["confidence"] in ("high", "medium", "low") and ex["rank_score"] is not None
+        # Expected profit against an assumed cost is not a ranking signal (engine v9): provisional lines carry an
+        # order-size rank instead, labelled as such.
+        assert ex["confidence"] in ("high", "medium", "low") and ex["rank_score"] is None
+        assert ex["provisional_rank"] > 0 and ex["expected_profit_basis"] == "assumed_cost"
     d = client.get("/api/dashboard").json()
     ranked = [x["rank_score"] for x in d["lines"] if not x["no_bid"] and x["rank_score"] is not None]
     assert ranked == sorted(ranked, reverse=True)
+    assert all(x["rank_score"] is None for x in d["lines"] if x["flags"]["provisional"])
 
 
 def test_lines_awarded_before_their_return_date_are_no_longer_opportunities(client, db):

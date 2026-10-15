@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "DIBBS Bid Copilot API",
+    "title": "The Invisible Hand API",
     "description": "Bid recommendations for DLA DIBBS solicitations. The app never submits bids.",
     "version": "0.1.0"
   },
@@ -860,6 +860,28 @@
         }
       }
     },
+    "/api/portfolio": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Portfolio",
+        "description": "The open book against the organization's capital, capacity and concentration limits (services/portfolio.py).",
+        "operationId": "portfolio_api_portfolio_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard": {
       "get": {
         "tags": [
@@ -989,6 +1011,106 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RecommendationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/lines/{line_id}/actual-cost": {
+      "post": {
+        "tags": [
+          "rfq"
+        ],
+        "summary": "Record Actual Cost",
+        "description": "What the broker actually paid per unit after winning: the only basis for a realized margin.",
+        "operationId": "record_actual_cost_api_rfq_lines__line_id__actual_cost_post",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualCostIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rfq/lines/{line_id}/snapshots": {
+      "get": {
+        "tags": [
+          "rfq"
+        ],
+        "summary": "Line Snapshots",
+        "description": "Every decision snapshot for the line, oldest first: what was recommended when, and what the broker recorded.",
+        "operationId": "line_snapshots_api_rfq_lines__line_id__snapshots_get",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Line Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SnapshotOut"
+                  },
+                  "title": "Response Line Snapshots Api Rfq Lines  Line Id  Snapshots Get"
                 }
               }
             }
@@ -2229,6 +2351,24 @@
         "type": "object",
         "title": "ActualBidIn"
       },
+      "ActualCostIn": {
+        "properties": {
+          "actual_cost_per_unit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost Per Unit"
+          }
+        },
+        "type": "object",
+        "title": "ActualCostIn"
+      },
       "ApprovedSourceOut": {
         "properties": {
           "cage_code": {
@@ -2768,6 +2908,17 @@
             ],
             "title": "Rank Score"
           },
+          "triage_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triage Score"
+          },
           "no_bid": {
             "type": "boolean",
             "title": "No Bid"
@@ -3272,6 +3423,17 @@
             ],
             "title": "Recommended Bid"
           },
+          "snapshot_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Bid"
+          },
           "actual_bid": {
             "anyOf": [
               {
@@ -3293,6 +3455,17 @@
               }
             ],
             "title": "Landed Cost"
+          },
+          "actual_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost"
           },
           "no_bid": {
             "type": "boolean",
@@ -3376,6 +3549,11 @@
             "type": "integer",
             "title": "With Actual Bid"
           },
+          "with_actual_cost": {
+            "type": "integer",
+            "title": "With Actual Cost",
+            "default": 0
+          },
           "decided": {
             "type": "integer",
             "title": "Decided"
@@ -3409,6 +3587,17 @@
               }
             ],
             "title": "Realized Margin Pct"
+          },
+          "estimated_margin_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Margin Pct"
           },
           "recommendation_would_have_won": {
             "type": "integer",
@@ -3809,7 +3998,8 @@
         "properties": {
           "email": {
             "type": "string",
-            "format": "email",
+            "maxLength": 320,
+            "minLength": 1,
             "title": "Email"
           },
           "password": {
@@ -3832,6 +4022,30 @@
             "type": "number",
             "exclusiveMinimum": 0.0,
             "title": "Unit Price"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "price_basis_qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Basis Qty"
           },
           "quoted_part_number": {
             "anyOf": [
@@ -4225,6 +4439,167 @@
         ],
         "title": "PipelineRunOut"
       },
+      "PortfolioOut": {
+        "properties": {
+          "quoted_lines": {
+            "type": "integer",
+            "title": "Quoted Lines"
+          },
+          "expected_awards": {
+            "type": "number",
+            "title": "Expected Awards"
+          },
+          "expected_profit": {
+            "type": "number",
+            "title": "Expected Profit"
+          },
+          "capital_in_flight": {
+            "type": "number",
+            "title": "Capital In Flight"
+          },
+          "capital_if_all_won": {
+            "type": "number",
+            "title": "Capital If All Won"
+          },
+          "capital_days": {
+            "type": "number",
+            "title": "Capital Days"
+          },
+          "p_no_award": {
+            "type": "number",
+            "title": "P No Award"
+          },
+          "working_capital_limit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Working Capital Limit"
+          },
+          "capital_hold": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Capital Hold"
+          },
+          "max_open_awards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Open Awards"
+          },
+          "awards_hold": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Awards Hold"
+          },
+          "pursue_candidates": {
+            "type": "integer",
+            "title": "Pursue Candidates"
+          },
+          "pursuit_hours_needed": {
+            "type": "number",
+            "title": "Pursuit Hours Needed"
+          },
+          "weekly_sourcing_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekly Sourcing Hours"
+          },
+          "pursue_now": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Pursue Now"
+          },
+          "deferred_capacity": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Deferred Capacity"
+          },
+          "pursuit_cost_committed": {
+            "type": "number",
+            "title": "Pursuit Cost Committed"
+          },
+          "supplier_shares": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Supplier Shares"
+          },
+          "max_supplier_share": {
+            "type": "number",
+            "title": "Max Supplier Share"
+          },
+          "concentrated_supplier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concentrated Supplier"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quoted_lines",
+          "expected_awards",
+          "expected_profit",
+          "capital_in_flight",
+          "capital_if_all_won",
+          "capital_days",
+          "p_no_award",
+          "working_capital_limit",
+          "capital_hold",
+          "max_open_awards",
+          "awards_hold",
+          "pursue_candidates",
+          "pursuit_hours_needed",
+          "weekly_sourcing_hours",
+          "pursue_now",
+          "deferred_capacity",
+          "pursuit_cost_committed",
+          "supplier_shares",
+          "max_supplier_share",
+          "concentrated_supplier",
+          "notes"
+        ],
+        "title": "PortfolioOut",
+        "description": "The open book against the firm's limits (services/portfolio.py). Line ids name what each limit holds back."
+      },
       "PredictionOut": {
         "properties": {
           "levels": {
@@ -4371,6 +4746,30 @@
               }
             ],
             "title": "Unit Price"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 8
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "price_basis_qty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Basis Qty"
           },
           "quoted_part_number": {
             "anyOf": [
@@ -4858,6 +5257,29 @@
             ],
             "title": "Actual Bid At"
           },
+          "actual_cost_per_unit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost Per Unit"
+          },
+          "actual_cost_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Cost At"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time",
@@ -5196,6 +5618,109 @@
             ],
             "title": "Min P Win"
           },
+          "pursuit_cost_per_line": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pursuit Cost Per Line"
+          },
+          "handling_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 120.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handling Days"
+          },
+          "working_capital_limit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Working Capital Limit"
+          },
+          "max_open_awards": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Open Awards"
+          },
+          "weekly_sourcing_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekly Sourcing Hours"
+          },
+          "pursuit_hours_per_line": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 40.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pursuit Hours Per Line"
+          },
+          "max_supplier_share": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Supplier Share"
+          },
+          "fulfilment_loss_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.5,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fulfilment Loss Pct"
+          },
           "auto_send_rfq": {
             "anyOf": [
               {
@@ -5314,6 +5839,59 @@
             "type": "number",
             "title": "Min P Win"
           },
+          "pursuit_cost_per_line": {
+            "type": "number",
+            "title": "Pursuit Cost Per Line"
+          },
+          "handling_days": {
+            "type": "integer",
+            "title": "Handling Days"
+          },
+          "working_capital_limit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Working Capital Limit"
+          },
+          "max_open_awards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Open Awards"
+          },
+          "weekly_sourcing_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekly Sourcing Hours"
+          },
+          "pursuit_hours_per_line": {
+            "type": "number",
+            "title": "Pursuit Hours Per Line"
+          },
+          "max_supplier_share": {
+            "type": "number",
+            "title": "Max Supplier Share"
+          },
+          "fulfilment_loss_pct": {
+            "type": "number",
+            "title": "Fulfilment Loss Pct"
+          },
           "auto_send_rfq": {
             "type": "boolean",
             "title": "Auto Send Rfq"
@@ -5375,6 +5953,14 @@
           "provisional_cost_fraction",
           "min_expected_profit",
           "min_p_win",
+          "pursuit_cost_per_line",
+          "handling_days",
+          "working_capital_limit",
+          "max_open_awards",
+          "weekly_sourcing_hours",
+          "pursuit_hours_per_line",
+          "max_supplier_share",
+          "fulfilment_loss_pct",
           "auto_send_rfq",
           "voice_enabled",
           "email_sender_name",
@@ -5448,6 +6034,49 @@
           "text"
         ],
         "title": "SimulatedReplyIn"
+      },
+      "SnapshotOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "engine_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "engine_version",
+          "created_at",
+          "payload"
+        ],
+        "title": "SnapshotOut",
+        "description": "One decision snapshot: what the tool showed (or the broker recorded) at that moment."
       },
       "SolicitationDetail": {
         "properties": {
@@ -6069,6 +6698,42 @@
           "currency": {
             "type": "string",
             "title": "Currency"
+          },
+          "price_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Unit"
+          },
+          "price_basis_qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Basis Qty"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence"
           },
           "quoted_part_number": {
             "anyOf": [

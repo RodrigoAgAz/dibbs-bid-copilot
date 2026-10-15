@@ -38,6 +38,10 @@ class BidRecommendation:
     curve: list[dict] = field(default_factory=list)  # samples of (bid, p_win, expected_profit)
     grid_low: float | None = None
     grid_high: float | None = None
+    # An external ceiling (DLA's automated price band) that bound the search, when one was given.
+    max_bid: float | None = None
+    capped: bool = False
+    fulfilment_loss_pct: float = 0.0
 
     @property
     def no_bid_reason(self) -> str | None:
@@ -82,31 +86,47 @@ def recommend_bid(
     min_p_win: float = 0.05,
     grid_points: int = 400,
     curve_points: int = 60,
+    max_bid: float | None = None,
+    max_bid_reason: str | None = None,
+    fulfilment_loss_pct: float = 0.0,
 ) -> BidRecommendation:
+    """`max_bid`: a hard ceiling on the bid from outside the price model (e.g. the band within which DLA's automated
+    evaluation has actually awarded); `max_bid_reason` is the no-bid text when even the minimum-margin bid is above it.
+    `fulfilment_loss_pct`: expected losses on a won line (rejections, expediting, replacements) as a fraction of the
+    bid, so profit per unit is bid x (1 - loss) - landed and the minimum margin is net of those losses."""
     landed = float(landed_cost)
     qty = max(float(quantity), 0.0)
+    keep = 1.0 - min(max(float(fulfilment_loss_pct), 0.0), 0.5)  # share of the bid the broker keeps
     floor_p = min(max(float(min_p_win), 0.05), 0.95)
-    dp = price_decimals(min(landed * (1.0 + max(min_margin_pct, 0.0)), float(dist.ppf(1.0 - floor_p))))
+    top = float(dist.ppf(1.0 - floor_p))
+    capped = max_bid is not None and max_bid < top
+    if capped:
+        top = float(max_bid)
+    min_bid = landed * (1.0 + max(min_margin_pct, 0.0)) / keep
+    dp = price_decimals(min(min_bid, top))
     step = 10.0 ** -dp
-    lo = _ceil_to(landed * (1.0 + max(min_margin_pct, 0.0)), dp)
-    # Floor to the price step so the top of the grid never dips below the minimum chance to win.
-    hi = _floor_to(float(dist.ppf(1.0 - floor_p)), dp)
+    lo = _ceil_to(min_bid, dp)
+    # Floor to the price step so the top of the grid never dips below the minimum chance to win (or above the cap).
+    hi = _floor_to(top, dp)
     reasons: list[str] = []
 
     if lo > hi:
-        # Even the minimum acceptable bid has less than floor_p chance of winning.
+        # Even the minimum acceptable bid has less than floor_p chance of winning (or sits above the external cap).
         grid = np.array([lo])
-        reasons.append(
-            f"cost too high: the minimum-margin bid has less than a {floor_p:.0%} chance of winning"
-            if floor_p > 0.05 else
-            "cost too high: minimum-margin bid exceeds the 95th percentile of the expected winning price"
-        )
+        if capped and lo > _floor_to(float(max_bid), dp):
+            reasons.append(max_bid_reason or f"cost too high: the minimum-margin bid exceeds the bid ceiling ${max_bid:,.2f}")
+        else:
+            reasons.append(
+                f"cost too high: the minimum-margin bid has less than a {floor_p:.0%} chance of winning"
+                if floor_p > 0.05 else
+                "cost too high: minimum-margin bid exceeds the 95th percentile of the expected winning price"
+            )
     else:
         grid = np.unique(np.round(np.linspace(lo, hi, grid_points), dp))
         grid = grid[grid >= lo]  # rounding must never go below landed * (1 + margin)
 
     p = np.asarray(dist.sf(grid), dtype=float).reshape(-1)
-    ep = p * (grid - landed) * qty
+    ep = p * (grid * keep - landed) * qty
     i = int(np.argmax(ep))
     # Refine the argmax to the price step between the neighbouring grid points.
     a, b = grid[max(i - 1, 0)], grid[min(i + 1, grid.size - 1)]
@@ -115,7 +135,7 @@ def recommend_bid(
     fine = fine[(fine >= lo) & (fine <= grid[-1])] if fine.size else fine
     if fine.size:
         pf = np.asarray(dist.sf(fine), dtype=float).reshape(-1)
-        ef = pf * (fine - landed) * qty
+        ef = pf * (fine * keep - landed) * qty
         j = int(np.argmax(ef))
         best_bid, best_p, best_e = float(fine[j]), float(pf[j]), float(ef[j])
     else:
@@ -135,9 +155,11 @@ def recommend_bid(
         cons = round(cons - step, dp)
     if cons >= lo:
         rec.conservative_bid, rec.conservative_p_win = cons, float(dist.sf(cons))
-    # Aggressive: the allowed bid whose P(win) is closest to 0.3.
+    # Aggressive: the allowed bid whose P(win) is closest to 0.3 (never above the external cap).
     agg = min(max(round(float(dist.ppf(1.0 - AGGRESSIVE_P_WIN)), dp), lo), max(lo, float(grid[-1])))
     rec.aggressive_bid, rec.aggressive_p_win = float(agg), float(dist.sf(agg))
+    rec.capped = bool(capped)
+    rec.max_bid = None if max_bid is None else float(max_bid)
 
     # The alternatives must bracket the recommendation: "conservative" is safer (a lower bid, higher P(win)) and
     # "aggressive" riskier. When the optimum already wins >= 70% of the time there is no safer option to offer.
@@ -152,9 +174,10 @@ def recommend_bid(
     xs = np.unique(np.round(np.linspace(c_lo, c_hi, curve_points), dp))
     ps = np.asarray(dist.sf(xs), dtype=float).reshape(-1)
     rec.curve = [
-        {"bid": float(b), "p_win": round(float(pw), 4), "expected_profit": round(float(pw * (b - landed) * qty), 2)}
+        {"bid": float(b), "p_win": round(float(pw), 4), "expected_profit": round(float(pw * (b * keep - landed) * qty), 2)}
         for b, pw in zip(xs, ps, strict=True)
     ]
+    rec.fulfilment_loss_pct = round(1.0 - keep, 4)
 
     if return_by_passed:
         reasons.insert(0, "return-by date has passed")

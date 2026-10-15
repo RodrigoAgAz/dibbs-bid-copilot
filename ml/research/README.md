@@ -55,3 +55,79 @@ Until then the product's answer for new parts is the right one: show the evidenc
 - New parts, held-out NSNs (2,047 rows; part-family evidence on 6.7%): cold model 83%; where evidence exists the
   evidence alone is 64% vs 88% (cold model) and 91% (model on top of evidence), so v2.2 anchors the median on the
   evidence and keeps the model's spread.
+
+## Cost model (2026-10-15): how predictable is a broker's supplier price before asking?
+
+`cost_lab.py` loads every usable quote an organization received (normalized to the line's unit of issue, the way
+`app/services/cost_model.py` does for live pricing), scores each quote from the organization's **other** quotes
+(leave-one-out, `dibbs_ml.cost_model.TenantCostModel`) and reports the error by the tier the estimate came from:
+
+| Tier | Uses | Minimum observations |
+|---|---|---|
+| nsn | the tenant's quotes for this NSN, quantity-adjusted with the measured elasticity (−0.14) | 1 |
+| cage | quotes for other parts by the same approved-source manufacturer, as a ratio to the predicted winning price | 2 |
+| fsc | quotes in the same supply class, as a ratio | 3 |
+| org | all the tenant's quotes, as a ratio | 5 |
+| prior | the org's provisional cost fraction (default 70%), spread σ = 0.45 | — |
+
+    DATABASE_URL=... python ml/research/cost_lab.py
+
+Local run on the demo organizations (quotes **simulated** by the demo refresher at roughly 70% of the predicted price,
+so this shows that the pipeline works, not what real suppliers do):
+
+| Org | Quotes | Tier | n | MdAPE | within 25% | 80% coverage | flat 70% MdAPE |
+|---|---|---|---|---|---|---|---|
+| Atlas (demo) | 15 | nsn | 9 | 10% | 89% | 78% | 5% |
+| Atlas (demo) | 15 | cage | 2 | 21% | 50% | 50% | 23% |
+| Atlas (demo) | 15 | org | 4 | 30% | 50% | 75% | 27% |
+| Bluewater (demo) | 11 | nsn | 6 | 4% | 67% | 67% | 17% |
+| Bluewater (demo) | 11 | org | 5 | 34% | 40% | 100% | 26% |
+
+What to expect on real tenants: the nsn tier should beat the flat assumption decisively (a supplier re-quoting a part
+it quoted last quarter), the cage and fsc tiers are where a tenant's structural advantage (its distributor terms)
+shows up, and the prior is what a brand-new tenant sees until it has quoted five lines. Re-run per pilot customer and
+replace this table; the tiers' minimum counts and spread floors are the knobs.
+
+## Competitors and contestability (2026-10-15)
+
+DIBBS names the winner of every award, so `dibbs_ml.competitors` profiles each repeat winner per supply class (wins,
+parts, recency, and the ratio of its winning price to the inflation-adjusted previous award) and classifies it as a
+manufacturer (an approved source for some NSN, or named as the manufacturer on an RFQ) or a reseller. Two uses:
+
+* **Contestability** P(a broker can win the line) = the part's reseller share of awards, shrunk toward the supply
+  class's share with three awards' worth of prior. It feeds the triage score and is shown on the RFQ page.
+* **Competitor view of P(win)** = prod over likely bidders (1 − P(bids) × P(their price < bid)). Only winning prices
+  are observed, never losing bids, so this runs low; it is shown beside the calibrated price model, never used instead.
+
+`competitor_lab.py` walks each class's awards in time order and scores the shrunk reseller share against the constant
+class share (Brier, lower is better). Local run on the **synthetic** demo awards (resellers win about 96% of them by
+construction, so the margins are small):
+
+| FSC | Awards scored | Reseller share | Brier (part history) | Brier (FSC share only) |
+|---|---|---|---|---|
+| 4730 | 660 | 97% | 0.018 | 0.025 |
+| 5305 | 1,103 | 96% | 0.024 | 0.037 |
+| 5306 | 755 | 95% | 0.023 | 0.044 |
+| 5310 | 828 | 98% | 0.016 | 0.017 |
+| 5330 | 763 | 98% | 0.019 | 0.022 |
+| 5340 | 555 | 97% | 0.020 | 0.025 |
+| 6145 | 647 | 96% | 0.030 | 0.039 |
+
+On real DIBBS awards the interesting classes are the ones where manufacturers win a material share: that is where the
+part's own history separates broker-winnable lines from the rest. Re-run in production and keep the table.
+
+## Enrichment and coverage (2026-10-15)
+
+Two enrichment paths were added behind measured gates rather than assumed value:
+
+* **FLIS / PUB LOG characteristics** (`item_characteristics`, `python -m app.cli import-characteristics`): same-name
+  parts agreeing on ≥ 2 characteristics become similar-item neighbours ("matching characteristics"). Their price
+  signal must be measured with `lab.py --cold` once real PUB LOG data is loaded; the live export format is UNVERIFIED
+  (docs/data_sources.md §13).
+* **Distributor price lists** (`catalog_prices`, `python -m app.cli import-catalog`): an imported price for the exact
+  approved part number is the cost model's "catalog" tier. `coverage_lab.py --org <id>` measures, before any feed is
+  integrated, what share of the organization's open lines a price list would touch, by FSC, alongside how many lines
+  have an approved part number at all and a candidate supplier with an email address.
+
+Local run on the Atlas demo organization (no catalog imported, no characteristics loaded): see the table printed by
+`coverage_lab.py`; the useful numbers appear once a pilot customer's price lists are imported.

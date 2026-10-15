@@ -704,3 +704,30 @@ backend/.venv/Scripts/python backend/scripts/dibbs_discovery.py \
 ```
 (`--steps`, `--dates`, `--fscs`, `--solicitations`, `--banner form|browser` etc.: see `--help`. Open RFQs and
 retention windows change daily, so a re-run will capture different documents.)
+
+---
+
+## 13. FLIS / PUB LOG item characteristics (UNVERIFIED format)
+
+DLA publishes the Federal Logistics Information System's public data ("PUB LOG") through its FLIS Data Electronic
+Reading Room (https://www.dla.mil/Information-Operations/FLIS-Data-Electronic-Reading-Room/). It carries, per NSN, the
+item's technical characteristics as Master Requirement Codes (MRC, e.g. MATT material, AAGR thread size) with clear-text
+replies, plus reference numbers (manufacturer CAGE + part number), freight and packaging data. `dla.mil` refuses
+non-browser downloads (HTTP 403), so the layout could not be captured in this repo and the loader
+(`app/pipelines/enrichment.py`, `python -m app.cli import-characteristics <file>`) reads any delimited export with a
+header row and columns named NSN (or NIIN + FSC), MRC (or code), value (or reply / clear text reply) and optionally
+name (or requirement). To verify against the real product: export a few NSNs from PUB LOG, check that the MRC codes and
+replies load (`item_characteristics` table), and record the exact column names here.
+
+What the data is used for: same-name parts in the same supply class that agree on at least two characteristics become
+price-evidence neighbours for new parts (`dibbs_ml.items`, reason "matching characteristics"). Their price signal is to
+be measured with `ml/research/lab.py --cold` once data is loaded; until then the part-number-family evidence remains
+the only measured kind.
+
+## 14. Distributor price lists (per organization)
+
+`python -m app.cli import-catalog <file> --org <id> --supplier <CAGE> [--manufacturer <CAGE>]` loads a distributor's
+price list (columns matched by name: part number, price, optional manufacturer CAGE, UOM, per, MOQ, lead time, in stock)
+into `catalog_prices`, tenant-owned. The cost model uses an imported price for a line's exact approved part number as
+its "catalog" tier (after the tenant's own quotes for the NSN, before any ratio tier). Before integrating a feed,
+`ml/research/coverage_lab.py --org <id>` reports how many open lines a price list actually matches, by FSC.

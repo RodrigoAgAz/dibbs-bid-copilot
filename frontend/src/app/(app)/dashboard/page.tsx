@@ -38,6 +38,70 @@ const LANE_ICON: Record<LaneKey, LucideIcon> = {
 };
 const SHOWN = 8;
 
+/** The open book against the firm's limits: what is in flight, what the week's hours cover, where the capital sits. */
+function PortfolioCard() {
+  const q = useQuery({ queryKey: ["portfolio"], queryFn: async () => unwrap(await api.GET("/api/portfolio")) });
+  const p = q.data;
+  if (!p || (p.quoted_lines === 0 && p.pursue_candidates === 0)) return null;
+  const capitalTone = p.capital_hold.length ? "text-warning" : "text-foreground";
+  return (
+    <section aria-labelledby="portfolio-heading" className="mb-8 rounded-xl border bg-card p-4" data-testid="portfolio">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="portfolio-heading" className="font-serif text-xl tracking-tight">
+          Your book
+        </h2>
+        <Link href="/settings" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+          <Settings className="h-3.5 w-3.5" aria-hidden /> Limits in Settings
+        </Link>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+        <div>
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Quoted lines worth bidding</dt>
+          <dd className="num text-lg font-semibold">{num(p.quoted_lines)}</dd>
+          <dd className="text-xs text-muted-foreground">
+            about {p.expected_awards.toFixed(1)} expected awards · {Math.round(p.p_no_award * 100)}% chance of none
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Expected capital in flight</dt>
+          <dd className={cn("num text-lg font-semibold", capitalTone)}>{money(p.capital_in_flight, { digits: 0 })}</dd>
+          <dd className="text-xs text-muted-foreground">
+            {p.working_capital_limit != null ? `limit ${money(p.working_capital_limit, { digits: 0 })}` : "no limit set"}
+            {p.capital_days > 0 ? ` · tied up about ${Math.round(p.capital_days)} days` : ""}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Worth pursuing (no quote yet)</dt>
+          <dd className="num text-lg font-semibold">{num(p.pursue_now.length)}</dd>
+          <dd className="text-xs text-muted-foreground">
+            {p.weekly_sourcing_hours != null
+              ? `${p.pursuit_hours_needed.toFixed(1)} h needed, ${p.weekly_sourcing_hours} h available${p.deferred_capacity.length ? `: ${num(p.deferred_capacity.length)} wait` : ""}`
+              : `about ${p.pursuit_hours_needed.toFixed(1)} h of sourcing`}
+            {" · "}
+            {money(p.pursuit_cost_committed, { digits: 0 })} of effort if none wins
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Expected profit (quoted)</dt>
+          <dd className="num text-lg font-semibold text-success">{money(p.expected_profit, { digits: 0 })}</dd>
+          <dd className="text-xs text-muted-foreground">
+            {p.supplier_shares.length
+              ? `top supplier ${p.supplier_shares[0].cage as string} carries ${Math.round((p.supplier_shares[0].share as number) * 100)}% of the capital`
+              : "no supplier quotes in the book yet"}
+          </dd>
+        </div>
+      </dl>
+      {p.notes.length > 0 && (
+        <ul className="mt-3 space-y-1 text-xs text-warning" data-testid="portfolio-notes">
+          {p.notes.map((n) => (
+            <li key={n}>{n.charAt(0).toUpperCase() + n.slice(1)}.</li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /** Jump to any open line by solicitation number, NSN or item name (keyboard: ↑ ↓ Enter Esc). */
 function QuickFind({ lines }: { lines: DashboardLine[] }) {
   const router = useRouter();
@@ -304,6 +368,8 @@ function Home() {
           </>
         )}
       </section>
+
+      {!q.isLoading && !q.error && <PortfolioCard />}
 
       {!q.isLoading && !q.error && (
         <section aria-labelledby="opps-heading" data-testid="opportunities">

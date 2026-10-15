@@ -138,15 +138,17 @@ describe("dashboard sorting", () => {
     expect(sortLines(ls, "line_value").map((l) => l.line_id)).toEqual([2, 3, 1]);
   });
 
-  it("ranks best bets by confidence-weighted profit, unpriced lines last by value", async () => {
+  it("ranks quoted lines by rank score, then unquoted lines by triage score, then by value", async () => {
     const { sortLines } = await import("./dashboard");
     const ls = [
       line({ line_id: 1, rank_score: 30, predicted_median: 1, quantity: 10 }),
-      line({ line_id: 2, rank_score: null, predicted_median: 5, quantity: 10 }),
+      line({ line_id: 2, rank_score: null, triage_score: 12, predicted_median: 5, quantity: 10 }),
       line({ line_id: 3, rank_score: 90, predicted_median: 1, quantity: 10 }),
-      line({ line_id: 4, rank_score: null, predicted_median: 50, quantity: 10 }),
+      line({ line_id: 4, rank_score: null, triage_score: null, predicted_median: 50, quantity: 10 }),
+      line({ line_id: 5, rank_score: null, triage_score: 40, predicted_median: 1, quantity: 1 }),
+      line({ line_id: 6, rank_score: null, triage_score: null, predicted_median: 500, quantity: 10 }),
     ];
-    expect(sortLines(ls, "best").map((l) => l.line_id)).toEqual([3, 1, 4, 2]);
+    expect(sortLines(ls, "best").map((l) => l.line_id)).toEqual([3, 1, 5, 2, 6, 4]);
   });
 });
 

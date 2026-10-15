@@ -19,7 +19,7 @@ from app.models import (
     SolicitationLine,
     SupplierQuote,
 )
-from app.schemas.rfq import DashboardLine, DashboardOut, DashboardSummary, Flags, QuoteStatusSummary
+from app.schemas.rfq import DashboardLine, DashboardOut, DashboardSummary, Flags, PortfolioOut, QuoteStatusSummary
 from app.services.biddable import not_awarded
 from app.services.ops import SYNTHETIC_PREFIX, hide_synthetic
 from app.services.recommendations import org_settings
@@ -65,6 +65,15 @@ def quote_summaries(ctx: TenantContext, line_ids: list[int]) -> dict[int, QuoteS
     return out
 
 
+@router.get("/portfolio", response_model=PortfolioOut)
+def portfolio(ctx: TenantContext = Depends(get_tenant)) -> PortfolioOut:
+    """The open book against the organization's capital, capacity and concentration limits (services/portfolio.py)."""
+    from app.services.portfolio import portfolio_summary
+
+    s = org_settings(ctx.db, ctx.org_id)
+    return PortfolioOut(**portfolio_summary(ctx.db, ctx.org_id, s).to_dict())
+
+
 @router.get("/dashboard", response_model=DashboardOut)
 def dashboard(
     fsc: list[str] | None = Query(default=None),
@@ -89,6 +98,7 @@ def dashboard(
             ex["needs_quote"].as_boolean().label("needs_quote"),
             ex["confidence"].as_string().label("confidence"),
             ex["rank_score"].as_float().label("rank_score"),
+            ex["triage_score"].as_float().label("triage_score"),
         )
         .join(L, R.solicitation_line_id == L.id)
         .join(S, L.solicitation_id == S.id)
@@ -140,11 +150,13 @@ def dashboard(
                     confidence=r.confidence or "low",
                 ),
                 rank_score=r.rank_score,
+                triage_score=r.triage_score,
             )
         )
-    # Best bets first: expected profit weighted by prediction confidence; then "quote first" lines, largest first.
-    lines.sort(key=lambda d: (d.no_bid, d.rank_score is None, -(d.rank_score or 0),
-                              -((d.predicted_median or 0) * (d.quantity or 0))))
+    # Lines priced against a real quote first (expected profit x confidence), then unquoted lines by how much they
+    # are worth pursuing (triage score), then anything left by order size.
+    lines.sort(key=lambda d: (d.no_bid, d.rank_score is None, -(d.rank_score or 0), d.triage_score is None,
+                              -(d.triage_score or 0), -((d.predicted_median or 0) * (d.quantity or 0))))
     awaiting = sum(q.sent for q in summaries.values())
     last = ctx.db.execute(
         select(IngestionRun.finished_at).where(IngestionRun.status.in_(["success", "partial"]))

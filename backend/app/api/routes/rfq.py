@@ -20,6 +20,7 @@ from app.models import (
     Organization,
     QuoteRequest,
     Recommendation,
+    RecommendationSnapshot,
     Solicitation,
     SolicitationLine,
     SupplierContact,
@@ -27,6 +28,7 @@ from app.models import (
 )
 from app.schemas.rfq import (
     ActualBidIn,
+    ActualCostIn,
     ApprovedSourceOut,
     AwardOut,
     CallLogOut,
@@ -36,12 +38,13 @@ from app.schemas.rfq import (
     PredictionOut,
     QuoteRequestOut,
     RecommendationOut,
+    SnapshotOut,
     SolicitationDetail,
     SupplierQuoteOut,
 )
 from app.services.email.providers import reply_address
 from app.services.pricing import latest_prediction
-from app.services.recommendations import refresh_line_for_org
+from app.services.recommendations import record_snapshot, refresh_line_for_org
 from app.services.sourcing import candidate_suppliers
 from app.services.voice.guardrails import check_call_allowed
 
@@ -219,6 +222,8 @@ def _line_detail(ctx: TenantContext, line: SolicitationLine, org: Organization) 
             explanation=rec.explanation or {},
             actual_bid=rec.actual_bid,
             actual_bid_at=rec.actual_bid_at,
+            actual_cost_per_unit=rec.actual_cost_per_unit,
+            actual_cost_at=rec.actual_cost_at,
             updated_at=rec.updated_at,
         ),
         history=[
@@ -294,8 +299,37 @@ def record_actual_bid(line_id: int, body: ActualBidIn, ctx: TenantContext = Depe
         rec = refresh_line_for_org(ctx.db, ctx.org_id, line)
     rec.actual_bid = round(body.actual_bid, 2) if body.actual_bid is not None else None
     rec.actual_bid_at = datetime.now(UTC) if body.actual_bid is not None else None
+    record_snapshot(ctx.db, rec, "actual_bid")
     ctx.db.commit()
     return _rec_out(rec)
+
+
+@router.post("/lines/{line_id}/actual-cost", response_model=RecommendationOut)
+def record_actual_cost(line_id: int, body: ActualCostIn, ctx: TenantContext = Depends(get_tenant)) -> RecommendationOut:
+    """What the broker actually paid per unit after winning: the only basis for a realized margin."""
+    line = ctx.db.get(SolicitationLine, line_id)
+    if line is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Line not found")
+    rec = ctx.db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line_id)).scalar_one_or_none()
+    if rec is None:
+        rec = refresh_line_for_org(ctx.db, ctx.org_id, line)
+    rec.actual_cost_per_unit = round(body.actual_cost_per_unit, 4) if body.actual_cost_per_unit is not None else None
+    rec.actual_cost_at = datetime.now(UTC) if body.actual_cost_per_unit is not None else None
+    record_snapshot(ctx.db, rec, "actual_cost")
+    ctx.db.commit()
+    return _rec_out(rec)
+
+
+@router.get("/lines/{line_id}/snapshots", response_model=list[SnapshotOut])
+def line_snapshots(line_id: int, ctx: TenantContext = Depends(get_tenant)) -> list[SnapshotOut]:
+    """Every decision snapshot for the line, oldest first: what was recommended when, and what the broker recorded."""
+    rows = ctx.db.execute(
+        select(RecommendationSnapshot)
+        .where(RecommendationSnapshot.solicitation_line_id == line_id)
+        .order_by(RecommendationSnapshot.created_at, RecommendationSnapshot.id)
+    ).scalars().all()
+    return [SnapshotOut(id=s.id, kind=s.kind, engine_version=s.engine_version, created_at=s.created_at, payload=s.payload or {})
+            for s in rows]
 
 
 @router.post("/lines/{line_id}/refresh", response_model=RecommendationOut)
@@ -323,5 +357,7 @@ def _rec_out(rec: Recommendation) -> RecommendationOut:
         explanation=rec.explanation or {},
         actual_bid=rec.actual_bid,
         actual_bid_at=rec.actual_bid_at,
+        actual_cost_per_unit=rec.actual_cost_per_unit,
+        actual_cost_at=rec.actual_cost_at,
         updated_at=rec.updated_at,
     )

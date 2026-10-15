@@ -268,31 +268,61 @@ def history_median(db: Session, nsn: str) -> float | None:
     return statistics.median(prices) if prices else None
 
 
+EVIDENCE_KEYS = ("part_number", "unit", "lead_time", "validity", "freight")
+
+
+def quote_evidence(ext: QuoteExtraction, unit_evidence: str, part_number_inferred: bool = False) -> dict:
+    """What the supplier actually confirmed, per fact: confirmed | inferred | unknown.
+
+    A fact is "confirmed" only when the supplier stated it. "inferred" means the tool filled it in (the requested
+    part number on a manual entry, or a price assumed to be per unit of issue), and the broker should see that.
+    """
+    return {
+        "part_number": "confirmed" if ext.quoted_part_number else ("inferred" if part_number_inferred else "unknown"),
+        "unit": unit_evidence if ext.unit_price is not None else "unknown",
+        "lead_time": "confirmed" if ext.lead_time_days is not None else "unknown",
+        "validity": "confirmed" if ext.quote_valid_until else "unknown",
+        "freight": "confirmed" if (ext.freight_cost is not None or ext.freight_terms) else "unknown",
+    }
+
+
 def store_extraction(
     db: Session, qr: QuoteRequest, ext: QuoteExtraction, raw_text: str, source: str
 ) -> SupplierQuote:
+    from app.services.landed_cost import price_per_issue_unit
+
     line = db.get(SolicitationLine, qr.solicitation_line_id)
     approved = {norm_pn(a.part_number) for a in db.execute(select(ApprovedSource).where(ApprovedSource.nsn == line.nsn)).scalars()}
+    reasons = []
     if line.approved_source_only:
-        quoted = norm_pn(ext.quoted_part_number) or norm_pn(qr.part_number)
+        # Only a part number the supplier themselves stated can conform. Falling back to the part number we asked for
+        # would mark a vague "yes, $4.20 each" as a conforming approved-source quote.
+        quoted = norm_pn(ext.quoted_part_number)
         conforms = bool(quoted) and quoted in approved
+        if ext.is_quote and not quoted:
+            reasons.append("supplier did not state the part number (approved-source-only line)")
     else:
         conforms = True
-    reasons = []
     if ext.extraction_confidence < REVIEW_CONFIDENCE:
         reasons.append(f"low extraction confidence ({ext.extraction_confidence:.2f})")
+    per_unit, unit_problem, unit_evidence = price_per_issue_unit(ext, line.unit_of_issue)
+    if ext.unit_price is not None and unit_problem:
+        reasons.append(f"pricing unit: {unit_problem}")
     med = history_median(db, line.nsn)
-    if ext.unit_price and med:
-        ratio = ext.unit_price / med
+    if per_unit and med:
+        ratio = per_unit / med
         if ratio > REVIEW_PRICE_RATIO or ratio < 1 / REVIEW_PRICE_RATIO:
-            reasons.append(f"price ${ext.unit_price:,.2f} is {ratio:.1f}x the historical median ${med:,.2f}")
-    if line.approved_source_only and not conforms:
+            reasons.append(f"price ${per_unit:,.4f} per {line.unit_of_issue or 'EA'} is {ratio:.1f}x the historical median ${med:,.2f}")
+    if line.approved_source_only and not conforms and ext.quoted_part_number:
         reasons.append("part number does not match an approved source (non-conforming)")
     quote = SupplierQuote(
         organization_id=qr.organization_id,
         quote_request_id=qr.id,
         unit_price=ext.unit_price,
         currency=ext.currency or "USD",
+        price_unit=(ext.price_unit or None),
+        price_basis_qty=ext.price_basis_qty,
+        evidence=quote_evidence(ext, unit_evidence),
         quoted_part_number=ext.quoted_part_number,
         min_order_qty=ext.min_order_qty,
         lead_time_days=ext.lead_time_days,

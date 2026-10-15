@@ -54,6 +54,8 @@ export const LANES: Lane[] = [
 const biddable = (l: DashboardLine) => !l.no_bid && l.recommended_bid != null;
 const due = (l: DashboardLine) => l.days_left ?? 9999;
 const rank = (l: DashboardLine) => l.rank_score ?? 0;
+// Unquoted lines: worth pursuing = profit if sourced x P(sourceable) x P(quote in time) x P(winnable) - effort.
+const triage = (l: DashboardLine) => l.triage_score ?? -Infinity;
 
 /** The lines in a lane, most pressing first. */
 export function laneLines(lines: DashboardLine[], lane: LaneKey): DashboardLine[] {
@@ -65,7 +67,7 @@ export function laneLines(lines: DashboardLine[], lane: LaneKey): DashboardLine[
     case "quote":
       return lines
         .filter((l) => biddable(l) && l.flags.provisional && statusOf(l) === "not_started" && ["high", "medium"].includes(l.flags.confidence ?? ""))
-        .sort((a, b) => rank(b) - rank(a));
+        .sort((a, b) => triage(b) - triage(a) || orderValue(b) - orderValue(a));
     case "review":
       return lines.filter((l) => !l.no_bid && statusOf(l) === "needs_review").sort((a, b) => due(a) - due(b));
     case "new":

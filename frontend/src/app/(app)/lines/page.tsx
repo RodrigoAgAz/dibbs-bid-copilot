@@ -139,7 +139,10 @@ function LineCards({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean }
                   <span className="inline-flex items-center gap-1">
                     {pct(l.p_win)} <ConfidenceDot level={l.flags.confidence} />
                   </span>
-                  <span className={cn("num", (l.expected_profit ?? 0) > 0 && "text-success")}>{money(l.expected_profit, { digits: 0 })}</span>
+                  <span className={cn("num", (l.expected_profit ?? 0) > 0 && (l.flags.provisional ? "text-muted-foreground" : "text-success"))}>
+                    {l.flags.provisional ? "~" : ""}
+                    {money(l.expected_profit, { digits: 0 })}
+                  </span>
                   <QuoteCell line={l} />
                   <FlagBadges flags={l.flags} compact />
                 </div>
@@ -208,8 +211,14 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
             <TD className="num text-right">
               <PWin value={l.p_win} level={l.flags.confidence} />
             </TD>
-            <TD className={cn("num text-right", !noBid && (l.expected_profit ?? 0) > 0 && "text-success font-medium")}>
-              {money(l.expected_profit, { digits: 0 })}
+            <TD className={cn("num text-right", !noBid && (l.expected_profit ?? 0) > 0 && (l.flags.provisional ? "text-muted-foreground" : "text-success font-medium"))}>
+              {l.flags.provisional && l.expected_profit != null ? (
+                <Tip content="Computed against an assumed cost (no supplier quote yet): what you would make if you can source at the target cost. Not used for ranking.">
+                  <span>~{money(l.expected_profit, { digits: 0 })}</span>
+                </Tip>
+              ) : (
+                money(l.expected_profit, { digits: 0 })
+              )}
             </TD>
             <TD>
               <QuoteCell line={l} />

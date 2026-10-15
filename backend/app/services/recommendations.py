@@ -15,13 +15,18 @@ from app.models import (
     PricePrediction,
     QuoteRequest,
     Recommendation,
+    RecommendationSnapshot,
     Solicitation,
     SolicitationLine,
     SupplierQuote,
 )
 from app.services.biddable import not_awarded
-from app.services.landed_cost import LandedCost, compute_landed_cost
+from app.services.competitors import fsc_competitors
+from app.services.cost_model import RefreshContext, build_refresh_context, catalog_prices_for
+from app.services.evaluation import evaluate_line
+from app.services.landed_cost import LandedCost, compute_landed_cost, price_per_issue_unit
 from app.services.pricing import distribution_of, fsc_median_index, latest_prediction, predict_line
+from app.services.sensitivity import sensitivity
 from dibbs_ml.bidding import recommend_bid
 
 log = logging.getLogger(__name__)
@@ -101,9 +106,11 @@ def candidate_quotes(db: Session, org_id: int, line_id: int) -> list[SupplierQuo
 
 
 def best_landed_cost(
-    db: Session, org_id: int, s: OrgSettings, line: SolicitationLine, median: float
+    db: Session, org_id: int, s: OrgSettings, line: SolicitationLine, median: float, cost_estimate=None,
 ) -> tuple[LandedCost, bool, int]:
     """Best landed cost among usable quotes. Returns (landed, has_conforming_quote, n_quotes).
+
+    `cost_estimate`: the tenant cost model's estimate, used for the provisional cost when no quote is usable.
 
     Usable: conforming (approved-source-only lines), not expired, and able to deliver in time (lead time within
     the line's required delivery days, when both are known). A quote that can't meet the delivery date would
@@ -115,7 +122,10 @@ def best_landed_cost(
     usable = [
         q for q in usable
         if not (q.quote_valid_until and q.quote_valid_until < today)
-        and not (q.lead_time_days and line.delivery_days and q.lead_time_days > line.delivery_days)
+        and not (q.lead_time_days and line.delivery_days
+                 and q.lead_time_days + int(getattr(s, 'handling_days', 0) or 0) > line.delivery_days)
+        # A price quoted per a unit that cannot be converted to the line's unit of issue is not a cost.
+        and price_per_issue_unit(q, line.unit_of_issue)[0] is not None
     ]
     best: LandedCost | None = None
     for q in usable:
@@ -123,7 +133,7 @@ def best_landed_cost(
         if best is None or lc.landed < best.landed:
             best = lc
     if best is None:
-        best = compute_landed_cost(line, line.solicitation, s, None, median)
+        best = compute_landed_cost(line, line.solicitation, s, None, median, cost_estimate=cost_estimate)
     return best, bool(usable), len(quotes)
 
 
@@ -134,16 +144,34 @@ def upsert_recommendation(
     line: SolicitationLine,
     pred: PricePrediction,
     today: date | None = None,
+    ctx: RefreshContext | None = None,
 ) -> Recommendation:
+    from app.services.contestability import contestability
+    from app.services.sourcing import candidate_suppliers
+    from app.services.triage import triage_line
+
     today = today or today_et()
     sol = line.solicitation
     dist = distribution_of(pred)
-    landed, has_conforming, n_quotes = best_landed_cost(db, org_id, s, line, dist.median)
+    q = pred.quantiles
+    if ctx is None:
+        ctx = build_refresh_context(db, org_id, s)
+    # Candidate suppliers serve three purposes here: the manufacturers behind the part (cost model tier), who could
+    # be asked (P(quote in time)), and the drafts the sourcing step may create.
+    candidates = candidate_suppliers(db, org_id, line)
+    oem_cages = {c.cage_code.upper() for c in candidates if c.reason == "approved_source"}
+    approved_parts = [(c.cage_code, pn) for c in candidates if c.reason == "approved_source" for pn in c.part_numbers]
+    catalog = catalog_prices_for(ctx.catalog, approved_parts) if ctx.catalog else []
+    cost_est = ctx.cost_model.estimate(line.nsn, line.fsc, oem_cages, None if q.get("no_reference") else dist.median,
+                                       line.quantity, catalog_prices=catalog)
+    landed, has_conforming, n_quotes = best_landed_cost(db, org_id, s, line, dist.median, cost_estimate=cost_est)
     target_p = s.min_p_win if not landed.provisional else max(s.min_p_win, PROVISIONAL_MIN_P_WIN)
-    rec = recommend_bid(
-        dist,
-        landed.landed,
-        line.quantity,
+    best_quote = db.get(SupplierQuote, landed.quote_id) if landed.quote_id else None
+    # How DLA evaluates this buy (services/evaluation.py): automated buys are filtered by price-reasonableness logic,
+    # so the bid search is capped at the band DLA has actually awarded within; fast awards move the deadline up.
+    fsc_comp = fsc_competitors(db, line.fsc)
+    ev = evaluate_line(line, sol, s, q.get("reference_price"), fsc_comp, best_quote, bool(oem_cages), today)
+    engine_kwargs = dict(
         min_margin_pct=s.min_margin_pct,
         min_expected_profit=s.min_expected_profit,
         max_line_value=s.max_line_value,
@@ -151,14 +179,20 @@ def upsert_recommendation(
         approved_source_only=line.approved_source_only,
         has_conforming_quote=has_conforming,
         return_by_passed=bool(sol.return_by_date and sol.return_by_date < today),
+        max_bid=ev.cap_bid,
+        max_bid_reason=(f"cost too high: the minimum-margin bid is above DLA's automated price band "
+                        f"(${ev.cap_bid:,.2f}, {ev.cap_ratio:.2f}x the previous award)") if ev.cap_bid else None,
+        # Expected fulfilment losses (rejections, expediting, replacements) come off every won line.
+        fulfilment_loss_pct=float(getattr(s, "fulfilment_loss_pct", 0.0) or 0.0),
     )
+    rec = recommend_bid(dist, landed.landed, line.quantity, **engine_kwargs)
+    ev.cap_binding = bool(rec.capped)
     reasons = list(rec.no_bid_reasons)
     sa = (sol.set_aside or "").strip().upper()
     eligible = {e.strip().upper() for e in (s.set_aside_eligibility or [])}
     if sa not in OPEN_SET_ASIDES and sa not in eligible:
         reasons.append(f"set-aside {sa} is not in your eligibility list")
 
-    q = pred.quantiles
     confidence = confidence_tier(q)
     if (landed.provisional and q.get("cold_start")) or q.get("no_reference"):
         # Quote first: the cost is a placeholder derived from the same guess as the price, so cost-based no-bid
@@ -182,6 +216,7 @@ def upsert_recommendation(
     if row is None:
         row = Recommendation(organization_id=org_id, solicitation_line_id=line.id)
         db.add(row)
+    before = _decision_state(row)
     row.price_prediction_id = pred.id
     row.best_quote_id = landed.quote_id
     row.landed_cost_per_unit = round(landed.landed, 4)
@@ -195,6 +230,26 @@ def upsert_recommendation(
     row.aggressive_bid = rec.aggressive_bid if priced else None
     row.no_bid = bool(reasons)
     row.no_bid_reason = "; ".join(reasons) if reasons else None
+    # Expected profit against an assumed cost is not a ranking signal: only lines priced against a real quote get a
+    # rank score. Provisional lines are ordered by order size x confidence, labelled as such, until a quote is in.
+    weight = CONFIDENCE_WEIGHT[confidence]
+    rank_score = round((rec.expected_profit or 0.0) * weight, 2) if priced and not landed.provisional else None
+    provisional_rank = round(float(line.quantity) * dist.median * weight, 2) if priced and landed.provisional else None
+    max_landed_cost = (round(rec.recommended_bid / (1.0 + s.min_margin_pct), 4)
+                       if landed.provisional and priced and rec.recommended_bid else None)
+    # Contestability for every priced line; the triage score only for lines still waiting on a quote.
+    contest = contestability(db, line, org_id) if priced else None
+    # Which plausible change would flip this decision (services/sensitivity.py), for every priced line.
+    sens = sensitivity(dist, landed.landed, landed.effective_unit_price, line.quantity, rec, **engine_kwargs) if priced else None
+    # Competitor view of the recommended bid: P(nobody likely to bid comes in under it). Shown beside the calibrated
+    # model's P(win), never used in its place (only winning prices are observed).
+    comp_view = None
+    if contest is not None and contest.competitors is not None and priced and rec.recommended_bid:
+        comp_view = contest.competitors.p_win(rec.recommended_bid, q.get("reference_price"))
+    triage = None
+    if priced and landed.provisional and not reasons:
+        triage = triage_line(db, ctx, line, sol, landed, cost_est, rec.expected_profit, max_landed_cost, contest, candidates,
+                             deadline=ev.effective_deadline)
     row.explanation = {
         "inputs": {
             "quantity": line.quantity,
@@ -228,16 +283,87 @@ def upsert_recommendation(
         "n_prior_awards": q.get("n_prior_awards"),
         "target_p_win": target_p,
         # Provisional lines: the landed cost a supplier quote must come in under for the minimum margin at this bid.
-        "max_landed_cost": (round(rec.recommended_bid / (1.0 + s.min_margin_pct), 4)
-                            if landed.provisional and priced and rec.recommended_bid else None),
-        "rank_score": round((rec.expected_profit or 0.0) * CONFIDENCE_WEIGHT[confidence], 2) if priced else None,
+        "max_landed_cost": max_landed_cost,
+        # "quote": expected profit is computed against a supplier's price. "assumed_cost": against the tenant cost
+        # model's estimate (or the flat fraction), so it says "if you can source at or under max_landed_cost".
+        "expected_profit_basis": None if not priced else ("assumed_cost" if landed.provisional else "quote"),
+        "rank_score": rank_score,
+        "provisional_rank": provisional_rank,
+        # Is this unquoted line worth sourcing effort? (services/triage.py; None once a quote prices the line.)
+        "triage": triage.to_dict() if triage else None,
+        "triage_score": round(triage.score, 2) if triage else None,
+        "cost_estimate": cost_est.to_dict() if (cost_est is not None and landed.provisional) else None,
+        "contestability": contest.to_dict() if contest else None,
+        "competitors": contest.competitors.to_dict() if (contest and contest.competitors) else None,
+        "competitor_p_win": None if comp_view is None else round(comp_view, 4),
+        # How DLA evaluates this buy and what it did to the bid (services/evaluation.py).
+        "evaluation": ev.to_dict(),
+        "sensitivity": sens.to_dict() if sens else None,
+        "fulfilment_loss_pct": rec.fulfilment_loss_pct,
+        "quote_evidence": (best_quote.evidence or {}) if best_quote is not None else None,
         "model": q.get("model"),
         "contributions": q.get("contributions", []),
         "similar_awards": q.get("similar_awards", []),
         "reference_price": q.get("reference_price"),
         "reference_type": q.get("reference_type"),
     }
+    if _decision_state(row) != before:
+        db.flush()  # the snapshot needs the recommendation id
+        db.add(RecommendationSnapshot(
+            organization_id=org_id, solicitation_line_id=line.id, recommendation_id=row.id, kind="recommendation",
+            engine_version=ENGINE_VERSION, payload=snapshot_payload(row, pred, usable_quote_ids=[landed.quote_id] if landed.quote_id else []),
+        ))
     return row
+
+
+def _decision_state(row: Recommendation) -> tuple:
+    """The values whose change is a new decision and therefore a new snapshot."""
+    return (
+        row.recommended_bid, row.landed_cost_per_unit, row.p_win_at_recommended, row.no_bid, row.no_bid_reason,
+        row.provisional, row.best_quote_id, row.conservative_bid, row.aggressive_bid,
+    )
+
+
+def snapshot_payload(row: Recommendation, pred: PricePrediction | None, usable_quote_ids: list[int] | None = None,
+                     **extra) -> dict:
+    """Everything the broker was shown for the decision, small enough to keep forever (no curve)."""
+    ex = row.explanation or {}
+    q = (pred.quantiles if pred is not None else None) or {}
+    return {
+        "prediction_id": pred.id if pred is not None else row.price_prediction_id,
+        "model": q.get("model"),
+        "quantiles": {"levels": q.get("levels"), "prices": q.get("prices")},
+        "median": q.get("median"),
+        "landed": row.landed_breakdown,
+        "landed_cost_per_unit": row.landed_cost_per_unit,
+        "provisional": row.provisional,
+        "quotes_used": usable_quote_ids or ([row.best_quote_id] if row.best_quote_id else []),
+        "recommended_bid": row.recommended_bid,
+        "conservative_bid": row.conservative_bid,
+        "aggressive_bid": row.aggressive_bid,
+        "p_win": row.p_win_at_recommended,
+        "expected_profit": row.expected_profit,
+        "expected_profit_basis": ex.get("expected_profit_basis"),
+        "no_bid": row.no_bid,
+        "reasons": ex.get("reasons", []),
+        "confidence": ex.get("confidence"),
+        "target_p_win": ex.get("target_p_win"),
+        "max_landed_cost": ex.get("max_landed_cost"),
+        "actual_bid": row.actual_bid,
+        "actual_cost_per_unit": row.actual_cost_per_unit,
+        **extra,
+    }
+
+
+def record_snapshot(db: Session, row: Recommendation, kind: str, **extra) -> RecommendationSnapshot:
+    """Append a snapshot for a broker action (actual bid, actual cost)."""
+    pred = db.get(PricePrediction, row.price_prediction_id) if row.price_prediction_id else None
+    snap = RecommendationSnapshot(
+        organization_id=row.organization_id, solicitation_line_id=row.solicitation_line_id, recommendation_id=row.id,
+        kind=kind, engine_version=ENGINE_VERSION, payload=snapshot_payload(row, pred, **extra),
+    )
+    db.add(snap)
+    return snap
 
 
 def ensure_prediction(db: Session, line: SolicitationLine, fsc_index=None) -> PricePrediction:
@@ -265,6 +391,7 @@ def refresh_org_recommendations(
     if not lines:
         return 0
     fsc_index = fsc_median_index(db, {ln.fsc for ln in lines}, today_et())
+    ctx = build_refresh_context(db, org_id, s)
     n = 0
     for line in lines:
         pred = ensure_prediction(db, line, fsc_index)
@@ -272,7 +399,7 @@ def refresh_org_recommendations(
             from app.services.sourcing import create_draft_requests
 
             create_draft_requests(db, org_id, line, s, only_sendable=not create_quote_drafts)
-        upsert_recommendation(db, org_id, s, line, pred)
+        upsert_recommendation(db, org_id, s, line, pred, ctx=ctx)
         n += 1
     db.flush()
     return n
@@ -281,7 +408,7 @@ def refresh_org_recommendations(
 def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Recommendation:
     s = org_settings(db, org_id)
     pred = ensure_prediction(db, line)
-    rec = upsert_recommendation(db, org_id, s, line, pred)
+    rec = upsert_recommendation(db, org_id, s, line, pred, ctx=build_refresh_context(db, org_id, s))
     db.flush()
     return rec
 
@@ -290,8 +417,17 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
 # (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first,
 # 4 = provisional bids target the likely winning price + confidence tiers, 5 = alternatives bracket the bid,
 # 6 = no cost-based no-bid reasons on quote-first lines, 7 = no price shown without any reference,
-# 8 = sub-dollar precision, recent-spread confidence, late/expired quotes ignored, uninformative ranges hidden.
-ENGINE_VERSION = "8"
+# 8 = sub-dollar precision, recent-spread confidence, late/expired quotes ignored, uninformative ranges hidden,
+# 9 = no rank score from an assumed cost (provisional lines ordered by size x confidence), quote evidence states,
+#     pricing-unit normalization, decision snapshots,
+# 10 = tenant cost model for the provisional cost, triage score (sourceable x quote-in-time x winnable - pursuit
+#      cost) for unquoted lines, contestability,
+# 11 = competitor model: reseller-share contestability, incumbents and supply-class players, competitor view of P(win),
+# 12 = DLA evaluation rules: automated price band caps the bid, handling days in delivery feasibility, fast-award
+#      deadlines, exceptions and evaluation factors shown,
+# 13 = fulfilment losses in expected profit, sensitivity scenarios per line, portfolio limits (capital, awards, hours,
+#      supplier concentration) in services/portfolio.py.
+ENGINE_VERSION = "13"
 
 
 def refresh_all_recommendations(db: Session) -> dict:

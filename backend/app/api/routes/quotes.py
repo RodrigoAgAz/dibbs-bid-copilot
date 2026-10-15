@@ -153,16 +153,27 @@ def simulate_reply(qr_id: int, body: SimulatedReplyIn, ctx: TenantContext = Depe
 @router.post("/quote-requests/{qr_id}/quotes", response_model=SupplierQuoteOut, status_code=201)
 def add_manual_quote(qr_id: int, body: ManualQuoteIn, ctx: TenantContext = Depends(get_tenant)) -> SupplierQuote:
     from app.models import ApprovedSource
-    from app.services.sourcing import norm_pn
+    from app.services.landed_cost import price_per_issue_unit
+    from app.services.llm import QuoteExtraction
+    from app.services.sourcing import norm_pn, quote_evidence
 
     qr = ctx.get(QuoteRequest, qr_id)
     line = _line(ctx, qr.solicitation_line_id)
     conforms = True
+    # A manual entry is the broker's own record: when they leave the part number blank the requested one is taken,
+    # but the quote's evidence says the part number was inferred, not confirmed by the supplier.
+    inferred_pn = not body.quoted_part_number and bool(qr.part_number)
     if line.approved_source_only:
         approved = {norm_pn(a.part_number) for a in ctx.db.execute(select(ApprovedSource).where(ApprovedSource.nsn == line.nsn)).scalars()}
         conforms = norm_pn(body.quoted_part_number or qr.part_number) in approved
+    ext = QuoteExtraction(is_quote=True, extraction_confidence=1.0, **body.model_dump())
+    per_unit, unit_problem, unit_evidence = price_per_issue_unit(ext, line.unit_of_issue)
+    if unit_problem:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Pricing unit: {unit_problem}")
     q = ctx.add(SupplierQuote(quote_request_id=qr.id, source="manual", extraction_confidence=1.0,
-                              conforms_to_part_number=conforms, **body.model_dump()))
+                              conforms_to_part_number=conforms,
+                              evidence=quote_evidence(ext, unit_evidence, part_number_inferred=inferred_pn),
+                              **body.model_dump()))
     qr.status = QuoteRequestStatus.parsed
     ctx.db.flush()
     refresh_line_for_org(ctx.db, ctx.org_id, line)
@@ -170,18 +181,38 @@ def add_manual_quote(qr_id: int, body: ManualQuoteIn, ctx: TenantContext = Depen
     return q
 
 
+# Which edited fields confirm which evidence item (the broker read it off the supplier's reply).
+_EVIDENCE_FOR_FIELD = {
+    "quoted_part_number": "part_number", "price_unit": "unit", "price_basis_qty": "unit",
+    "lead_time_days": "lead_time", "quote_valid_until": "validity", "freight_terms": "freight", "freight_cost": "freight",
+}
+
+
 @router.patch("/supplier-quotes/{quote_id}", response_model=SupplierQuoteOut)
 def edit_quote(quote_id: int, body: QuotePatch, ctx: TenantContext = Depends(get_tenant)) -> SupplierQuote:
+    from app.services.landed_cost import price_per_issue_unit
+
     q = ctx.get(SupplierQuote, quote_id)
     data = body.model_dump(exclude_unset=True)
     mark = data.pop("mark_reviewed", False)
     for k, v in data.items():
         setattr(q, k, v)
+    qr = ctx.get(QuoteRequest, q.quote_request_id)
+    line = _line(ctx, qr.solicitation_line_id)
+    if data:
+        ev = dict(q.evidence or {})
+        for k, v in data.items():
+            if v is not None and k in _EVIDENCE_FOR_FIELD:
+                ev[_EVIDENCE_FOR_FIELD[k]] = "confirmed"
+        q.evidence = ev
     if mark or data:
+        per_unit, unit_problem, _ = price_per_issue_unit(q, line.unit_of_issue)
+        if q.unit_price is not None and unit_problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                f"Pricing unit: {unit_problem}. Set the price basis before approving this quote.")
         q.reviewed_at = datetime.now(UTC)
         q.needs_review = False
-    qr = ctx.get(QuoteRequest, q.quote_request_id)
-    refresh_line_for_org(ctx.db, ctx.org_id, _line(ctx, qr.solicitation_line_id))
+    refresh_line_for_org(ctx.db, ctx.org_id, line)
     ctx.db.commit()
     return q
 

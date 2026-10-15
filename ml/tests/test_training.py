@@ -42,6 +42,12 @@ def test_backtest_and_report(result, tmp_dir):
     bt = result.metrics["backtest"]["policies"]
     assert set(bt) == {"model", "last_minus_2pct", "cost_plus_15pct"}
     assert bt["model"]["losing_wins"] == 0  # the engine never bids below cost
+    # Every policy is held to the same margin and win-probability rules, and charged for effort.
+    assert all(r["losing_wins"] == 0 for r in bt.values())
+    assert all({"net_profit", "net_profit_per_line", "withheld_by_rules"} <= set(r) for r in bt.values())
+    assert bt["last_minus_2pct"]["withheld_by_rules"] >= 0 and bt["model"]["withheld_by_rules"] == 0
+    assert bt["cost_plus_15pct"]["net_profit"] == pytest.approx(
+        bt["cost_plus_15pct"]["total_profit"] - result.metrics["backtest"]["pursuit_cost"] * bt["cost_plus_15pct"]["bids"])
     path = write_model_report(result.metrics, run_id=1, promoted=True, promote_reason="test", out_dir=tmp_dir)
     text = path.read_text(encoding="utf-8")
     for needle in ("pinball", "80% interval coverage", "P(win) calibration", "cost_plus_15pct", "last_minus_2pct"):

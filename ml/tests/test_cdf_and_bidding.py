@@ -131,3 +131,18 @@ def test_sub_dollar_items_are_priced_below_the_cent():
     assert r.recommended_bid is not None and r.recommended_bid != round(r.recommended_bid, 2)
     assert round(r.recommended_bid, 4) == r.recommended_bid
     assert r.recommended_bid >= 0.035 * 1.10 - 1e-9
+
+
+def test_external_bid_ceiling_caps_the_search():
+    d = PriceDistribution.lognormal(math.log(10), 0.3)
+    free = recommend_bid(d, 6.0, 100, min_p_win=0.2)
+    capped = recommend_bid(d, 6.0, 100, min_p_win=0.2, max_bid=9.0, max_bid_reason="above DLA's band")
+    assert not capped.no_bid and capped.capped and capped.max_bid == 9.0
+    assert capped.recommended_bid <= 9.0 < free.recommended_bid
+    assert capped.aggressive_bid is None or capped.aggressive_bid <= 9.0
+    # A cap above the search range changes nothing.
+    loose = recommend_bid(d, 6.0, 100, min_p_win=0.2, max_bid=50.0)
+    assert not loose.capped and loose.recommended_bid == free.recommended_bid
+    # Even the minimum-margin bid is above the cap: no bid, with the caller's reason.
+    r = recommend_bid(d, 8.5, 100, min_margin_pct=0.10, max_bid=9.0, max_bid_reason="above DLA's band")
+    assert r.no_bid and r.no_bid_reasons[0] == "above DLA's band"

@@ -72,8 +72,33 @@ class Recommendation(Base, TenantOwned):
     explanation: Mapped[dict] = mapped_column(JSONType, default=dict)
     actual_bid: Mapped[float | None] = mapped_column(Float, nullable=True)
     actual_bid_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    # What the broker actually paid per unit after the award (purchase order + freight etc.). Only this makes a
+    # "realized" margin; the landed cost above is the estimate the bid was priced against.
+    actual_cost_per_unit: Mapped[float | None] = mapped_column(Float, nullable=True)
+    actual_cost_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
+
+
+class RecommendationSnapshot(Base, TenantOwned):
+    """Append-only record of what the broker was shown, taken whenever a recommendation's decision-relevant values
+    change and when the broker records a bid or a cost. Recommendations themselves are upserted in place, so without
+    this nothing could say what the tool recommended before an award posted."""
+
+    __tablename__ = "recommendation_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), index=True)
+    solicitation_line_id: Mapped[int] = mapped_column(
+        ForeignKey("solicitation_lines.id", ondelete="CASCADE"), index=True
+    )
+    recommendation_id: Mapped[int | None] = mapped_column(
+        ForeignKey("recommendations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    kind: Mapped[str] = mapped_column(String(16), default="recommendation")  # recommendation | actual_bid | actual_cost
+    engine_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    payload: Mapped[dict] = mapped_column(JSONType, default=dict)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, index=True)
 
 
 class IngestionRun(Base):

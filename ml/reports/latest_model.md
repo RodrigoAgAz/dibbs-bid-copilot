@@ -64,13 +64,13 @@ Brier score 0.1233, expected calibration error 0.1226 (baseline: Brier 0.1917, E
 
 ## Bidding backtest
 
-Assumption: landed cost = winning price x U(0.6, 0.95); bid wins iff bid < winning price. Model policy uses the recommendation engine with a 5% minimum margin and skips no-bid lines.
+Assumption: landed cost = winning price x U(0.6, 0.95); bid wins iff bid < winning price. Every policy is held to the same rules: no bid below landed cost + 5% and none with less than 5% chance of winning; each bid placed is charged $15 of effort.
 
-| Policy | Bids | Wins | Win rate | Total profit | Profit per bid | Wins below cost |
-|---|---|---|---|---|---|---|
-| model | 68 | 4 | 5.9% | $2,642 | $38.85 | 0 |
-| last_minus_2pct | 68 | 34 | 50.0% | $2,404 | $35.36 | 15 |
-| cost_plus_15pct | 68 | 53 | 77.9% | $5,604 | $82.41 | 0 |
+| Policy | Bids | Withheld by rules | Wins | Win rate | Total profit | Net of effort | Net per line | Wins below cost |
+|---|---|---|---|---|---|---|---|---|
+| model | 68 | 0 | 4 | 5.9% | $2,642 | $1,622 | $23.85 | 0 |
+| last_minus_2pct | 48 | 20 | 14 | 29.2% | $4,241 | $3,521 | $51.78 | 0 |
+| cost_plus_15pct | 68 | 0 | 53 | 77.9% | $5,604 | $4,584 | $67.41 | 0 |
 
 ![Backtest](backtest.png)
 

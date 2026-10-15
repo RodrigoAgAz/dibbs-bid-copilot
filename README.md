@@ -7,11 +7,20 @@ solicitations posted on [DIBBS](https://www.dibbs.bsm.dla.mil/). Every day it:
 2. **Enriches** each line with the NSN's procurement history, approved sources and solicitation flags.
 3. **Predicts** the distribution of the winning unit price, using LightGBM quantile regression with
    conformal calibration trained on historical DIBBS awards.
-4. **Builds a cost floor** by emailing RFQs to the suppliers who can actually supply the part (approved
-   sources first) and parsing their replies with an LLM. An optional AI voice module can call suppliers.
-5. **Recommends a bid** that maximizes `P(win | bid) × (bid − landed cost) × quantity`, plus conservative
-   and aggressive alternatives, or a "no bid" with reasons.
-6. Shows it all in a dashboard where each firm sees only its own watchlist, quotes and recommendations.
+4. **Estimates the broker's cost before anyone has quoted** from the firm's own past quotes and imported price lists
+   (tiers: this NSN, the exact approved part's catalog price, the same manufacturer, the supply class, the firm,
+   then a labelled assumption), and **triages** unquoted lines: profit if sourced × P(a supplier price lands under
+   the target) × P(a candidate answers in time) × P(a broker can win the part at all) − effort. Every factor is shown.
+5. **Builds a cost floor** by emailing RFQs to the suppliers who can actually supply the part (approved
+   sources first) and parsing their replies with an LLM, recording what the supplier confirmed versus what was
+   assumed (part number, pricing unit, lead time, validity, freight). An optional AI voice module can call suppliers.
+6. **Recommends a bid** that maximizes `P(win | bid) × (bid × (1 − fulfilment losses) − landed cost) × quantity`
+   within the band DLA's automated evaluation has actually awarded in that supply class, plus conservative and
+   aggressive alternatives, or a "no bid" with reasons; shows who wins the part (manufacturers vs resellers, how far
+   under the last price), how DLA evaluates the buy, and which plausible change would flip the decision.
+7. Shows it all in a dashboard where each firm sees only its own watchlist, quotes and recommendations, with the
+   whole book set against its working capital, award capacity, sourcing hours and supplier concentration. Every
+   decision is snapshotted, so History judges recommendations on what was shown before the award posted.
 
 > **The app never submits bids.** The broker reviews the recommendation and submits on DIBBS themselves.
 
@@ -138,6 +147,9 @@ judgment call, and [`docs/data_sources.md`](docs/data_sources.md) for the observ
 | `make backfill FSC=5305,5310 START=2023-01-01 END=today` | `python dev.py backfill --fsc 5305,5310 --start 2023-01-01 --end today` | Resumable history backfill |
 | `make train` | `python dev.py train` | Retrain, evaluate, write `ml/reports/latest_model.md`, promote if better |
 | `make fsc-report` | `python dev.py fsc-report` | Write `ml/reports/fsc_volume.md` |
+| | `python -m app.cli import-characteristics <file>` | Load FLIS / PUB LOG item characteristics (see `docs/data_sources.md` §13) |
+| | `python -m app.cli import-catalog <file> --org <id> --supplier <CAGE>` | Load a distributor price list as a cost tier for one organization |
+| | `python ml/research/{cost,competitor,coverage}_lab.py` | Research: cost predictability by tier, contestability, enrichment coverage |
 | `make test` | `python dev.py test` + `python dev.py e2e` | pytest (backend + ML), Vitest, Playwright e2e |
 | `make lint` | `python dev.py lint` | ruff, ESLint, `tsc --noEmit` |
 | `make api-types` | `python dev.py api-types` | Regenerate the typed API client from OpenAPI |

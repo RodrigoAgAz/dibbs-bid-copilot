@@ -50,12 +50,17 @@ const lineValue = (l: DashboardLine): number => (l.predicted_median ?? 0) * l.qu
 
 export function sortLines(lines: DashboardLine[], key: SortKey): DashboardLine[] {
   if (key === "best") {
-    // Expected profit weighted by prediction confidence; unpriced ("quote first") lines last, biggest first.
+    // Lines priced against a real supplier quote first, by expected profit x prediction confidence (rank_score).
+    // Then unquoted lines by how much they are worth pursuing (triage_score: profit if sourced x P(sourceable) x
+    // P(quote in time) x P(winnable) - pursuit cost). Anything left, biggest order first.
+    const tier = (l: DashboardLine) => (l.rank_score != null ? 0 : l.triage_score != null ? 1 : 2);
     return [...lines].sort((a, b) => {
-      const ra = a.rank_score ?? null;
-      const rb = b.rank_score ?? null;
-      if (ra === null || rb === null) return ra === rb ? lineValue(b) - lineValue(a) : ra === null ? 1 : -1;
-      return rb - ra;
+      const ta = tier(a);
+      const tb = tier(b);
+      if (ta !== tb) return ta - tb;
+      if (ta === 0) return (b.rank_score as number) - (a.rank_score as number);
+      if (ta === 1) return (b.triage_score as number) - (a.triage_score as number);
+      return lineValue(b) - lineValue(a);
     });
   }
   const v = (l: DashboardLine): number => {

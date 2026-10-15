@@ -82,6 +82,25 @@ class NsnItem(Base):
     last_seen_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
+class ItemCharacteristic(Base):
+    """One technical characteristic of an NSN from DLA's public FLIS / PUB LOG data (material, thread size, ...).
+
+    Loaded from an exported file (`app/pipelines/characteristics.py`); the live format is documented as UNVERIFIED in
+    docs/data_sources.md. Global public data.
+    """
+
+    __tablename__ = "item_characteristics"
+    __table_args__ = (UniqueConstraint("nsn", "mrc"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nsn: Mapped[str] = mapped_column(String(16), index=True)
+    mrc: Mapped[str] = mapped_column(String(8))  # Master Requirement Code (e.g. MATT material, AAGR thread size)
+    name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    value: Mapped[str] = mapped_column(String(300))
+    source: Mapped[str] = mapped_column(String(32), default="pub_log")
+    loaded_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
 class ApprovedSource(Base):
     __tablename__ = "approved_sources"
     __table_args__ = (UniqueConstraint("nsn", "cage_code", "part_number"),)

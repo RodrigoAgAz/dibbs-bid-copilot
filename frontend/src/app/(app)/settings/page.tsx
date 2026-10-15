@@ -252,7 +252,71 @@ export default function SettingsPage() {
               onChange={(v) => set("provisional_cost_fraction", v / 100)}
               step="1"
               suffix="% of predicted price"
-              hint="Used until a supplier quotes"
+              hint="Starting assumption; your own quotes replace it as they come in"
+            />
+            <NumberField
+              label="Effort per line pursued"
+              value={s.pursuit_cost_per_line}
+              onChange={(v) => set("pursuit_cost_per_line", v)}
+              step="1"
+              suffix="$"
+              hint="Research and quoting cost charged in the triage score"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Portfolio &amp; risk</CardTitle>
+            <CardDescription>Limits for the whole book. Lines beyond them are held back, not dropped, and the home page says why.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <NumberField
+              label="Working capital limit"
+              value={s.working_capital_limit ?? 0}
+              onChange={(v) => set("working_capital_limit", v > 0 ? v : null)}
+              step="1000"
+              suffix="$"
+              hint="Expected cash tied up in won lines (supplier paid before DLA pays); 0 = no limit"
+            />
+            <NumberField
+              label="Awards you can fulfil at once"
+              value={s.max_open_awards ?? 0}
+              onChange={(v) => set("max_open_awards", v > 0 ? Math.round(v) : null)}
+              step="1"
+              hint="Expected concurrent awards; 0 = no limit"
+            />
+            <NumberField
+              label="Sourcing hours per week"
+              value={s.weekly_sourcing_hours ?? 0}
+              onChange={(v) => set("weekly_sourcing_hours", v > 0 ? v : null)}
+              step="1"
+              suffix="h"
+              hint="Time for pursuing unquoted lines; 0 = no limit"
+            />
+            <NumberField
+              label="Hours per line pursued"
+              value={s.pursuit_hours_per_line}
+              onChange={(v) => set("pursuit_hours_per_line", v)}
+              step="0.05"
+              suffix="h"
+              hint="Research, requests and quote entry for one line"
+            />
+            <NumberField
+              label="Max share on one supplier"
+              value={Math.round(s.max_supplier_share * 100)}
+              onChange={(v) => set("max_supplier_share", v / 100)}
+              step="5"
+              suffix="% of expected capital"
+              hint="Flagged when one supplier carries more of the book"
+            />
+            <NumberField
+              label="Fulfilment losses"
+              value={Math.round(s.fulfilment_loss_pct * 1000) / 10}
+              onChange={(v) => set("fulfilment_loss_pct", v / 100)}
+              step="0.5"
+              suffix="% of the bid"
+              hint="Rejections, expediting, replacements; comes off every won line's profit"
             />
           </CardContent>
         </Card>
@@ -270,6 +334,14 @@ export default function SettingsPage() {
             <NumberField label="Origin inspection extra" value={s.origin_inspection_allowance_per_line} onChange={(v) => set("origin_inspection_allowance_per_line", v)} suffix="$" />
             <NumberField label="First article allowance" value={s.first_article_allowance_per_line} onChange={(v) => set("first_article_allowance_per_line", v)} suffix="$ per line" />
             <NumberField label="Payment terms" value={s.payment_terms_days} onChange={(v) => set("payment_terms_days", Math.round(v))} step="1" suffix="days" />
+            <NumberField
+              label="Handling days"
+              value={s.handling_days}
+              onChange={(v) => set("handling_days", Math.round(v))}
+              step="1"
+              suffix="days"
+              hint="Between receiving the part and DLA's required delivery; a quote must fit lead time + handling"
+            />
             <NumberField label="Cost of capital" value={Math.round(s.cost_of_capital_pct * 1000) / 10} onChange={(v) => set("cost_of_capital_pct", v / 100)} step="0.5" suffix="% / year" />
           </CardContent>
         </Card>

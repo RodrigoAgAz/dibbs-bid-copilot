@@ -360,6 +360,26 @@ export interface paths {
         patch: operations["update_supplier_api_suppliers__supplier_id__patch"];
         trace?: never;
     };
+    "/api/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Portfolio
+         * @description The open book against the organization's capital, capacity and concentration limits (services/portfolio.py).
+         */
+        get: operations["portfolio_api_portfolio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard": {
         parameters: {
             query?: never;
@@ -405,6 +425,46 @@ export interface paths {
         put?: never;
         /** Record Actual Bid */
         post: operations["record_actual_bid_api_rfq_lines__line_id__actual_bid_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rfq/lines/{line_id}/actual-cost": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Actual Cost
+         * @description What the broker actually paid per unit after winning: the only basis for a realized margin.
+         */
+        post: operations["record_actual_cost_api_rfq_lines__line_id__actual_cost_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rfq/lines/{line_id}/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Line Snapshots
+         * @description Every decision snapshot for the line, oldest first: what was recommended when, and what the broker recorded.
+         */
+        get: operations["line_snapshots_api_rfq_lines__line_id__snapshots_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -952,6 +1012,11 @@ export interface components {
             /** Actual Bid */
             actual_bid?: number | null;
         };
+        /** ActualCostIn */
+        ActualCostIn: {
+            /** Actual Cost Per Unit */
+            actual_cost_per_unit?: number | null;
+        };
         /** ApprovedSourceOut */
         ApprovedSourceOut: {
             /** Cage Code */
@@ -1097,6 +1162,8 @@ export interface components {
             expected_profit: number | null;
             /** Rank Score */
             rank_score?: number | null;
+            /** Triage Score */
+            triage_score?: number | null;
             /** No Bid */
             no_bid: boolean;
             /** No Bid Reason */
@@ -1299,10 +1366,14 @@ export interface components {
             quantity: number;
             /** Recommended Bid */
             recommended_bid: number | null;
+            /** Snapshot Bid */
+            snapshot_bid?: number | null;
             /** Actual Bid */
             actual_bid: number | null;
             /** Landed Cost */
             landed_cost: number | null;
+            /** Actual Cost */
+            actual_cost?: number | null;
             /** No Bid */
             no_bid: boolean;
             /** Outcome */
@@ -1330,6 +1401,11 @@ export interface components {
             tracked: number;
             /** With Actual Bid */
             with_actual_bid: number;
+            /**
+             * With Actual Cost
+             * @default 0
+             */
+            with_actual_cost: number;
             /** Decided */
             decided: number;
             /** Won */
@@ -1340,6 +1416,8 @@ export interface components {
             win_rate: number | null;
             /** Realized Margin Pct */
             realized_margin_pct: number | null;
+            /** Estimated Margin Pct */
+            estimated_margin_pct?: number | null;
             /** Recommendation Would Have Won */
             recommendation_would_have_won: number;
             /** Recommendation Decided */
@@ -1476,10 +1554,7 @@ export interface components {
         };
         /** LoginIn */
         LoginIn: {
-            /**
-             * Email
-             * Format: email
-             */
+            /** Email */
             email: string;
             /** Password */
             password: string;
@@ -1488,6 +1563,10 @@ export interface components {
         ManualQuoteIn: {
             /** Unit Price */
             unit_price: number;
+            /** Price Unit */
+            price_unit?: string | null;
+            /** Price Basis Qty */
+            price_basis_qty?: number | null;
             /** Quoted Part Number */
             quoted_part_number?: string | null;
             /** Min Order Qty */
@@ -1612,6 +1691,56 @@ export interface components {
             /** Last Finished At */
             last_finished_at: string | null;
         };
+        /**
+         * PortfolioOut
+         * @description The open book against the firm's limits (services/portfolio.py). Line ids name what each limit holds back.
+         */
+        PortfolioOut: {
+            /** Quoted Lines */
+            quoted_lines: number;
+            /** Expected Awards */
+            expected_awards: number;
+            /** Expected Profit */
+            expected_profit: number;
+            /** Capital In Flight */
+            capital_in_flight: number;
+            /** Capital If All Won */
+            capital_if_all_won: number;
+            /** Capital Days */
+            capital_days: number;
+            /** P No Award */
+            p_no_award: number;
+            /** Working Capital Limit */
+            working_capital_limit: number | null;
+            /** Capital Hold */
+            capital_hold: number[];
+            /** Max Open Awards */
+            max_open_awards: number | null;
+            /** Awards Hold */
+            awards_hold: number[];
+            /** Pursue Candidates */
+            pursue_candidates: number;
+            /** Pursuit Hours Needed */
+            pursuit_hours_needed: number;
+            /** Weekly Sourcing Hours */
+            weekly_sourcing_hours: number | null;
+            /** Pursue Now */
+            pursue_now: number[];
+            /** Deferred Capacity */
+            deferred_capacity: number[];
+            /** Pursuit Cost Committed */
+            pursuit_cost_committed: number;
+            /** Supplier Shares */
+            supplier_shares: {
+                [key: string]: unknown;
+            }[];
+            /** Max Supplier Share */
+            max_supplier_share: number;
+            /** Concentrated Supplier */
+            concentrated_supplier: string | null;
+            /** Notes */
+            notes: string[];
+        };
         /** PredictionOut */
         PredictionOut: {
             /** Levels */
@@ -1662,6 +1791,10 @@ export interface components {
         QuotePatch: {
             /** Unit Price */
             unit_price?: number | null;
+            /** Price Unit */
+            price_unit?: string | null;
+            /** Price Basis Qty */
+            price_basis_qty?: number | null;
             /** Quoted Part Number */
             quoted_part_number?: string | null;
             /** Min Order Qty */
@@ -1815,6 +1948,10 @@ export interface components {
             actual_bid: number | null;
             /** Actual Bid At */
             actual_bid_at: string | null;
+            /** Actual Cost Per Unit */
+            actual_cost_per_unit?: number | null;
+            /** Actual Cost At */
+            actual_cost_at?: string | null;
             /**
              * Updated At
              * Format: date-time
@@ -1887,6 +2024,22 @@ export interface components {
             min_expected_profit?: number | null;
             /** Min P Win */
             min_p_win?: number | null;
+            /** Pursuit Cost Per Line */
+            pursuit_cost_per_line?: number | null;
+            /** Handling Days */
+            handling_days?: number | null;
+            /** Working Capital Limit */
+            working_capital_limit?: number | null;
+            /** Max Open Awards */
+            max_open_awards?: number | null;
+            /** Weekly Sourcing Hours */
+            weekly_sourcing_hours?: number | null;
+            /** Pursuit Hours Per Line */
+            pursuit_hours_per_line?: number | null;
+            /** Max Supplier Share */
+            max_supplier_share?: number | null;
+            /** Fulfilment Loss Pct */
+            fulfilment_loss_pct?: number | null;
             /** Auto Send Rfq */
             auto_send_rfq?: boolean | null;
             /** Voice Enabled */
@@ -1928,6 +2081,22 @@ export interface components {
             min_expected_profit: number;
             /** Min P Win */
             min_p_win: number;
+            /** Pursuit Cost Per Line */
+            pursuit_cost_per_line: number;
+            /** Handling Days */
+            handling_days: number;
+            /** Working Capital Limit */
+            working_capital_limit: number | null;
+            /** Max Open Awards */
+            max_open_awards: number | null;
+            /** Weekly Sourcing Hours */
+            weekly_sourcing_hours: number | null;
+            /** Pursuit Hours Per Line */
+            pursuit_hours_per_line: number;
+            /** Max Supplier Share */
+            max_supplier_share: number;
+            /** Fulfilment Loss Pct */
+            fulfilment_loss_pct: number;
             /** Auto Send Rfq */
             auto_send_rfq: boolean;
             /** Voice Enabled */
@@ -1967,6 +2136,27 @@ export interface components {
         SimulatedReplyIn: {
             /** Text */
             text: string;
+        };
+        /**
+         * SnapshotOut
+         * @description One decision snapshot: what the tool showed (or the broker recorded) at that moment.
+         */
+        SnapshotOut: {
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Engine Version */
+            engine_version: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
         };
         /** SolicitationDetail */
         SolicitationDetail: {
@@ -2113,6 +2303,14 @@ export interface components {
             unit_price: number | null;
             /** Currency */
             currency: string;
+            /** Price Unit */
+            price_unit?: string | null;
+            /** Price Basis Qty */
+            price_basis_qty?: number | null;
+            /** Evidence */
+            evidence?: {
+                [key: string]: string;
+            } | null;
             /** Quoted Part Number */
             quoted_part_number: string | null;
             /** Min Order Qty */
@@ -2913,6 +3111,26 @@ export interface operations {
             };
         };
     };
+    portfolio_api_portfolio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioOut"];
+                };
+            };
+        };
+    };
     dashboard_api_dashboard_get: {
         parameters: {
             query?: {
@@ -2997,6 +3215,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecommendationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_actual_cost_api_rfq_lines__line_id__actual_cost_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualCostIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    line_snapshots_api_rfq_lines__line_id__snapshots_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"][];
                 };
             };
             /** @description Validation Error */

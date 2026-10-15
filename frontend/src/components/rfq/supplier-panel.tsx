@@ -46,13 +46,64 @@ function useInvalidate(sn: string) {
   };
 }
 
+const EVIDENCE_LABEL: Record<string, string> = {
+  part_number: "part number",
+  unit: "pricing unit",
+  lead_time: "lead time",
+  validity: "validity",
+  freight: "freight",
+};
+
+/** What the supplier actually confirmed. "inferred" = the tool filled it in; "unknown" = nobody said. */
+function Evidence({ evidence }: { evidence: Record<string, string> | null | undefined }) {
+  if (!evidence) return null;
+  const inferred = Object.entries(evidence).filter(([, v]) => v === "inferred").map(([k]) => EVIDENCE_LABEL[k] ?? k);
+  const unknown = Object.entries(evidence).filter(([, v]) => v === "unknown").map(([k]) => EVIDENCE_LABEL[k] ?? k);
+  if (!inferred.length && !unknown.length) {
+    return (
+      <Tip content="The supplier stated the part number, pricing unit, lead time, validity and freight">
+        <span>
+          <Badge variant="success">All confirmed</Badge>
+        </span>
+      </Tip>
+    );
+  }
+  return (
+    <span className="inline-flex flex-wrap gap-1" data-testid="quote-evidence">
+      {inferred.length > 0 && (
+        <Tip content={`Assumed by the tool, not stated by the supplier: ${inferred.join(", ")}`}>
+          <span>
+            <Badge variant="warning">Assumed: {inferred.join(", ")}</Badge>
+          </span>
+        </Tip>
+      )}
+      {unknown.length > 0 && (
+        <Tip content={`The supplier did not say: ${unknown.join(", ")}`}>
+          <span>
+            <Badge variant="outline">Not stated: {unknown.join(", ")}</Badge>
+          </span>
+        </Tip>
+      )}
+    </span>
+  );
+}
+
+function priceBasisText(q: Quote): string | null {
+  if (q.price_basis_qty != null && q.price_basis_qty !== 1) return `per ${num(q.price_basis_qty)}${q.price_unit ? ` (${q.price_unit})` : ""}`;
+  if (q.price_unit) return `per ${q.price_unit}`;
+  return null;
+}
+
 function QuoteRow({ q, sn }: { q: Quote; sn: string }) {
   const invalidate = useInvalidate(sn);
   const [edit, setEdit] = useState(false);
   const [price, setPrice] = useState(String(q.unit_price ?? ""));
+  const [basis, setBasis] = useState(String(q.price_basis_qty ?? ""));
+  const [unit, setUnit] = useState(q.price_unit ?? "");
   const [lead, setLead] = useState(String(q.lead_time_days ?? ""));
   const [moq, setMoq] = useState(String(q.min_order_qty ?? ""));
   const [raw, setRaw] = useState(false);
+  const basisText = priceBasisText(q);
   const save = useMutation({
     mutationFn: async (body: Schemas["QuotePatch"]) =>
       unwrap(await api.PATCH("/api/supplier-quotes/{quote_id}", { params: { path: { quote_id: q.id } }, body })),
@@ -67,7 +118,10 @@ function QuoteRow({ q, sn }: { q: Quote; sn: string }) {
         {q.declined ? (
           <Badge variant="outline">Declined</Badge>
         ) : (
-          <span className="num text-sm font-semibold">{money(q.unit_price)}</span>
+          <span className="num text-sm font-semibold">
+            {money(q.unit_price)}
+            {basisText && <span className="ml-1 text-[11px] font-normal text-muted-foreground">{basisText}</span>}
+          </span>
         )}
         <span>Lead {q.lead_time_days != null ? `${q.lead_time_days} d` : "—"}</span>
         <span>MOQ {q.min_order_qty != null ? num(q.min_order_qty) : "—"}</span>
@@ -85,6 +139,7 @@ function QuoteRow({ q, sn }: { q: Quote; sn: string }) {
             <Tip content="How sure the parser is about the fields it read from the reply">
               <span className="text-muted-foreground">read with {pct(q.extraction_confidence)} confidence</span>
             </Tip>
+            <Evidence evidence={q.evidence} />
           </>
         )}
         <span className="text-muted-foreground">via {q.source}</span>
@@ -119,6 +174,8 @@ function QuoteRow({ q, sn }: { q: Quote; sn: string }) {
             e.preventDefault();
             save.mutate({
               unit_price: price ? Number(price) : undefined,
+              price_basis_qty: basis ? Number(basis) : undefined,
+              price_unit: unit ? unit.toUpperCase() : undefined,
               lead_time_days: lead ? Number(lead) : null,
               min_order_qty: moq ? Number(moq) : null,
               mark_reviewed: true,
@@ -126,8 +183,16 @@ function QuoteRow({ q, sn }: { q: Quote; sn: string }) {
           }}
         >
           <div className="grid gap-1">
-            <Label htmlFor={`p-${q.id}`}>Unit price</Label>
+            <Label htmlFor={`p-${q.id}`}>Price</Label>
             <Input id={`p-${q.id}`} className="h-7 w-24 text-xs" type="number" step="0.0001" min="0" value={price} onChange={(e) => setPrice(e.target.value)} />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor={`pb-${q.id}`}>Covers (units of issue)</Label>
+            <Input id={`pb-${q.id}`} className="h-7 w-24 text-xs" type="number" step="any" min="0" placeholder="1" value={basis} onChange={(e) => setBasis(e.target.value)} />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor={`pu-${q.id}`}>Supplier&apos;s unit</Label>
+            <Input id={`pu-${q.id}`} className="h-7 w-16 text-xs uppercase" maxLength={8} placeholder="EA" value={unit} onChange={(e) => setUnit(e.target.value)} />
           </div>
           <div className="grid gap-1">
             <Label htmlFor={`l-${q.id}`}>Lead days</Label>

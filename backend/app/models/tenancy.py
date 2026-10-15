@@ -77,6 +77,19 @@ class OrgSettings(Base, TenantOwned):
     min_expected_profit: Mapped[float] = mapped_column(Float, default=25.0)
     # Never recommend a bid with a lower chance of winning (keeps the optimizer out of the unreliable tail).
     min_p_win: Mapped[float] = mapped_column(Float, default=0.2, server_default="0.2")
+    # Broker effort to pursue one line (research, quote requests, entering quotes), charged in the triage score.
+    pursuit_cost_per_line: Mapped[float] = mapped_column(Float, default=15.0, server_default="15")
+    # Days the broker needs between receiving the part and DLA's required delivery (inspection, repack, ship).
+    handling_days: Mapped[int] = mapped_column(Integer, default=3, server_default="3")
+    # Portfolio and risk (services/portfolio.py). None = no limit.
+    working_capital_limit: Mapped[float | None] = mapped_column(Float, nullable=True)  # $ in flight across won lines
+    max_open_awards: Mapped[int | None] = mapped_column(Integer, nullable=True)  # expected awards the firm can fulfil
+    weekly_sourcing_hours: Mapped[float | None] = mapped_column(Float, nullable=True)  # hours a week for pursuing lines
+    pursuit_hours_per_line: Mapped[float] = mapped_column(Float, default=0.33, server_default="0.33")
+    max_supplier_share: Mapped[float] = mapped_column(Float, default=0.5, server_default="0.5")  # of expected capital
+    # Expected fulfilment losses (rejections, expediting, replacements) as a fraction of the order value, charged in
+    # the bid's expected profit.
+    fulfilment_loss_pct: Mapped[float] = mapped_column(Float, default=0.02, server_default="0.02")
     # Sourcing / channels
     auto_send_rfq: Mapped[bool] = mapped_column(Boolean, default=False)
     voice_enabled: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -117,6 +117,14 @@ class SettingsOut(BaseModel):
     provisional_cost_fraction: float
     min_expected_profit: float
     min_p_win: float
+    pursuit_cost_per_line: float
+    handling_days: int
+    working_capital_limit: float | None
+    max_open_awards: int | None
+    weekly_sourcing_hours: float | None
+    pursuit_hours_per_line: float
+    max_supplier_share: float
+    fulfilment_loss_pct: float
     auto_send_rfq: bool
     voice_enabled: bool
     email_sender_name: str | None
@@ -143,6 +151,14 @@ class SettingsIn(BaseModel):
     provisional_cost_fraction: float | None = Field(default=None, gt=0, le=2)
     min_expected_profit: float | None = Field(default=None, ge=0)
     min_p_win: float | None = Field(default=None, ge=0.05, le=0.9)
+    pursuit_cost_per_line: float | None = Field(default=None, ge=0, le=10000)
+    handling_days: int | None = Field(default=None, ge=0, le=120)
+    working_capital_limit: float | None = Field(default=None, ge=0)
+    max_open_awards: int | None = Field(default=None, ge=0, le=100000)
+    weekly_sourcing_hours: float | None = Field(default=None, ge=0, le=1000)
+    pursuit_hours_per_line: float | None = Field(default=None, gt=0, le=40)
+    max_supplier_share: float | None = Field(default=None, gt=0, le=1)
+    fulfilment_loss_pct: float | None = Field(default=None, ge=0, le=0.5)
     auto_send_rfq: bool | None = None
     voice_enabled: bool | None = None
     email_sender_name: str | None = Field(default=None, max_length=200)
@@ -182,7 +198,8 @@ def update_org_settings(body: SettingsIn, ctx: TenantContext = Depends(get_tenan
     if data.get("voice_enabled") and not get_settings().voice_enabled:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Voice calling is not enabled on this server")
     for k, v in data.items():
-        if v is not None or k in ("email_sender_name", "email_signature"):
+        if v is not None or k in ("email_sender_name", "email_signature", "working_capital_limit", "max_open_awards",
+                                  "weekly_sourcing_hours"):
             setattr(row, k, v)
     ctx.db.commit()
     # Settings change landed costs and margins: refresh this org's recommendations (urgent lines now).

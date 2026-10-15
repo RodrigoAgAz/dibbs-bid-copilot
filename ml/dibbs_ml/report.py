@@ -189,16 +189,19 @@ def write_model_report(metrics: dict, run_id, promoted: bool, promote_reason: st
         "",
         "## Bidding backtest",
         "",
-        f"Assumption: {metrics['backtest']['assumption']}. Model policy uses the recommendation engine "
-        f"with a {100 * metrics['backtest']['min_margin_pct']:.0f}% minimum margin and skips no-bid lines.",
+        f"Assumption: {metrics['backtest']['assumption']}. Every policy is held to the same rules: no bid below "
+        f"landed cost + {100 * metrics['backtest']['min_margin_pct']:.0f}% and none with less than "
+        f"{100 * metrics['backtest'].get('min_p_win', 0.05):.0f}% chance of winning; each bid placed is charged "
+        f"${metrics['backtest'].get('pursuit_cost', 0):,.0f} of effort.",
         "",
-        "| Policy | Bids | Wins | Win rate | Total profit | Profit per bid | Wins below cost |",
-        "|---|---|---|---|---|---|---|",
+        "| Policy | Bids | Withheld by rules | Wins | Win rate | Total profit | Net of effort | Net per line | Wins below cost |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for name, r in metrics["backtest"]["policies"].items():
         lines.append(
-            f"| {name} | {r['bids']:,} | {r['wins']:,} | {_fmt(r['win_rate'], pct=True)} | "
-            f"{_fmt(r['total_profit'], money=True)} | ${r['profit_per_bid']:,.2f} | {r['losing_wins']:,} |"
+            f"| {name} | {r['bids']:,} | {r.get('withheld_by_rules', 0):,} | {r['wins']:,} | {_fmt(r['win_rate'], pct=True)} | "
+            f"{_fmt(r['total_profit'], money=True)} | {_fmt(r.get('net_profit', r['total_profit']), money=True)} | "
+            f"${r.get('net_profit_per_line', 0):,.2f} | {r['losing_wins']:,} |"
         )
     lines += [
         "",

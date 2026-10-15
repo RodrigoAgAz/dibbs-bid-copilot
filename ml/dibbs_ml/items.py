@@ -68,6 +68,17 @@ class Item:
     unit: str
     cages: frozenset[str]
     families: frozenset[str]
+    # Technical characteristics from FLIS / PUB LOG as (MRC, normalized value) pairs, when loaded.
+    chars: frozenset[tuple[str, str]] = frozenset()
+
+
+# Two parts with the same name that agree on this many characteristics (material, thread, dimensions, ...) are
+# comparable; one shared characteristic (e.g. "steel") is not.
+MIN_CHAR_MATCH = 2
+
+
+def norm_char_value(v: str | None) -> str:
+    return re.sub(r"\s+", " ", (v or "").upper().strip())
 
 
 @dataclass
@@ -79,13 +90,23 @@ class ItemIndex:
     by_fsc: dict[str, list[str]] = field(default_factory=dict)
     by_cage: dict[str, list[str]] = field(default_factory=dict)
     by_family: dict[str, list[str]] = field(default_factory=dict)
+    # (fsc, mrc, value) -> NSNs with that characteristic, for characteristic-based candidates.
+    by_char: dict[tuple[str, str, str], list[str]] = field(default_factory=dict)
     _cache: dict[str, list[tuple[str, float, str]]] = field(default_factory=dict)
 
     @classmethod
-    def from_frames(cls, lines: pd.DataFrame, sources: pd.DataFrame | None = None) -> ItemIndex:
+    def from_frames(cls, lines: pd.DataFrame, sources: pd.DataFrame | None = None,
+                    characteristics: pd.DataFrame | None = None) -> ItemIndex:
         """lines: nsn, nomenclature, unit_of_issue (any number of rows per NSN; the last non-empty wins).
-        sources: nsn, cage_code, part_number (approved sources)."""
+        sources: nsn, cage_code, part_number (approved sources).
+        characteristics: nsn, mrc, value (FLIS / PUB LOG item characteristics), optional."""
         idx = cls()
+        chars: dict[str, set[tuple[str, str]]] = defaultdict(set)
+        if characteristics is not None and len(characteristics):
+            for r in characteristics.itertuples(index=False):
+                v = norm_char_value(getattr(r, "value", None))
+                if r.mrc and v:
+                    chars[r.nsn].add((str(r.mrc).upper(), v))
         meta: dict[str, dict] = {}
         for r in lines.itertuples(index=False):
             m = meta.setdefault(r.nsn, {"nom": None, "unit": None})
@@ -107,7 +128,7 @@ class ItemIndex:
                 continue
             it = Item(nsn=nsn, fsc=nsn[:4], noun=noun(m["nom"]), mods=frozenset(modifier_tokens(m["nom"])),
                       unit=(m["unit"] or "").upper(), cages=frozenset(cages.get(nsn, ())),
-                      families=frozenset(fams.get(nsn, ())))
+                      families=frozenset(fams.get(nsn, ())), chars=frozenset(chars.get(nsn, ())))
             idx.items[nsn] = it
             idx.by_group.setdefault((it.fsc, it.noun), []).append(nsn)
             idx.by_fsc.setdefault(it.fsc, []).append(nsn)
@@ -115,6 +136,8 @@ class ItemIndex:
                 idx.by_cage.setdefault(f"{it.fsc}:{c}", []).append(nsn)
             for f in it.families:
                 idx.by_family.setdefault(f, []).append(nsn)
+            for mrc, v in it.chars:
+                idx.by_char.setdefault((it.fsc, mrc, v), []).append(nsn)
         return idx
 
     def __len__(self) -> int:
@@ -140,12 +163,19 @@ class ItemIndex:
         if a.families & b.families:
             s += 0.2
             why = "same part-number family"
+        shared = len(a.chars & b.chars)
+        if shared >= MIN_CHAR_MATCH and a.noun == b.noun:
+            # Same kind of part agreeing on material, thread, dimensions...: comparable even across manufacturers.
+            s += 0.3 * min(shared / max(len(a.chars | b.chars), 1), 1.0) + 0.1
+            if why not in ("same part-number family",):
+                why = "matching characteristics"
         return min(s, 1.0), why
 
     def neighbors(self, nsn: str, k: int = NEIGHBORS) -> list[tuple[str, float, str]]:
         """Most similar other NSNs: (nsn, score, reason). Candidates: same-FSC items in the same part-number
-        family, the only kind of similarity with measured price signal (see SIM_FEATURES); name or
-        manufacturer matches alone would mean thousands of noisy candidates for names like GASKET."""
+        family (the kind of similarity with measured price signal, see SIM_FEATURES) and, when FLIS characteristics
+        are loaded, same-name items agreeing on at least MIN_CHAR_MATCH characteristics; name or manufacturer matches
+        alone would mean thousands of noisy candidates for names like GASKET."""
         if nsn in self._cache:
             return self._cache[nsn]
         a = self.items.get(nsn)
@@ -154,6 +184,12 @@ class ItemIndex:
         cands: set[str] = set()
         for f in a.families:
             cands.update(o for o in self.by_family.get(f, ()) if o[:4] == a.fsc)
+        if a.chars:
+            hits: dict[str, int] = defaultdict(int)
+            for mrc, v in a.chars:
+                for o in self.by_char.get((a.fsc, mrc, v), ()):
+                    hits[o] += 1
+            cands.update(o for o, n in hits.items() if n >= MIN_CHAR_MATCH and self.items[o].noun == a.noun)
         cands.discard(nsn)
         scored = []
         for other in cands:
@@ -207,7 +243,9 @@ def similar_item_features(
         o_item = items.items.get(other) if items is not None else None
         fam = why == "same part-number family" or (
             me is not None and o_item is not None and bool(me.families & o_item.families))
-        if not fam:
+        # Characteristic matches (FLIS data) count as evidence too, at their (lower) similarity weight; their price
+        # signal is to be measured once PUB LOG data is loaded (research/README.md).
+        if not fam and why != "matching characteristics":
             continue
         p = h.before(as_of)
         if not len(p):
@@ -219,7 +257,7 @@ def similar_item_features(
         logs.append(math.log(max(adj, 1e-12)))
         weights.append(s)
         if len(evidence) < 8:
-            evidence.append({"nsn": other, "score": round(s, 2), "reason": "same part-number family",
+            evidence.append({"nsn": other, "score": round(s, 2), "reason": "same part-number family" if fam else why,
                              "award_date": str(d), "unit_price": round(float(p.prices[-1]), 4), "quantity": qi,
                              "adjusted_price": round(adj, 4)})
     feats = {k: float("nan") for k in SIM_FEATURES}

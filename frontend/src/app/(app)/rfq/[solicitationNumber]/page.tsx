@@ -16,7 +16,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
 import { useMe } from "@/lib/hooks";
 import { competitors, priceStory, type Award } from "@/lib/insights";
-import { REFERENCE_LABELS, countdown, formatDate, formatNsn, formatSolicitation, isDemoSolicitation, modelLabel, money, num, pct, plural } from "@/lib/format";
+import { REFERENCE_LABELS, countdown, formatDate, formatDateTime, formatNsn, formatSolicitation, isDemoSolicitation, modelLabel, money, num, pct, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Sol = Schemas["SolicitationDetail"];
@@ -113,6 +113,21 @@ function CopyBid({ value }: { value: number | null | undefined }) {
   );
 }
 
+const EVIDENCE_WORD: Record<string, string> = { part_number: "part number", unit: "pricing unit", lead_time: "lead time", validity: "validity", freight: "freight" };
+
+/** Under the landed cost: which facts of the quote it rests on were assumed or never stated. */
+function QuoteEvidenceNote({ evidence }: { evidence: Record<string, string> }) {
+  const weak = Object.entries(evidence)
+    .filter(([, v]) => v !== "confirmed")
+    .map(([k, v]) => `${EVIDENCE_WORD[k] ?? k} ${v === "inferred" ? "assumed" : "not stated"}`);
+  if (!weak.length) return <div className="text-[11px] text-success">supplier confirmed every term</div>;
+  return (
+    <div className="text-[11px] text-warning" data-testid="quote-evidence-note">
+      {weak.join(" · ")}
+    </div>
+  );
+}
+
 function ActualBid({ line, sn }: { line: Line; sn: string }) {
   const qc = useQueryClient();
   const [v, setV] = useState(line.recommendation?.actual_bid != null ? String(line.recommendation.actual_bid) : "");
@@ -144,6 +159,306 @@ function ActualBid({ line, sn }: { line: Line; sn: string }) {
       {save.error ? <span className="text-xs text-destructive">{errorMessage(save.error)}</span> : null}
     </form>
     </WriteGuard>
+  );
+}
+
+function ActualCost({ line, sn }: { line: Line; sn: string }) {
+  const qc = useQueryClient();
+  const current = line.recommendation?.actual_cost_per_unit;
+  const [v, setV] = useState(current != null ? String(current) : "");
+  useEffect(() => setV(current != null ? String(current) : ""), [current]);
+  const save = useMutation({
+    mutationFn: async () =>
+      unwrap(await api.POST("/api/rfq/lines/{line_id}/actual-cost", { params: { path: { line_id: line.id } }, body: { actual_cost_per_unit: v ? Number(v) : null } })),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["rfq", sn] });
+      qc.invalidateQueries({ queryKey: ["history"] });
+    },
+  });
+  return (
+    <WriteGuard>
+      <form
+        className="flex items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+      >
+        <div className="grid gap-1">
+          <Label htmlFor={`ac-${line.id}`}>What I actually paid (per unit, landed)</Label>
+          <Input id={`ac-${line.id}`} className="h-8 w-32 text-xs" type="number" step="0.0001" min="0" value={v} onChange={(e) => setV(e.target.value)} />
+        </div>
+        <Button size="sm" variant="outline" type="submit" disabled={save.isPending}>
+          {save.isSuccess ? <Check /> : null} Save
+        </Button>
+        {save.error ? <span className="text-xs text-destructive">{errorMessage(save.error)}</span> : null}
+      </form>
+    </WriteGuard>
+  );
+}
+
+type CostEstimate = { median: number; q10: number; q90: number; tier: string; n: number; basis: string; ratio?: number | null };
+type CompetitorProfile = {
+  cage: string;
+  name: string | null;
+  wins: number;
+  nsns: number;
+  last_win: string | null;
+  is_manufacturer: boolean;
+  share: number;
+  median_ratio: number | null;
+  ratio_sigma: number | null;
+  n_ratio: number;
+};
+type CompetitorsInfo = {
+  fsc: string;
+  n_awards: number;
+  incumbents: CompetitorProfile[];
+  fsc_players: CompetitorProfile[];
+  reseller_share_nsn: number | null;
+  reseller_share_fsc: number;
+  p_winnable: number;
+  reason: string;
+};
+
+/** "−5%" when a competitor typically wins 5% under the inflation-adjusted previous award, "+3%" above it. */
+function undercut(ratio: number): string {
+  const d = Math.round((ratio - 1) * 100);
+  return d === 0 ? "±0%" : d < 0 ? `−${-d}%` : `+${d}%`;
+}
+type TriageInfo = {
+  score: number;
+  expected_profit_if_sourced: number;
+  p_sourceable: number;
+  supplier_price_ceiling: number | null;
+  p_quote_in_time: number;
+  candidates: number;
+  candidates_with_email: number;
+  days_left: number | null;
+  p_winnable: number;
+  winnable_reason: string;
+  pursuit_cost: number;
+};
+
+/** Where the assumed supplier price comes from: the tenant's own quotes (by tier) or the starting assumption. */
+function CostEstimateNote({ est }: { est: CostEstimate }) {
+  return (
+    <p className="mt-2 text-[11px] text-muted-foreground" data-testid="cost-estimate">
+      Assumed supplier price <b className="num">{money(est.median)}</b> (likely {money(est.q10)} to {money(est.q90)}), from {est.basis}.
+    </p>
+  );
+}
+
+/** Is this line worth the sourcing effort? Every factor of the score, so the broker can see why it ranks where it does. */
+function TriageBox({ t }: { t: TriageInfo }) {
+  const worth = t.score > 0;
+  return (
+    <div className={cn("mt-2 rounded-md border p-2", worth ? "border-success/40 bg-success/5" : "border-border bg-background")} data-testid="triage">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="font-semibold">{worth ? "Worth pursuing" : "Probably not worth the effort"}</span>
+        <span className="num">
+          Triage score <b>{money(t.score, { digits: 0 })}</b>
+        </span>
+      </div>
+      <ul className="mt-1 grid gap-x-4 gap-y-0.5 text-[11px] sm:grid-cols-2">
+        <li>
+          Profit if sourced at the assumed cost: <b className="num">{money(t.expected_profit_if_sourced, { digits: 0 })}</b>
+        </li>
+        <li>
+          Chance a supplier price lands under {t.supplier_price_ceiling != null ? money(t.supplier_price_ceiling) : "the target"}:{" "}
+          <b className="num">{pct(t.p_sourceable)}</b>
+        </li>
+        <li>
+          Chance one of {plural(t.candidates, "candidate")} ({t.candidates_with_email} with an email) answers in time: <b className="num">{pct(t.p_quote_in_time)}</b>
+        </li>
+        <li>
+          Winnable by a broker: <b className="num">{pct(t.p_winnable)}</b> <span className="text-muted-foreground">({t.winnable_reason})</span>
+        </li>
+        <li>
+          Effort charged: <b className="num">{money(t.pursuit_cost, { digits: 0 })}</b>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+type EvaluationInfo = {
+  mode: string;
+  price_only: boolean;
+  manual_reasons: string[];
+  cap_bid: number | null;
+  cap_ratio: number | null;
+  cap_reference: number | null;
+  cap_n: number;
+  cap_source: string | null;
+  cap_binding: boolean;
+  required_days: number | null;
+  quote_lead_days: number | null;
+  handling_days: number;
+  delivery_feasible: boolean | null;
+  return_by: string | null;
+  effective_deadline: string | null;
+  effective_days_left: number | null;
+  exceptions: string[];
+  factors: { label: string; amount: number }[];
+  notes: string[];
+};
+
+const MODE_LABEL: Record<string, string> = {
+  automated: "Automated evaluation: price alone among qualified quotes",
+  fast_automated: "Fast auto evaluation: price alone, may award before the return date",
+  aidc: "Automated IDC: price alone, a one-year contract",
+  manual: "Manual evaluation by a buyer",
+};
+
+/** How DLA evaluates this buy (Master Solicitation, Part I) and what that did to the bid. */
+function EvaluationBox({ ev }: { ev: EvaluationInfo }) {
+  return (
+    <details className="rounded-md border bg-muted/30 p-2 text-xs" data-testid="evaluation" open={ev.cap_binding || ev.exceptions.length > 0}>
+      <summary className="cursor-pointer font-semibold">
+        How DLA evaluates this: {MODE_LABEL[ev.mode] ?? ev.mode}
+        {ev.cap_binding ? <span className="ml-2 rounded border border-warning/50 px-1.5 py-0.5 text-[11px] text-warning">bid capped</span> : null}
+        {ev.exceptions.length > 0 ? <span className="ml-2 rounded border border-destructive/50 px-1.5 py-0.5 text-[11px] text-destructive">{plural(ev.exceptions.length, "warning")}</span> : null}
+      </summary>
+      <ul className="mt-1.5 space-y-1">
+        {ev.manual_reasons.map((m) => (
+          <li key={m}>{m.charAt(0).toUpperCase() + m.slice(1)}.</li>
+        ))}
+        {ev.cap_bid != null ? (
+          <li>
+            {ev.cap_binding ? "The bid is capped at " : "Price band: bids up to "}
+            <b className="num">{money(ev.cap_bid)}</b>
+            {ev.cap_source ? <span className="text-muted-foreground"> ({ev.cap_source})</span> : null}.
+          </li>
+        ) : ev.price_only ? (
+          <li className="text-muted-foreground">No automated price band yet for this supply class (too few awards on file); the model&apos;s range alone bounds the bid.</li>
+        ) : null}
+        {ev.required_days != null ? (
+          <li>
+            Required delivery {ev.required_days} days after order
+            {ev.quote_lead_days != null ? (
+              <>
+                ; the quote&apos;s lead time is {ev.quote_lead_days} d + {ev.handling_days} d handling:{" "}
+                <b className={ev.delivery_feasible ? "text-success" : "text-warning"}>{ev.delivery_feasible ? "fits" : "does not fit"}</b>
+              </>
+            ) : (
+              <span className="text-muted-foreground">; a supplier quote must fit it with {ev.handling_days} d handling</span>
+            )}
+            .
+          </li>
+        ) : null}
+        {ev.effective_deadline && ev.return_by && ev.effective_deadline !== ev.return_by ? (
+          <li className="text-warning">Sourcing deadline {formatDate(ev.effective_deadline)}, before the return-by date {formatDate(ev.return_by)}.</li>
+        ) : null}
+        {ev.exceptions.map((x) => (
+          <li key={x} className="text-destructive">
+            {x.charAt(0).toUpperCase() + x.slice(1)}.
+          </li>
+        ))}
+        {ev.notes.map((n) => (
+          <li key={n} className="text-muted-foreground">
+            {n.charAt(0).toUpperCase() + n.slice(1)}.
+          </li>
+        ))}
+        {ev.factors.length > 0 ? (
+          <li className="text-muted-foreground">
+            Evaluation factors DLA adds to a quote&apos;s price: {ev.factors.map((f) => `${f.label} (+${money(f.amount, { digits: 0 })})`).join("; ")}.
+          </li>
+        ) : null}
+      </ul>
+    </details>
+  );
+}
+
+type SensitivityInfo = {
+  fragile: boolean;
+  scenarios: { name: string; recommended_bid: number | null; p_win: number | null; expected_profit: number | null; no_bid: boolean; bid_change_pct: number | null; flips: boolean }[];
+};
+
+/** Which plausible change would flip the decision: the same engine re-run on three scenarios. */
+function SensitivityBox({ s, base }: { s: SensitivityInfo; base: number | null | undefined }) {
+  return (
+    <details className={cn("rounded-md border p-2 text-xs", s.fragile ? "border-warning/50 bg-warning/5" : "bg-muted/30")} data-testid="sensitivity" open={s.fragile}>
+      <summary className="cursor-pointer font-semibold">
+        {s.fragile ? "Fragile: a plausible change flips this decision" : "Robust to plausible changes"}
+      </summary>
+      <table className="mt-1.5 w-full text-[11px]">
+        <thead className="text-muted-foreground">
+          <tr>
+            <th className="text-left font-medium">If…</th>
+            <th className="text-right font-medium">Bid</th>
+            <th className="text-right font-medium">P(win)</th>
+            <th className="text-right font-medium">Expected profit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>as recommended</td>
+            <td className="num text-right">{money(base)}</td>
+            <td />
+            <td />
+          </tr>
+          {s.scenarios.map((sc) => (
+            <tr key={sc.name} className={cn(sc.flips && "text-warning")}>
+              <td>{sc.name}</td>
+              <td className="num text-right">
+                {sc.no_bid ? "no bid" : money(sc.recommended_bid)}
+                {sc.bid_change_pct != null && !sc.no_bid ? <span className="ml-1 text-muted-foreground">({sc.bid_change_pct >= 0 ? "+" : "−"}{Math.abs(Math.round(sc.bid_change_pct * 100))}%)</span> : null}
+              </td>
+              <td className="num text-right">{sc.no_bid ? "—" : pct(sc.p_win)}</td>
+              <td className="num text-right">{sc.no_bid ? "—" : money(sc.expected_profit, { digits: 0 })}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
+const SNAPSHOT_KIND: Record<string, string> = { recommendation: "Recommended", actual_bid: "You bid", actual_cost: "You paid" };
+
+/** Append-only record of what the tool showed and what the broker recorded, oldest first. */
+function DecisionHistory({ lineId }: { lineId: number }) {
+  const [open, setOpen] = useState(false);
+  const q = useQuery({
+    queryKey: ["snapshots", lineId],
+    queryFn: async () => unwrap(await api.GET("/api/rfq/lines/{line_id}/snapshots", { params: { path: { line_id: lineId } } })),
+    enabled: open,
+  });
+  return (
+    <details className="text-xs" onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)} data-testid="decision-history">
+      <summary className="cursor-pointer text-muted-foreground">Decision history</summary>
+      {q.isLoading ? (
+        <p className="mt-1 text-muted-foreground">Loading…</p>
+      ) : !q.data?.length ? (
+        <p className="mt-1 text-muted-foreground">No snapshots yet.</p>
+      ) : (
+        <ul className="mt-1 space-y-0.5">
+          {q.data.map((s) => {
+            const p = s.payload as Record<string, unknown>;
+            return (
+              <li key={s.id} className="flex flex-wrap gap-x-3 gap-y-0.5">
+                <span className="w-32 shrink-0 text-muted-foreground">{formatDateTime(s.created_at)}</span>
+                <span className="font-medium">{SNAPSHOT_KIND[s.kind] ?? s.kind}</span>
+                {s.kind === "recommendation" ? (
+                  <span>
+                    {p.no_bid ? "no bid" : `bid ${money(p.recommended_bid as number | null)} · P(win) ${pct(p.p_win as number | null)}`}
+                    {" · landed "}
+                    {money(p.landed_cost_per_unit as number | null)}
+                    {p.provisional ? " (assumed)" : " (quoted)"}
+                  </span>
+                ) : s.kind === "actual_bid" ? (
+                  <span>{money(p.actual_bid as number | null)}</span>
+                ) : (
+                  <span>{money(p.actual_cost_per_unit as number | null)}</span>
+                )}
+                {s.engine_version && <span className="text-muted-foreground">engine v{s.engine_version}</span>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </details>
   );
 }
 
@@ -210,12 +525,25 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             <div className="num text-xl font-semibold">{pct(r.p_win_at_recommended)}</div>
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Expected profit</div>
-            <div className={cn("num text-xl font-semibold", r.no_bid ? "text-muted-foreground" : "text-success")}>{money(r.expected_profit, { digits: 0 })}</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              {ex.expected_profit_basis === "assumed_cost" ? "Profit if sourced" : "Expected profit"}
+            </div>
+            <div
+              className={cn("num text-xl font-semibold", r.no_bid ? "text-muted-foreground" : ex.expected_profit_basis === "assumed_cost" ? "text-foreground" : "text-success")}
+              data-testid="expected-profit"
+            >
+              {money(r.expected_profit, { digits: 0 })}
+            </div>
+            {ex.expected_profit_basis === "assumed_cost" && typeof ex.max_landed_cost === "number" && (
+              <div className="text-[11px] text-muted-foreground">if landed cost ≤ {money(ex.max_landed_cost as number)}</div>
+            )}
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Landed cost</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{r.provisional ? "Assumed cost" : "Landed cost"}</div>
             <div className="num text-xl font-semibold">{money(r.landed_cost_per_unit)}</div>
+            {!r.provisional && ex.quote_evidence && typeof ex.quote_evidence === "object" ? (
+              <QuoteEvidenceNote evidence={ex.quote_evidence as Record<string, string>} />
+            ) : null}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
@@ -275,6 +603,8 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             No supplier quote yet, so this bid is set where it is likely to win ({pct(r.p_win_at_recommended)} chance), not optimized
             against a guessed cost. A supplier quote at or below the target keeps your minimum margin; once quotes are in, the bid is
             optimized against your real cost.
+            {ex.cost_estimate && typeof ex.cost_estimate === "object" ? <CostEstimateNote est={ex.cost_estimate as CostEstimate} /> : null}
+            {ex.triage && typeof ex.triage === "object" ? <TriageBox t={ex.triage as TriageInfo} /> : null}
           </div>
         ) : r.provisional && !r.no_bid && (
           <p className="rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
@@ -283,8 +613,16 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
         )}
         <div className="flex flex-wrap items-end justify-between gap-3 border-t pt-3">
           {r.no_bid ? <span /> : <CopyBid value={r.recommended_bid} />}
-          <ActualBid line={line} sn={sn} />
+          <div className="flex flex-wrap items-end gap-3">
+            <ActualBid line={line} sn={sn} />
+            {(line.outcome as { won?: boolean } | null)?.won && <ActualCost line={line} sn={sn} />}
+          </div>
         </div>
+        {ex.evaluation && typeof ex.evaluation === "object" ? <EvaluationBox ev={ex.evaluation as EvaluationInfo} /> : null}
+        {ex.sensitivity && typeof ex.sensitivity === "object" && !r.no_bid ? (
+          <SensitivityBox s={ex.sensitivity as SensitivityInfo} base={r.recommended_bid} />
+        ) : null}
+        <DecisionHistory lineId={line.id} />
         <p className="text-[11px] text-muted-foreground">
           The Invisible Hand never submits bids. Review the recommendation and submit your quote on DIBBS yourself.
         </p>
@@ -299,7 +637,12 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
     curve?: { bid: number; p_win: number; expected_profit: number }[];
     needs_quote?: boolean;
     no_reference?: boolean;
+    competitors?: CompetitorsInfo | null;
+    contestability?: { p_winnable: number; reason: string } | null;
+    competitor_p_win?: number | null;
   };
+  const profiles = new Map<string, CompetitorProfile>();
+  for (const c of [...(ex.competitors?.incumbents ?? []), ...(ex.competitors?.fsc_players ?? [])]) profiles.set(c.cage, c);
   const p = line.prediction;
   // Without a quote or any price history the curve and the cost waterfall would be drawn from a guess.
   const guessOnly = Boolean(ex.needs_quote || ex.no_reference || !p);
@@ -372,7 +715,14 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
         <Card>
           <CardHeader>
             <CardTitle>Who wins this NSN</CardTitle>
-            <CardDescription>Past awardees, most wins first</CardDescription>
+            <CardDescription>
+              Past awardees, most wins first
+              {ex.contestability ? (
+                <span className="ml-2 rounded border px-1.5 py-0.5 text-[11px]" data-testid="contestability">
+                  winnable by a broker: {pct(ex.contestability.p_winnable)}
+                </span>
+              ) : null}
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -381,30 +731,67 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
                   <TH>Awardee</TH>
                   <TH className="text-right">Wins</TH>
                   <TH className="text-right">Last price</TH>
+                  <TH className="text-right">vs last price</TH>
                   <TH>Last award</TH>
                 </tr>
               </THead>
               <TBody>
-                {competitors(history).map((c) => (
-                  <TR key={c.cage}>
-                    <TD className="max-w-[200px] truncate" title={c.name ?? ""}>
-                      {c.name ?? <span className="text-muted-foreground">Unknown</span>}
-                      <div className="font-mono text-[11px] text-muted-foreground">{c.cage === "unknown" ? "—" : c.cage}</div>
-                    </TD>
-                    <TD className="num text-right">{c.wins}</TD>
-                    <TD className="num text-right">{c.lastPrice == null ? <span className="text-muted-foreground">unverified</span> : money(c.lastPrice)}</TD>
-                    <TD>{formatDate(c.lastDate)}</TD>
-                  </TR>
-                ))}
+                {competitors(history).map((c) => {
+                  const p = profiles.get(c.cage);
+                  return (
+                    <TR key={c.cage}>
+                      <TD className="max-w-[200px] truncate" title={c.name ?? ""}>
+                        {c.name ?? <span className="text-muted-foreground">Unknown</span>}
+                        <div className="font-mono text-[11px] text-muted-foreground">
+                          {c.cage === "unknown" ? "—" : c.cage}
+                          {p ? <span className="ml-1 font-sans">{p.is_manufacturer ? "· manufacturer" : "· reseller"}</span> : null}
+                        </div>
+                      </TD>
+                      <TD className="num text-right">{c.wins}</TD>
+                      <TD className="num text-right">{c.lastPrice == null ? <span className="text-muted-foreground">unverified</span> : money(c.lastPrice)}</TD>
+                      <TD className="num text-right">
+                        {p?.median_ratio != null ? (
+                          <Tip content={`Typically wins at ${pct(p.median_ratio)} of the inflation-adjusted previous award (${plural(p.n_ratio, "award")} in this supply class)`}>
+                            <span>{undercut(p.median_ratio)}</span>
+                          </Tip>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TD>
+                      <TD>{formatDate(c.lastDate)}</TD>
+                    </TR>
+                  );
+                })}
                 {!line.history.length && (
                   <TR>
-                    <TD colSpan={4} className="text-center text-xs text-muted-foreground">
+                    <TD colSpan={5} className="text-center text-xs text-muted-foreground">
                       No past awards for this NSN.
                     </TD>
                   </TR>
                 )}
               </TBody>
             </Table>
+            {ex.competitors ? (
+              <div className="space-y-1 border-t px-3 py-2 text-xs" data-testid="competitors">
+                {ex.contestability ? <p>{ex.contestability.reason.charAt(0).toUpperCase() + ex.contestability.reason.slice(1)}.</p> : null}
+                {ex.competitors.fsc_players.length > 0 && (
+                  <p className="text-muted-foreground">
+                    Also active in FSC {ex.competitors.fsc}:{" "}
+                    {ex.competitors.fsc_players
+                      .slice(0, 5)
+                      .map((p) => `${p.name ?? p.cage} (${plural(p.wins, "win")}${p.median_ratio != null ? `, ${undercut(p.median_ratio)}` : ""})`)
+                      .join(", ")}
+                    .
+                  </p>
+                )}
+                {typeof ex.competitor_p_win === "number" && r?.p_win_at_recommended != null ? (
+                  <p className="text-muted-foreground">
+                    Competitor view of the recommended bid: {pct(ex.competitor_p_win)} chance nobody known comes in under it (model: {pct(r.p_win_at_recommended)}).
+                    Winning prices only, so this view runs low; the model&apos;s figure is the calibrated one.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </div>

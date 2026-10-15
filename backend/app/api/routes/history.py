@@ -11,7 +11,14 @@ from sqlalchemy import select
 from app.api.deps import get_tenant
 from app.core.tenancy import TenantContext
 from app.core.timeutil import today_et
-from app.models import AwardHistory, Organization, Recommendation, Solicitation, SolicitationLine
+from app.models import (
+    AwardHistory,
+    Organization,
+    Recommendation,
+    RecommendationSnapshot,
+    Solicitation,
+    SolicitationLine,
+)
 from app.schemas.rfq import HistoryOut, HistoryRow, HistoryStats
 from app.services.data_quality import MAX_RATIO, RELIABLE_SOURCES
 from app.services.ops import SYNTHETIC_PREFIX, hide_synthetic
@@ -55,9 +62,23 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
         ref = verified_median.get(a.nsn)
         return bool(ref and a.unit_price and 1 / MAX_RATIO <= a.unit_price / ref <= MAX_RATIO)
 
+    # Decision snapshots: the recommendation as it stood before each award posted. Recommendations are upserted in
+    # place, so this is the only record of what the broker was shown at the time.
+    snaps: dict[int, list[RecommendationSnapshot]] = {}
+    awarded_line_ids = [line.id for _, line, sol in rows if (sol.solicitation_number, line.nsn) in awards]
+    for i in range(0, len(awarded_line_ids), 500):
+        for s in ctx.db.execute(
+            select(RecommendationSnapshot)
+            .where(RecommendationSnapshot.solicitation_line_id.in_(awarded_line_ids[i:i + 500]),
+                   RecommendationSnapshot.kind == "recommendation")
+            .order_by(RecommendationSnapshot.created_at, RecommendationSnapshot.id)
+        ).scalars():
+            snaps.setdefault(s.solicitation_line_id, []).append(s)
+
     out: list[HistoryRow] = []
     won = lost = rec_decided = rec_would_win = 0
-    margins: list[float] = []
+    realized: list[float] = []
+    estimated: list[float] = []
     for rec, line, sol in rows:
         a = awards.get((sol.solicitation_number, line.nsn))
         if a is None:
@@ -71,19 +92,35 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
         if rec.actual_bid is not None and outcome in ("won", "lost"):
             if outcome == "won":
                 won += 1
-                if rec.landed_cost_per_unit and rec.actual_bid:
-                    margins.append((rec.actual_bid - rec.landed_cost_per_unit) / rec.actual_bid)
+                if rec.actual_bid:
+                    # Realized margin needs the price actually paid; the landed estimate only gives the margin the
+                    # bid was priced for.
+                    if rec.actual_cost_per_unit is not None:
+                        realized.append((rec.actual_bid - rec.actual_cost_per_unit) / rec.actual_bid)
+                    if rec.landed_cost_per_unit:
+                        estimated.append((rec.actual_bid - rec.landed_cost_per_unit) / rec.actual_bid)
             else:
                 lost += 1
-        # Only recommendations last computed before the award posted count (a fast award can post before the
-        # return-by date, and a recommendation recomputed after it could already know the winning price).
-        before_award = a is not None and rec.updated_at is not None and rec.updated_at < datetime.combine(
-            a.award_date, datetime.min.time(), tzinfo=UTC)
+        # "Recommendation would win" is judged on the last snapshot taken before the award posted (a fast award can
+        # post before the return-by date, and a recommendation recomputed after it could already know the winning
+        # price). Lines from before snapshots existed fall back to the recommendation's last update time.
+        snapshot_bid: float | None = None
+        before_award = False
+        if a is not None:
+            cutoff = datetime.combine(a.award_date, datetime.min.time(), tzinfo=UTC)
+            prior = [s for s in snaps.get(line.id, []) if s.created_at < cutoff]
+            if prior:
+                p = prior[-1].payload or {}
+                before_award = True
+                snapshot_bid = None if p.get("no_bid") else p.get("recommended_bid")
+            elif not snaps.get(line.id) and rec.updated_at is not None and rec.updated_at < cutoff:
+                before_award = True
+                snapshot_bid = None if rec.no_bid else rec.recommended_bid
         verified = a is not None and price_verified(a)
-        counted = bool(a is not None and before_award and verified and rec.recommended_bid is not None and not rec.no_bid)
+        counted = bool(a is not None and before_award and verified and snapshot_bid is not None)
         if counted:
             rec_decided += 1
-            rec_would_win += int(rec.recommended_bid < a.unit_price)
+            rec_would_win += int(snapshot_bid < a.unit_price)
         out.append(
             HistoryRow(
                 line_id=line.id,
@@ -93,8 +130,10 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
                 nomenclature=line.nomenclature,
                 quantity=line.quantity,
                 recommended_bid=rec.recommended_bid,
+                snapshot_bid=snapshot_bid,
                 actual_bid=rec.actual_bid,
                 landed_cost=rec.landed_cost_per_unit,
+                actual_cost=rec.actual_cost_per_unit,
                 no_bid=rec.no_bid,
                 outcome=outcome,
                 winning_price=a.unit_price if a else None,
@@ -109,11 +148,13 @@ def history(ctx: TenantContext = Depends(get_tenant)) -> HistoryOut:
         stats=HistoryStats(
             tracked=len(out),
             with_actual_bid=sum(1 for r in out if r.actual_bid is not None),
+            with_actual_cost=sum(1 for r in out if r.actual_cost is not None),
             decided=decided,
             won=won,
             lost=lost,
             win_rate=(won / decided) if decided else None,
-            realized_margin_pct=(sum(margins) / len(margins)) if margins else None,
+            realized_margin_pct=(sum(realized) / len(realized)) if realized else None,
+            estimated_margin_pct=(sum(estimated) / len(estimated)) if estimated else None,
             recommendation_would_have_won=rec_would_win,
             recommendation_decided=rec_decided,
         ),

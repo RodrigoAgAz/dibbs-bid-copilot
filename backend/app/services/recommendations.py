@@ -146,6 +146,10 @@ def upsert_recommendation(
 
     q = pred.quantiles
     confidence = confidence_tier(q)
+    if landed.provisional and q.get("cold_start"):
+        # Quote first: the cost is a placeholder derived from the same guess as the price, so cost-based no-bid
+        # reasons ("cost too high", "expected profit below ...") would be invented too. Hard rules still apply.
+        reasons = [r for r in reasons if not (r.startswith("cost too high") or "expected profit" in r)]
     # Quote first: with no award history for the NSN and no supplier quote, both the price range (FSC-wide) and
     # the provisional cost (a fraction of that range's median) come from the same guess, so a "best bid" and its
     # expected profit would be invented (live: bids at ~10x the median). Show the range, ask for a quote.
@@ -259,8 +263,9 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
 
 # Bump when the recommendation rules change: the next boot re-computes every open line once
 # (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first,
-# 4 = provisional bids target the likely winning price + confidence tiers, 5 = alternatives bracket the bid.
-ENGINE_VERSION = "5"
+# 4 = provisional bids target the likely winning price + confidence tiers, 5 = alternatives bracket the bid,
+# 6 = no cost-based no-bid reasons on quote-first lines.
+ENGINE_VERSION = "6"
 
 
 def refresh_all_recommendations(db: Session) -> dict:

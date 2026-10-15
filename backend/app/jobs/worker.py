@@ -60,9 +60,10 @@ def _queue_startup_jobs() -> None:
 
         queue_engine_refresh_if_needed()
         enqueue_unique(demo_refresh_job)
-        from app.jobs.tasks import queue_retrain_if_model_code_changed
+        from app.jobs.tasks import queue_research_if_requested, queue_retrain_if_model_code_changed
 
-        queue_retrain_if_model_code_changed()  # cheap when the demo is already topped up
+        queue_retrain_if_model_code_changed()
+        queue_research_if_requested()  # cheap when the demo is already topped up
     except Exception:  # never take the worker down
         log.exception("startup jobs could not be queued")
 

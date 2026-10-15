@@ -166,6 +166,33 @@ def retrain_for_model_code_job() -> dict:
     return retrain_job()
 
 
+@bulk
+def research_job(run_id: str) -> dict:
+    """In-cluster pricing research (results in the worker logs). The marker is set by this new code."""
+    from app.models import IngestCheckpoint
+    from app.services.research import run_research
+
+    with session_scope() as db:
+        if db.query(IngestCheckpoint).filter_by(source="research", key=run_id).one_or_none() is None:
+            db.add(IngestCheckpoint(source="research", key=run_id, status="done", detail="started"))
+    with session_scope() as db:
+        return run_research(db, run_id)
+
+
+def queue_research_if_requested() -> str | None:
+    from app.config import get_settings
+    from app.jobs.queue import enqueue_unique
+    from app.models import IngestCheckpoint
+
+    run_id = get_settings().research_run.strip()
+    if not run_id:
+        return None
+    with session_scope() as db:
+        if db.query(IngestCheckpoint).filter_by(source="research", key=run_id).one_or_none() is not None:
+            return None
+    return enqueue_unique(research_job, run_id, job_timeout=4 * 3600)
+
+
 def ops_check_job() -> dict:
     from app.services.ops import run_ops_check
 

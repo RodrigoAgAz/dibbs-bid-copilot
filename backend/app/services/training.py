@@ -57,7 +57,6 @@ def load_awards_frame(db: Session) -> pd.DataFrame:
 
     awards, quality = filter_awards(awards)
     log.info("training awards: %s", quality)
-    awards.attrs["quality"] = quality
     awards["fsc"] = awards["nsn"].str[:4]
     ctx = pd.DataFrame(
         db.execute(
@@ -88,6 +87,7 @@ def load_awards_frame(db: Session) -> pd.DataFrame:
         columns=["nsn", "n_approved_sources"],
     )
     df = df.merge(n_src, on="nsn", how="left")
+    df.attrs["quality"] = quality  # merges drop attrs: set them on the frame actually returned
     return df
 
 

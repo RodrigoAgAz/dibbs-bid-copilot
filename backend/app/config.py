@@ -79,6 +79,8 @@ class Settings(BaseSettings):
     nightly_backfill: bool = True
     # Ops: email this address (throttled) when data goes stale or a pipeline fails. Needs a real email provider.
     ops_alert_email: str = ""
+    # Pricing research on production data, in-cluster: set to a new id to run app/services/research.py once.
+    research_run: str = ""
 
     # Public demo: "Explore the demo" signs visitors in as a read-only viewer of the Atlas demo org.
     public_demo: bool = False

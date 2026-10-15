@@ -161,7 +161,7 @@ def test_lines_without_history_or_quote_ask_for_a_quote_first(client, db):
     db.commit()
     rec = db.execute(select(Recommendation).where(Recommendation.solicitation_line_id == line.id,
                                                   Recommendation.organization_id == me["organization"]["id"])).scalar_one()
-    assert not rec.no_bid and rec.recommended_bid is None and rec.expected_profit is None
+    assert not rec.no_bid and rec.recommended_bid is None and rec.expected_profit is None, rec.no_bid_reason
     assert rec.explanation["needs_quote"] and rec.explanation["price_range"][0] < rec.explanation["price_range"][1]
 
     d = client.get("/api/dashboard").json()

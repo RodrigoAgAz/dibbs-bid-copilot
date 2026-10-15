@@ -107,7 +107,7 @@ def test_bulk_jobs_have_their_own_queue_and_worker_pools_parse():
     from app.jobs.worker import parse_pools
 
     for f in (tasks.award_labeling_job, tasks.retrain_job, tasks.nightly_backfill_job, tasks.initial_live_load_job,
-              tasks.retrain_for_model_code_job):
+              tasks.retrain_for_model_code_job, tasks.research_job):
         assert queue_for(f) == BULK_QUEUE
     for f in (tasks.daily_ingest_job, tasks.followups_job, tasks.ops_check_job, tasks.send_quote_request_job):
         assert queue_for(f) == QUEUE_NAME

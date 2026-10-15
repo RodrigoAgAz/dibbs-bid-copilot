@@ -358,3 +358,12 @@ def test_live_deployments_hide_the_synthetic_practice_lines(client, db, settings
     assert d["summary"]["lines"] == 0 and not any(x["solicitation_number"].startswith("SPEZZ") for x in d["lines"])
     h = client.get("/api/history").json()
     assert not any(r["solicitation_number"].startswith("SPEZZ") for r in h["rows"])
+
+
+def test_public_top_lines_only_with_the_public_demo(client, db, settings):
+    from app.api.routes import public
+
+    public._cache.clear()
+    assert client.get("/api/public/top-lines").status_code == 404
+    settings(public_demo=True)
+    assert client.get("/api/public/top-lines").json() == []  # no demo org seeded

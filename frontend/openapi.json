@@ -1940,6 +1940,31 @@
           }
         }
       }
+    },
+    "/api/public/top-lines": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Top Lines",
+        "operationId": "top_lines_api_public_top_lines_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TopLine"
+                  },
+                  "type": "array",
+                  "title": "Response Top Lines Api Public Top Lines Get"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6059,6 +6084,138 @@
           "parsed_at"
         ],
         "title": "SupplierQuoteOut"
+      },
+      "TopLine": {
+        "properties": {
+          "solicitation_number": {
+            "type": "string",
+            "title": "Solicitation Number"
+          },
+          "nomenclature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomenclature"
+          },
+          "nsn": {
+            "type": "string",
+            "title": "Nsn"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity"
+          },
+          "unit_of_issue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Of Issue"
+          },
+          "return_by_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return By Date"
+          },
+          "predicted_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Median"
+          },
+          "range_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Range Low"
+          },
+          "range_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Range High"
+          },
+          "n_prior_awards": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Prior Awards"
+          },
+          "recommended_bid": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Bid"
+          },
+          "p_win": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Win"
+          }
+        },
+        "type": "object",
+        "required": [
+          "solicitation_number",
+          "nomenclature",
+          "nsn",
+          "quantity",
+          "unit_of_issue",
+          "return_by_date",
+          "predicted_median",
+          "range_low",
+          "range_high",
+          "n_prior_awards",
+          "recommended_bid",
+          "p_win"
+        ],
+        "title": "TopLine"
       },
       "TrackRecordOut": {
         "properties": {

@@ -73,7 +73,7 @@ def _include_optional_routers(app: FastAPI) -> None:
     """Routers added in later build phases."""
     import importlib
 
-    for name in ("dashboard", "rfq", "quotes", "history", "admin", "webhooks"):
+    for name in ("dashboard", "rfq", "quotes", "history", "admin", "webhooks", "public"):
         try:
             mod = importlib.import_module(f"app.api.routes.{name}")
         except ModuleNotFoundError as exc:

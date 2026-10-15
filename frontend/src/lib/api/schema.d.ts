@@ -866,6 +866,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/top-lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Top Lines */
+        get: operations["top_lines_api_public_top_lines_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2073,6 +2090,33 @@ export interface components {
              * Format: date-time
              */
             parsed_at: string;
+        };
+        /** TopLine */
+        TopLine: {
+            /** Solicitation Number */
+            solicitation_number: string;
+            /** Nomenclature */
+            nomenclature: string | null;
+            /** Nsn */
+            nsn: string;
+            /** Quantity */
+            quantity: number;
+            /** Unit Of Issue */
+            unit_of_issue: string | null;
+            /** Return By Date */
+            return_by_date: string | null;
+            /** Predicted Median */
+            predicted_median: number | null;
+            /** Range Low */
+            range_low: number | null;
+            /** Range High */
+            range_high: number | null;
+            /** N Prior Awards */
+            n_prior_awards: number | null;
+            /** Recommended Bid */
+            recommended_bid: number | null;
+            /** P Win */
+            p_win: number | null;
         };
         /** TrackRecordOut */
         TrackRecordOut: {
@@ -3603,6 +3647,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    top_lines_api_public_top_lines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TopLine"][];
                 };
             };
         };

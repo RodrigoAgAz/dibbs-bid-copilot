@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { BadgeDollarSign, BarChart3, FileSearch, Inbox, Lock, MailCheck, ShieldCheck, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { api, errorMessage } from "@/lib/api/client";
-import { formatDate, num, pct } from "@/lib/format";
+import { api, errorMessage, unwrap } from "@/lib/api/client";
+import { formatDate, formatSolicitation, money, num, pct } from "@/lib/format";
 import { useAuthOptions, useDataHealth } from "@/lib/hooks";
 
 const STEPS = [
@@ -62,6 +63,13 @@ export default function LandingPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const live = health.data && health.data.connector_mode !== "fixture";
+  const top = useQuery({
+    queryKey: ["public-top-lines"],
+    queryFn: async () => unwrap(await api.GET("/api/public/top-lines")),
+    enabled: !!options.data?.public_demo,
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
 
   async function exploreDemo() {
     setBusy(true);
@@ -143,6 +151,39 @@ export default function LandingPage() {
           </div>
         </section>
       ) : null}
+
+      {top.data && top.data.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 pt-14" data-testid="top-lines">
+          <h2 className="text-xl font-semibold">Live right now</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Three open DLA solicitations from today&apos;s data, priced the way the demo broker sees them.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {top.data.map((l) => (
+              <div key={l.solicitation_number} className="rounded-lg border bg-card p-4">
+                <div className="font-mono text-xs text-muted-foreground">{formatSolicitation(l.solicitation_number)}</div>
+                <div className="mt-1 truncate text-sm font-semibold" title={l.nomenclature ?? ""}>
+                  {l.nomenclature}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {num(l.quantity)} {l.unit_of_issue} · due {formatDate(l.return_by_date)}
+                  {l.n_prior_awards ? ` · ${l.n_prior_awards} past awards` : ""}
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground">Winning price likely</div>
+                <div className="num text-lg font-semibold">{money(l.predicted_median)}</div>
+                {l.range_low != null && l.range_high != null && (
+                  <div className="text-xs text-muted-foreground">
+                    80% range {money(l.range_low)}–{money(l.range_high)}
+                  </div>
+                )}
+                <div className="mt-3 rounded-md bg-muted/60 px-2 py-1.5 text-xs">
+                  Recommended bid <b className="num">{money(l.recommended_bid)}</b> · {pct(l.p_win)} to win
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-xl font-semibold">How it works</h2>

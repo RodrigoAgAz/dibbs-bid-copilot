@@ -205,7 +205,7 @@ def forgot_password(body: ForgotPasswordIn, request: Request, db: Session = Depe
             db,
             OutboundEmail(
                 to=user.email,
-                subject="Reset your DIBBS Bid Copilot password",
+                subject="Reset your Invisible Hand password",
                 body=(
                     "Someone asked to reset the password for this account.\n\n"
                     f"Reset it here (valid for 1 hour): {link}\n\n"

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Building2, CalendarClock, Eye, History, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
+import { Brand, HandMark } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Badge, Tip } from "@/components/ui/misc";
 import { api } from "@/lib/api/client";
@@ -38,12 +39,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
-        <div className="mx-auto flex h-12 max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-[10px] font-bold text-primary-foreground">
-              DB
-            </div>
-            <span className="hidden text-sm font-semibold sm:inline">Bid Copilot</span>
+        <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-2 px-3 sm:gap-4 sm:px-4">
+          <Link href="/dashboard" className="mr-1 flex items-center" aria-label="The Invisible Hand: today">
+            <HandMark className="h-7 w-7 sm:hidden" />
+            <Brand size="sm" className="hidden sm:inline-flex" />
           </Link>
           <nav className="flex min-w-0 items-center gap-0.5" aria-label="Main">
             {nav.map(({ href, label, icon: Icon }) => {
@@ -56,8 +55,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   aria-label={label}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:px-2.5",
-                    active && "bg-accent text-foreground",
+                    "relative flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:px-2.5",
+                    active && "text-foreground after:absolute after:inset-x-2 after:-bottom-[11px] after:h-0.5 after:rounded-full after:bg-gold",
                   )}
                 >
                   <Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
@@ -70,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DataFreshness />
             {me?.organization.plan === "demo" && (
               <Badge variant="warning" className="hidden sm:inline-flex">
-                Demo org
+                Demo company
               </Badge>
             )}
             {me && (

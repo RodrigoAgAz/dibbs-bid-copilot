@@ -40,7 +40,7 @@ function Enter() {
         </>
       ) : (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Spinner /> Opening DIBBS Bid Copilot…
+          <Spinner /> Opening The Invisible Hand…
         </div>
       )}
     </div>

@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # Email
     email_provider: str = "console"
     resend_api_key: str = ""
-    email_from: str = "DIBBS Bid Copilot <quotes@copilot.example.com>"
+    email_from: str = "The Invisible Hand <quotes@copilot.example.com>"
     email_reply_domain: str = "copilot.example.com"
     inbound_email_secret: str = "dev-inbound-secret"
 

@@ -284,12 +284,12 @@ def run_ops_check(db: Session, now: datetime | None = None) -> dict:
     from app.services.email.providers import OutboundEmail, get_email_provider
 
     body = "\n".join(
-        ["DIBBS Bid Copilot data health is DEGRADED.", "", *[f"- {c['name']}: {c['detail']}" for c in failing], "",
+        ["The Invisible Hand data health is DEGRADED.", "", *[f"- {c['name']}: {c['detail']}" for c in failing], "",
          f"Newest RFQ posting date: {h['newest_rfq_posting_date']}",
          f"Open RFQ lines: {h['open_rfq_lines']}", f"Award rows: {h['award_rows']}",
          "", "Check the worker logs (railway logs -s worker) and /admin."]
     )
-    res = get_email_provider().send(db, OutboundEmail(to=to, subject="[DIBBS Bid Copilot] data health degraded",
+    res = get_email_provider().send(db, OutboundEmail(to=to, subject="[The Invisible Hand] data health degraded",
                                                       body=body, kind="ops_alert"))
     if marker is None:
         db.add(IngestCheckpoint(source="ops_alert", key="last", status="done", updated_at=now,

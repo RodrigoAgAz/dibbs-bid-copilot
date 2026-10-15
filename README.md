@@ -1,4 +1,4 @@
-# DIBBS Bid Copilot
+# The Invisible Hand (DLA DIBBS bid pricing; repo: dibbs-bid-copilot)
 
 A multi-tenant SaaS tool for small federal contractors ("brokers") who quote on Defense Logistics Agency
 solicitations posted on [DIBBS](https://www.dibbs.bsm.dla.mil/). Every day it:

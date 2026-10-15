@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: { default: "DIBBS Bid Copilot", template: "%s · DIBBS Bid Copilot" },
-  description: "Bid recommendations for DLA DIBBS solicitations",
+  title: { default: "The Invisible Hand", template: "%s · The Invisible Hand" },
+  description: "Winning-price predictions and bid recommendations for DLA DIBBS solicitations",
   icons: { icon: "/favicon.svg" },
 };
 

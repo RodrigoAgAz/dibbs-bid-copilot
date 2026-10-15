@@ -76,8 +76,8 @@ def invite_member(body: InviteIn, ctx: TenantContext = Depends(require_owner)) -
         ctx.db,
         OutboundEmail(
             to=email,
-            subject="You've been invited to DIBBS Bid Copilot",
-            body=f"{ctx.user.email} invited you to join their team on DIBBS Bid Copilot.\n\nAccept: {url}\n",
+            subject="You've been invited to The Invisible Hand",
+            body=f"{ctx.user.email} invited you to join their team on The Invisible Hand.\n\nAccept: {url}\n",
             organization_id=ctx.org_id,
             kind="system",
         ),

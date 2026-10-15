@@ -4,14 +4,14 @@
 
 @layer base {
   :root {
-    --background: 220 20% 98%;
+    --background: 40 20% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 40%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 222 55% 30%;
+    --primary-foreground: 40 40% 98%;
     --secondary: 220 14% 94%;
     --secondary-foreground: 222 47% 11%;
     --muted: 220 14% 95%;
@@ -26,13 +26,17 @@
     --warning-foreground: 0 0% 98%;
     --border: 220 13% 88%;
     --input: 220 13% 85%;
-    --ring: 221 83% 45%;
-    --radius: 0.4rem;
-    --chart-1: 221 83% 45%;
+    --ring: 222 55% 40%;
+    --radius: 0.5rem;
+    --chart-1: 222 58% 40%;
     --chart-2: 152 62% 36%;
     --chart-3: 35 92% 45%;
     --chart-4: 0 72% 50%;
     --chart-5: 262 60% 52%;
+    /* Brand: ink (the tile, the hero band) and gold (the hand) */
+    --brand-ink: 222 50% 14%;
+    --brand-ink-2: 221 48% 28%;
+    --brand-gold: 42 60% 58%;
   }
 
   .dark {
@@ -59,6 +63,9 @@
     --border: 217 30% 20%;
     --input: 217 30% 22%;
     --ring: 217 91% 62%;
+    --brand-ink: 222 50% 10%;
+    --brand-ink-2: 221 45% 22%;
+    --brand-gold: 42 62% 62%;
   }
 
   * {

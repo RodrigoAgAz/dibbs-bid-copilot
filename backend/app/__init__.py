@@ -1,4 +1,4 @@
-"""DIBBS Bid Copilot backend."""
+"""The Invisible Hand backend (DLA DIBBS bid pricing)."""
 
 import sys
 from pathlib import Path

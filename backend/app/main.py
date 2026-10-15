@@ -29,7 +29,7 @@ def create_app() -> FastAPI:
     logging.basicConfig(level=s.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
     app = FastAPI(
-        title="DIBBS Bid Copilot API",
+        title="The Invisible Hand API",
         version="0.1.0",
         description="Bid recommendations for DLA DIBBS solicitations. The app never submits bids.",
     )

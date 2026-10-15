@@ -22,10 +22,14 @@ const config: Config = {
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
         success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
         warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
+        ink: { DEFAULT: "hsl(var(--brand-ink))", 2: "hsl(var(--brand-ink-2))" },
+        gold: "hsl(var(--brand-gold))",
       },
       borderRadius: { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" },
       fontFamily: {
         sans: ["Inter", "Segoe UI", "ui-sans-serif", "system-ui", "-apple-system", "Roboto", "sans-serif"],
+        // Classical serif for the wordmark and page titles (system fonts only: builds stay offline).
+        serif: ["Iowan Old Style", "Palatino Linotype", "Palatino", "Book Antiqua", "Georgia", "serif"],
         mono: ["JetBrains Mono", "Cascadia Mono", "ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
       },
     },

@@ -286,7 +286,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
           <ActualBid line={line} sn={sn} />
         </div>
         <p className="text-[11px] text-muted-foreground">
-          The Copilot never submits bids. Review the recommendation and submit your quote on DIBBS yourself.
+          The Invisible Hand never submits bids. Review the recommendation and submit your quote on DIBBS yourself.
         </p>
       </CardContent>
     </Card>

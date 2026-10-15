@@ -48,7 +48,7 @@ const FEATURES = [
   {
     icon: ShieldCheck,
     title: "You stay in control",
-    body: "Bid Copilot never submits anything to DIBBS. Every recommendation shows its reasoning, similar past awards and the risk of losing.",
+    body: "The Invisible Hand never submits anything to DIBBS. Every recommendation shows its reasoning, similar past awards and the risk of losing.",
   },
   {
     icon: Lock,
@@ -91,7 +91,7 @@ export default function LandingPage() {
             Price every DIBBS solicitation in minutes, not hours.
           </h1>
           <p className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Bid Copilot reads each day&apos;s RFQs in your supply classes, pulls the NSN&apos;s award history, predicts the winning price,
+            The Invisible Hand reads each day&apos;s RFQs in your supply classes, pulls the NSN&apos;s award history, predicts the winning price,
             collects supplier quotes and recommends the bid with the best expected profit.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">

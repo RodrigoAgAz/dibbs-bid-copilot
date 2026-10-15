@@ -9,7 +9,7 @@ export default function TermsPage() {
       <section>
         <h2>1. The service</h2>
         <p>
-          DIBBS Bid Copilot (the &quot;Service&quot;) helps businesses that sell to the Defense Logistics Agency estimate winning prices for
+          The Invisible Hand (the &quot;Service&quot;) helps businesses that sell to the Defense Logistics Agency estimate winning prices for
           solicitations posted on DLA Internet Bid Board System (DIBBS), request quotes from their suppliers and decide what to bid. By
           creating an account or using the Service you agree to these terms on behalf of yourself and the company you represent.
         </p>

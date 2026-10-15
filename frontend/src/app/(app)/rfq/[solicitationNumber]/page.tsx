@@ -209,18 +209,22 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          <Tip content="Highest-margin bid that still wins at least 70% of the time">
-            <span className="rounded-md border px-2 py-1">
-              Conservative <b className="num">{money(r.conservative_bid)}</b>
-              {ex.conservative_p_win != null && <span className="text-muted-foreground"> · {pct(ex.conservative_p_win as number)}</span>}
-            </span>
-          </Tip>
-          <Tip content="Bid with about a 30% chance of winning">
-            <span className="rounded-md border px-2 py-1">
-              Aggressive <b className="num">{money(r.aggressive_bid)}</b>
-              {ex.aggressive_p_win != null && <span className="text-muted-foreground"> · {pct(ex.aggressive_p_win as number)}</span>}
-            </span>
-          </Tip>
+          {r.conservative_bid != null && (
+            <Tip content="Safer: the highest bid that still wins at least 70% of the time">
+              <span className="rounded-md border px-2 py-1">
+                Conservative <b className="num">{money(r.conservative_bid)}</b>
+                {ex.conservative_p_win != null && <span className="text-muted-foreground"> · {pct(ex.conservative_p_win as number)}</span>}
+              </span>
+            </Tip>
+          )}
+          {r.aggressive_bid != null && (
+            <Tip content="Riskier: more margin, lower chance of winning (about 30%, or your minimum)">
+              <span className="rounded-md border px-2 py-1">
+                Aggressive <b className="num">{money(r.aggressive_bid)}</b>
+                {ex.aggressive_p_win != null && <span className="text-muted-foreground"> · {pct(ex.aggressive_p_win as number)}</span>}
+              </span>
+            </Tip>
+          )}
           <FlagBadges flags={{ provisional: r.provisional, low_data: Boolean(ex.low_data), cold_start: Boolean(ex.cold_start), approved_source_only: line.approved_source_only, needs_quote: Boolean(ex.needs_quote) }} />
         </div>
         {ex.needs_quote ? (

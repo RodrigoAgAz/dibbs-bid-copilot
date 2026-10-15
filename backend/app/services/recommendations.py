@@ -258,8 +258,8 @@ def refresh_line_for_org(db: Session, org_id: int, line: SolicitationLine) -> Re
 
 # Bump when the recommendation rules change: the next boot re-computes every open line once
 # (app.cli bootstrap -> refresh_all_recommendations_job). 2 = minimum win probability, 3 = quote first,
-# 4 = provisional bids target the likely winning price + confidence tiers.
-ENGINE_VERSION = "4"
+# 4 = provisional bids target the likely winning price + confidence tiers, 5 = alternatives bracket the bid.
+ENGINE_VERSION = "5"
 
 
 def refresh_all_recommendations(db: Session) -> dict:

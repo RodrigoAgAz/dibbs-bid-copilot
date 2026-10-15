@@ -185,11 +185,11 @@ export default function DashboardPage() {
         description={
           s ? (
             <>
-              Open RFQ lines in your FSC watchlist, ranked by expected profit · as of {formatDate(s.as_of)}
+              Open RFQ lines in your FSC watchlist, best bets first (expected profit weighted by confidence) · as of {formatDate(s.as_of)}
               {s.last_ingest_at ? ` · last ingest ${formatDateTime(s.last_ingest_at)}` : ""}
             </>
           ) : (
-            "Open RFQ lines in your FSC watchlist, ranked by expected profit"
+            "Open RFQ lines in your FSC watchlist, best bets first"
           )
         }
         actions={

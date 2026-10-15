@@ -33,6 +33,17 @@ describe("insights", () => {
     expect(s.some((x) => x.startsWith("ACME FASTENERS won 4 of 5 awards"))).toBe(true);
   });
 
+  it("calls out a winning streak", () => {
+    const streak = [
+      a("2022-01-01", 1.0, 10, "9AAA1"),
+      a("2023-01-01", 1.9, 10, "7BGA2"),
+      a("2024-01-01", 1.95, 10, "7BGA2"),
+      a("2025-01-01", 1.94, 10, "7BGA2"),
+    ];
+    const s = priceStory(streak, 10, new Date("2026-10-14T12:00:00Z"));
+    expect(s[s.length - 1]).toBe("CAGE 7BGA2 won the last 3 awards in a row ($1.90–$1.95): the price to beat is theirs.");
+  });
+
   it("says so when there is no history", () => {
     expect(priceStory([], 10)[0]).toContain("No past awards on file");
   });

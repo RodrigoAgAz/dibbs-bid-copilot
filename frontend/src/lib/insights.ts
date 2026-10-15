@@ -99,6 +99,16 @@ export function priceStory(awards: Award[], quantity: number, today: Date = new 
       );
     }
   }
+  // A streak says more about the next award than an all-time count.
+  let streak = 1;
+  for (let i = sorted.length - 2; i >= 0 && sorted[i].awardee_cage && sorted[i].awardee_cage === last.awardee_cage; i--) streak++;
+  if (streak >= 3 && last.awardee_cage) {
+    const prices = sorted.slice(-streak).map((a) => a.unit_price);
+    out.push(
+      `${who} won the last ${streak} awards in a row (${money(Math.min(...prices))}–${money(Math.max(...prices))}): the price to beat is theirs.`,
+    );
+    return out;
+  }
   const top = competitors(sorted, 1)[0];
   if (top && sorted.length >= 3 && top.wins / sorted.length >= 0.5 && top.cage !== "unknown") {
     out.push(`${top.name || `CAGE ${top.cage}`} won ${top.wins} of ${sorted.length} awards: expect them to bid again.`);

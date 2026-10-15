@@ -44,22 +44,34 @@ def run_pool(queues: list[str]) -> None:
     Worker([Queue(q, connection=conn) for q in queues], connection=conn, name=name).work(with_scheduler=False)
 
 
-def main() -> None:
-    _logging()
+STARTUP_JOBS_DELAY = 60  # seconds: let the previous deployment's worker shut down first
+
+
+def _queue_startup_jobs() -> None:
+    """Jobs that must run on the newest code: a pending recommendation-engine refresh and the demo top-up.
+
+    Queued after a delay because during a deploy the outgoing worker is still listening for a while and would
+    pick them up with its older code (the engine refresh also refuses to run on older code).
+    """
+    time.sleep(STARTUP_JOBS_DELAY)
     try:
-        # The worker runs the newest code once it starts, so it (not only the API's boot) queues a pending
-        # recommendation-engine refresh; the job itself refuses to run on an older worker.
-        from app.jobs.tasks import queue_engine_refresh_if_needed
+        from app.jobs.queue import enqueue_unique
+        from app.jobs.tasks import demo_refresh_job, queue_engine_refresh_if_needed
 
         queue_engine_refresh_if_needed()
-        from app.jobs.queue import enqueue_unique
-        from app.jobs.tasks import demo_refresh_job
-
         enqueue_unique(demo_refresh_job)  # cheap when the demo is already topped up
-    except Exception:  # never block the worker from starting
-        log.exception("engine refresh check failed")
+    except Exception:  # never take the worker down
+        log.exception("startup jobs could not be queued")
+
+
+def main() -> None:
+    _logging()
+    import threading
+
+    startup = threading.Thread(target=_queue_startup_jobs, name="startup-jobs", daemon=True)
     pools = parse_pools(os.environ.get("WORKER_POOLS", f"{QUEUE_NAME};{BULK_QUEUE}"))
     if len(pools) == 1:
+        startup.start()
         run_pool(pools[0])
         return
     ctx = mp.get_context("fork")
@@ -67,6 +79,7 @@ def main() -> None:
     for p in procs:
         p.start()
         log.info("worker pool %s started (pid %s)", p.name, p.pid)
+    startup.start()  # after forking: never fork while another thread may hold a lock
 
     stopping = False
 

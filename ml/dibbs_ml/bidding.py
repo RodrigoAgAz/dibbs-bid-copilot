@@ -120,6 +120,13 @@ def recommend_bid(
     agg = min(max(round(float(dist.ppf(1.0 - AGGRESSIVE_P_WIN)), 2), lo), max(lo, float(grid[-1])))
     rec.aggressive_bid, rec.aggressive_p_win = float(agg), float(dist.sf(agg))
 
+    # The alternatives must bracket the recommendation: "conservative" is safer (a lower bid, higher P(win)) and
+    # "aggressive" riskier. When the optimum already wins >= 70% of the time there is no safer option to offer.
+    if rec.conservative_bid is not None and rec.recommended_bid is not None and rec.conservative_bid >= rec.recommended_bid:
+        rec.conservative_bid = rec.conservative_p_win = None
+    if rec.recommended_bid is not None and rec.aggressive_bid <= rec.recommended_bid:
+        rec.aggressive_bid = rec.aggressive_p_win = None
+
     # Curve for the UI: from landed cost to the 97.5th percentile (shows the full trade-off).
     c_lo = max(landed, float(dist.ppf(0.01)) * 0.9)
     c_hi = max(float(dist.ppf(0.975)), lo * 1.05)

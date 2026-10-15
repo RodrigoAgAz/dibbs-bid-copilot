@@ -195,7 +195,8 @@ def run_daily_ingest(db: Session, mode: str | None = None, only_date: date | Non
     return summary
 
 
-MAX_COMPANY_LOOKUPS = 60
+MAX_COMPANY_LOOKUPS = 200  # ~1 request/second
+COMPANY_RETRY_AFTER = timedelta(days=14)  # a CAGE DIBBS had no name for is retried after this
 
 
 def resolve_new_companies(db: Session, src: DibbsSource, errors: list) -> int:
@@ -208,8 +209,16 @@ def resolve_new_companies(db: Session, src: DibbsSource, errors: list) -> int:
     cages = {c for (c,) in db.execute(select(AwardHistory.awardee_cage).where(AwardHistory.nsn.in_(open_nsns))).all() if c}
     cages |= {c for (c,) in db.execute(select(ApprovedSource.cage_code).where(ApprovedSource.nsn.in_(open_nsns))).all()}
     known = {c for (c,) in db.execute(select(Company.cage_code).where(Company.name.is_not(None))).all()}
+    # Misses (no name on DIBBS) wait COMPANY_RETRY_AFTER; otherwise the same alphabetically-first CAGEs were
+    # retried every run and starved everything behind them.
+    tried = {c: at for c, at in db.execute(
+        select(Company.cage_code, Company.resolved_at).where(Company.name.is_(None), Company.resolved_at.is_not(None))
+    ).all()}
+    retry_before = datetime.now(UTC) - COMPANY_RETRY_AFTER
+    todo = [c for c in cages - known if c not in tried or tried[c] < retry_before]
+    todo.sort(key=lambda c: (c in tried, c))  # never-tried first
     n = 0
-    for cage in sorted(cages - known)[:MAX_COMPANY_LOOKUPS]:
+    for cage in todo[:MAX_COMPANY_LOOKUPS]:
         try:
             if resolve_company(db, src, cage) and db.get(Company, cage).name:
                 n += 1

@@ -108,3 +108,17 @@ def test_min_p_win_keeps_wide_distributions_out_of_the_tail():
     # When even the minimum-margin bid is a long shot, it's a no-bid with a clear reason.
     r = recommend_bid(PriceDistribution.lognormal(math.log(10), 0.2), 12.0, 10, min_p_win=0.3)
     assert r.no_bid and "less than a 30% chance" in r.no_bid_reason
+
+
+@pytest.mark.parametrize("sigma", [0.05, 0.15, 0.4, 1.2])
+@pytest.mark.parametrize("landed_frac", [0.3, 0.6, 0.75, 0.9])
+@pytest.mark.parametrize("min_p", [0.05, 0.2, 0.5])
+def test_alternatives_bracket_the_recommendation(sigma, landed_frac, min_p):
+    d = PriceDistribution.lognormal(math.log(100), sigma)
+    r = recommend_bid(d, 100 * landed_frac, 50, min_p_win=min_p)
+    if r.recommended_bid is None:
+        return
+    if r.conservative_bid is not None:
+        assert r.conservative_bid < r.recommended_bid and r.conservative_p_win > r.p_win
+    if r.aggressive_bid is not None:
+        assert r.aggressive_bid > r.recommended_bid and r.aggressive_p_win < r.p_win

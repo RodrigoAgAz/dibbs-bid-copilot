@@ -24,6 +24,7 @@ from app.models import (
     Solicitation,
     SolicitationLine,
 )
+from app.services.biddable import not_awarded
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,8 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
 
     open_lines = db.execute(
         select(func.count()).select_from(SolicitationLine).join(Solicitation).where(
-            Solicitation.return_by_date >= today, ~Solicitation.solicitation_number.startswith(SYNTHETIC_PREFIX)
+            Solicitation.return_by_date >= today, ~Solicitation.solicitation_number.startswith(SYNTHETIC_PREFIX),
+            not_awarded(),
         )
     ).scalar_one()
     real_awards = db.execute(
@@ -132,26 +134,27 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
 def live_track_record(db: Session, since_days: int = 180) -> dict:
     """How the live predictions did once DLA posted the award (out of sample by construction).
 
-    For real solicitations that closed and have since been awarded, take the last prediction made BEFORE the
-    return-by date (end of day, ET-agnostic +1 day margin) and compare it with the winning unit price.
+    For real solicitations that have been awarded, take the last prediction made before BOTH the award date and
+    the return-by date, and compare it with the winning unit price. (Fast-award solicitations are often awarded
+    before their return-by date; a prediction made after the award could already contain the winning price.)
     """
     today = today_et()
     rows = db.execute(
-        select(SolicitationLine.id, Solicitation.return_by_date, AwardHistory.unit_price)
+        select(SolicitationLine.id, Solicitation.return_by_date, AwardHistory.unit_price, AwardHistory.award_date)
         .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
         .join(AwardHistory, (AwardHistory.solicitation_number == Solicitation.solicitation_number)
               & (AwardHistory.nsn == SolicitationLine.nsn))
         .where(
-            Solicitation.return_by_date < today,
-            Solicitation.return_by_date >= today - timedelta(days=since_days),
+            AwardHistory.award_date >= today - timedelta(days=since_days),
             ~Solicitation.solicitation_number.startswith(SYNTHETIC_PREFIX),
             AwardHistory.source != "synthetic",
             AwardHistory.unit_price > 0,
         )
     ).all()
     winners: dict[int, tuple[date, float]] = {}
-    for line_id, due, price in rows:
-        winners.setdefault(line_id, (due, float(price)))
+    for line_id, due, price, awarded in rows:
+        cut = min(d for d in (due, awarded) if d is not None)
+        winners.setdefault(line_id, (cut, float(price)))
     inside = 0
     errors: list[float] = []
     ids = list(winners)
@@ -164,8 +167,8 @@ def live_track_record(db: Session, since_days: int = 180) -> dict:
         ).scalars():
             preds.setdefault(p.solicitation_line_id, []).append(p)
         for line_id in chunk:
-            due, price = winners[line_id]
-            cutoff = datetime.combine(due + timedelta(days=1), datetime.min.time(), tzinfo=UTC)
+            cut, price = winners[line_id]
+            cutoff = datetime.combine(cut, datetime.min.time(), tzinfo=UTC)  # strictly before that day
             before = [p for p in preds.get(line_id, []) if p.created_at and p.created_at <= cutoff]
             if not before:
                 continue

@@ -20,6 +20,7 @@ from app.models import (
     SupplierQuote,
 )
 from app.schemas.rfq import DashboardLine, DashboardOut, DashboardSummary, Flags, QuoteStatusSummary
+from app.services.biddable import not_awarded
 from app.services.ops import SYNTHETIC_PREFIX, hide_synthetic
 from app.services.recommendations import org_settings
 
@@ -93,6 +94,7 @@ def dashboard(
         .join(S, L.solicitation_id == S.id)
         .where(
             or_(S.return_by_date.is_(None), S.return_by_date >= today),
+            not_awarded(),
             L.fsc.in_(fscs),
             *([~S.solicitation_number.startswith(SYNTHETIC_PREFIX)] if hide_synthetic() else []),
         )

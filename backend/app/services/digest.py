@@ -27,6 +27,7 @@ from app.models import (
     User,
     UserRole,
 )
+from app.services.biddable import not_awarded
 from app.services.email.providers import EmailProvider, OutboundEmail, get_email_provider
 from app.services.recommendations import org_settings
 
@@ -85,6 +86,7 @@ def build_digest(db: Session, org_id: int, now: datetime | None = None) -> Diges
             Recommendation.organization_id == org_id,
             Recommendation.no_bid.is_(False),
             Solicitation.return_by_date >= today,
+            not_awarded(),
             SolicitationLine.fsc.in_(fscs),
         )
     ).all()

@@ -19,6 +19,7 @@ from app.core.timeutil import today_et
 from app.db import get_db
 from app.models import Organization, Recommendation, Solicitation, SolicitationLine
 from app.services.accounts import DEMO_VIEWER_ORG
+from app.services.biddable import not_awarded
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 
@@ -61,6 +62,7 @@ def top_lines(db: Session = Depends(get_db)) -> list[TopLine]:
             Recommendation.no_bid.is_(False),
             Recommendation.recommended_bid.is_not(None),
             Solicitation.return_by_date >= today,
+            not_awarded(),
             ~Solicitation.solicitation_number.startswith("SPEZZ"),
         )
     ).all()

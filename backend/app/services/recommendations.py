@@ -19,6 +19,7 @@ from app.models import (
     SolicitationLine,
     SupplierQuote,
 )
+from app.services.biddable import not_awarded
 from app.services.landed_cost import LandedCost, compute_landed_cost
 from app.services.pricing import distribution_of, fsc_median_index, latest_prediction, predict_line
 from dibbs_ml.bidding import recommend_bid
@@ -62,7 +63,7 @@ def open_lines(db: Session, today: date | None = None, fscs: list[str] | None = 
         select(SolicitationLine)
         .join(Solicitation)
         .options(joinedload(SolicitationLine.solicitation))
-        .where(or_(Solicitation.return_by_date.is_(None), Solicitation.return_by_date >= today))
+        .where(or_(Solicitation.return_by_date.is_(None), Solicitation.return_by_date >= today), not_awarded())
     )
     if fscs is not None:
         stmt = stmt.where(SolicitationLine.fsc.in_(fscs))

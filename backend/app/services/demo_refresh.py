@@ -31,6 +31,7 @@ from app.models import (
     SolicitationLine,
     SupplierContact,
 )
+from app.services.biddable import not_awarded
 from app.services.recommendations import org_settings
 
 log = logging.getLogger(__name__)
@@ -124,6 +125,7 @@ def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None =
             Recommendation.no_bid.is_(False),
             Recommendation.recommended_bid.is_not(None),
             Solicitation.return_by_date >= today + timedelta(days=2),
+            not_awarded(),
             ~Solicitation.solicitation_number.startswith("SPEZZ"),  # real DIBBS lines only
             SolicitationLine.fsc.in_(list(s.fsc_watchlist or [])),
             SolicitationLine.approved_source_only.is_(False),  # fictional suppliers can't be approved sources

@@ -133,12 +133,8 @@ export default function LandingPage() {
                 value={health.data.model.coverage_80 != null ? `${Math.round(health.data.model.coverage_80 * 100)}%` : "—"}
               />
               <Stat
-                label="Error using the last award price"
-                value={
-                  health.data.model.baseline_median_abs_pct_error != null
-                    ? `${Math.round(health.data.model.baseline_median_abs_pct_error * 100)}%`
-                    : "—"
-                }
+                label="Winning price inside the 90% range"
+                value={health.data.model.coverage_90 != null ? `${Math.round(health.data.model.coverage_90 * 100)}%` : "—"}
               />
             </dl>
             {health.data.live_track_record && health.data.live_track_record.n >= 20 ? (

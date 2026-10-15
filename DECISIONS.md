@@ -204,6 +204,17 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
 - **Demo refresher** (`services/demo_refresh.py`, every 2 h): demo orgs only, up to 12 real open lines with
   simulated quotes from six fictional "(demo)" suppliers (placeholder CAGE codes ZZD01-06, example.com
   addresses), so a visitor sees the whole sourcing loop on live RFQs without any real company shown quoting.
+- **Awarded lines are not opportunities.** DLA awards many automated (fast-award) solicitations before their
+  return-by date. Lines with a posted award (award row for the solicitation + NSN) or a record-page status of
+  Awarded/Cancelled now leave the dashboard, digest, demo, re-pricing and open-line counts
+  (`services/biddable.py`). Before this, re-pricing folded a line's own winning price into its "prediction".
+- **The live track record only counts predictions made before the award date** (and before the return-by date).
+  The first version used the return-by date alone and showed a too-good-to-be-true 0.5% median error.
+- **Accuracy shown honestly.** On run 3's held-out window (830 real awards) the median absolute error of the
+  model's median (17.3%) is no better than the inflation-adjusted last award (16.9%); the model's value is in
+  calibrated ranges (80% / 90% coverage 76% / 89%) and the win-probability curve, and it wins on pinball loss.
+  The landing page shows median error and range coverage, not a baseline comparison it doesn't win. Improving
+  the point estimate is open work.
 - **Dashboard selects columns**, extracting the three values it needs from the explanation JSON in SQL
   (`#>>` on Postgres, `json_extract` on SQLite) instead of loading thousands of full explanations. Responses are
   gzip-compressed (3.5 MB → about 320 KB for 4,300 lines).

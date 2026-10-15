@@ -215,3 +215,31 @@ def test_provisional_bids_target_the_likely_winning_price(client, db):
     d = client.get("/api/dashboard").json()
     ranked = [x["rank_score"] for x in d["lines"] if not x["no_bid"] and x["rank_score"] is not None]
     assert ranked == sorted(ranked, reverse=True)
+
+
+def test_lines_awarded_before_their_return_date_are_no_longer_opportunities(client, db):
+    from datetime import date, timedelta
+
+    from app.models import AwardHistory, Solicitation
+    from app.services.recommendations import open_lines
+
+    build_world(db, n_open=6)
+    signup(client, "fast@broker.example.com", org="Fast Award Org")
+    d = client.get("/api/dashboard").json()
+    target = d["lines"][0]
+    line = db.get(SolicitationLine, target["line_id"])
+    sol = line.solicitation
+    assert sol.return_by_date >= date.today()
+    # A fast award posts before the return-by date.
+    db.add(AwardHistory(nsn=line.nsn, award_date=date.today() - timedelta(days=1), unit_price=1.0, quantity=line.quantity,
+                        contract_number="SPE-FAST-1", solicitation_number=sol.solicitation_number, source="award_listing"))
+    db.commit()
+    assert line.id not in {ln.id for ln in open_lines(db)}
+    after = client.get("/api/dashboard").json()
+    assert target["line_id"] not in {x["line_id"] for x in after["lines"]}
+    assert after["summary"]["lines"] == d["summary"]["lines"] - 1
+    # A cancelled solicitation is gone too.
+    other = db.get(Solicitation, db.get(SolicitationLine, after["lines"][0]["line_id"]).solicitation_id)
+    other.status = "Cancelled"
+    db.commit()
+    assert all(x["solicitation_number"] != other.solicitation_number for x in client.get("/api/dashboard").json()["lines"])

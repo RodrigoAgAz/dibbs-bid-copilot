@@ -34,6 +34,12 @@ def test_demo_refresh_quotes_real_lines_with_fictional_suppliers(client, db):
             for k in range(TARGET_QUOTED_LINES):
                 db.add(QuoteRequest(organization_id=org.id, solicitation_line_id=ln.id, cage_code=f"P{k:04d}",
                                     channel="email", status="sent", reply_token=f"practice-{sol.id}-{ln.id}-{k}"))
+    # Leftover unsent drafts on real lines (from before drafts were on demand) don't count either.
+    for sol in open_sols[2:]:
+        for ln in sol.lines:
+            for k in range(TARGET_QUOTED_LINES):
+                db.add(QuoteRequest(organization_id=org.id, solicitation_line_id=ln.id, cage_code=f"D{k:04d}",
+                                    channel="email", status="draft", reply_token=f"practice-draft-{ln.id}-{k}"))
     db.commit()
 
     out = refresh_demo_orgs(db)

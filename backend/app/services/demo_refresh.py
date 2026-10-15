@@ -108,6 +108,7 @@ def refresh_demo_org(db: Session, org: Organization, rng: random.Random | None =
             .join(SolicitationLine, QuoteRequest.solicitation_line_id == SolicitationLine.id)
             .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
             .where(QuoteRequest.organization_id == org.id, Solicitation.return_by_date >= today,
+                   QuoteRequest.status != QuoteRequestStatus.draft,  # unsent drafts don't make a line "quoted"
                    ~Solicitation.solicitation_number.startswith("SPEZZ"))  # seeded practice lines don't count
         ).all()
     }

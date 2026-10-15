@@ -94,6 +94,7 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
         select(AwardHistory.source, func.count()).where(AwardHistory.source != "synthetic").group_by(AwardHistory.source)
     ).all())
     model = db.execute(select(ModelRun).where(ModelRun.is_active.is_(True)).limit(1)).scalar_one_or_none()
+    latest_run = db.execute(select(ModelRun).order_by(ModelRun.created_at.desc()).limit(1)).scalar_one_or_none()
 
     runs = {}
     checks: list[dict] = []
@@ -131,7 +132,7 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
         "award_rows_last_30_days": int(recent_awards),
         "nsns_with_history": int(nsns),
         "award_rows_by_source": {str(k): int(v) for k, v in by_source.items()},
-        "model": _model_info(model, real_awards) if model else None,
+        "model": _model_info(model, real_awards, latest_run) if model else None,
         "live_track_record": live_track_record(db),
         "runs": runs,
         "checks": checks,
@@ -225,13 +226,22 @@ def _tier(m: dict | None) -> dict | None:
             "coverage_80": m.get("coverage_80"), "coverage_90": m.get("coverage_90")}
 
 
-def _model_info(model: ModelRun, real_awards: int) -> dict:
-    """Held-out accuracy of the active model: tested on the most recent awards it never saw (time split)."""
+def _model_info(model: ModelRun, real_awards: int, latest: ModelRun | None = None) -> dict:
+    """Held-out accuracy of the active model: tested on the most recent awards it never saw (time split).
+
+    When a later retrain was not promoted, it re-scored the ACTIVE model on its newer (quality-filtered) test
+    window; that evaluation is the current one, so it is reported instead of the active run's original numbers.
+    """
     from app.services.training import REAL_ONLY_THRESHOLD
 
     m = model.metrics or {}
     main, base = m.get("model") or {}, m.get("baseline") or {}
     test = (m.get("windows") or {}).get("test") or [None, None]
+    later = (latest.metrics or {}) if latest is not None and latest.id != model.id else {}
+    if (later.get("active_model_on_same_test") or {}).get("warm"):
+        main = later["active_model_on_same_test"]
+        base = later.get("baseline") or base
+        test = (later.get("windows") or {}).get("test") or test
     return {
         "run_id": model.id,
         "trained_at": _iso(model.created_at),

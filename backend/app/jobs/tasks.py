@@ -131,7 +131,7 @@ def demo_refresh_job() -> list:
         return refresh_demo_orgs(db)
 
 
-MODEL_CODE_VERSION = "lgbm_quantile_v2"  # bump when the training code changes: one retrain is queued
+MODEL_CODE_VERSION = "lgbm_quantile_v2.1"  # .1: re-score the active model by history depth on clean data  # bump when the training code changes: one retrain is queued
 
 
 def queue_retrain_if_model_code_changed() -> str | None:

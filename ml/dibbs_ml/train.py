@@ -117,7 +117,8 @@ def train_from_awards(
         try:
             act_m, _ = evaluate_model(active_model, test, "model")
             metrics["active_model_on_same_test"] = {
-                k: act_m[k] for k in ("pinball_mean", "mape_median", "coverage_80", "coverage_90")
+                k: act_m[k] for k in ("pinball_mean", "mape_median", "median_abs_pct_error", "coverage_80",
+                                      "coverage_90", "n", "warm", "cold", "by_history") if k in act_m
             }
         except Exception as exc:  # incompatible old artifact
             metrics["active_model_on_same_test"] = {"error": str(exc)[:300]}

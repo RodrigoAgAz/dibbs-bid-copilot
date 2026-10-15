@@ -134,7 +134,13 @@ def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = Fals
     clear_model_cache()
     if promote:
         _repredict_open_lines(db)
-    log.info("model run %s: promoted=%s (%s)", run.id, promote, reason)
+    act = result.metrics.get("active_model_on_same_test") or {}
+    log.info("model run %s (%s): promoted=%s (%s); median error with history new %.3f / active %s; new parts "
+             "new %.3f / active %s", run.id, result.model.model_version, promote, reason,
+             (result.metrics["model"].get("warm") or {}).get("median_abs_pct_error", float("nan")),
+             (act.get("warm") or {}).get("median_abs_pct_error"),
+             (result.metrics["model"].get("cold") or {}).get("median_abs_pct_error", float("nan")),
+             (act.get("cold") or {}).get("median_abs_pct_error"))
     return {
         "model_run_id": run.id,
         "promoted": promote,

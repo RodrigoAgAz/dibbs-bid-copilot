@@ -63,6 +63,7 @@ def clear_model_cache() -> None:
 
 def line_context(line: SolicitationLine, sol: Solicitation, n_sources: int) -> dict:
     return {
+        "nsn": line.nsn,
         "fsc": line.fsc,
         "unit_of_issue": line.unit_of_issue,
         "buyer_code": sol.buyer_code,
@@ -81,15 +82,11 @@ def line_context(line: SolicitationLine, sol: Solicitation, n_sources: int) -> d
 
 
 def nsn_history(db: Session, nsn: str) -> PriorAwards:
-    rows = db.execute(
-        select(AwardHistory.award_date, AwardHistory.unit_price, AwardHistory.quantity, AwardHistory.awardee_cage)
-        .where(AwardHistory.nsn == nsn, AwardHistory.unit_price > 0, AwardHistory.quantity > 0)
-        .order_by(AwardHistory.award_date)
-    ).all()
-    if not rows:
-        return PriorAwards.empty()
-    df = pd.DataFrame(rows, columns=["award_date", "unit_price", "quantity", "awardee_cage"])
-    return PriorAwards.from_frame(df)
+    """The NSN's award history after the training quality filter (services/data_quality.py)."""
+    from app.services.item_index import load_histories
+
+    hists, _ = load_histories(db, [nsn])
+    return hists.get(nsn, PriorAwards.empty())
 
 
 def fsc_median_index(db: Session, fscs: set[str], as_of: date) -> FscMedianIndex:
@@ -121,15 +118,34 @@ def predict_line(
     run, model = get_active_model(db)
     n_sources = db.execute(select(func.count()).select_from(ApprovedSource).where(ApprovedSource.nsn == line.nsn)).scalar_one()
     ctx = line_context(line, sol, int(n_sources))
-    hist = nsn_history(db, line.nsn)
+    from app.services.item_index import ensure_item, item_index, load_histories
+    from dibbs_ml.items import similar_item_features
+
+    hists, raw_counts = load_histories(db, [line.nsn])
+    hist = hists.get(line.nsn, PriorAwards.empty())
     fsc_index = fsc_index or fsc_median_index(db, {line.fsc}, as_of)
     fmed = fsc_index.get(line.fsc, as_of)
-    feats, ref, ref_type = compute_features(hist, ctx, line.quantity, as_of, default_ppi(), fmed)
+    ppi = default_ppi()
+    feats, ref, ref_type = compute_features(hist, ctx, line.quantity, as_of, ppi, fmed)
     cold_ref, cold_ref_type = cold_reference(ctx, fmed)
+    # Similar items (same part-number family / manufacturer): features for the model + evidence for the broker.
+    sim_ref, evidence = None, []
+    try:
+        items = item_index(db)
+        ensure_item(db, items, line)
+        nbrs = items.neighbors(line.nsn)
+        if nbrs:
+            nh, _ = load_histories(db, [n for n, _, _ in nbrs])
+            sim, sim_ref, evidence = similar_item_features(nbrs, nh, line.quantity, as_of, ppi, line.fsc, fmed,
+                                                           items=items, nsn=line.nsn)
+            feats.update(sim)
+    except Exception:  # similar items must never block a prediction
+        log.exception("similar items failed for line %s", line.id)
     n_prior = int(feats["n_prior_awards"])
     is_cold = n_prior == 0
     row = pd.DataFrame(
-        [{**feats, "is_cold": is_cold, "ref_price": ref, "cold_ref_price": cold_ref, "cold_ref_type": cold_ref_type}]
+        [{**feats, "is_cold": is_cold, "ref_price": ref, "cold_ref_price": cold_ref, "cold_ref_type": cold_ref_type,
+          "sim_ref_price": sim_ref if sim_ref else float("nan")}]
     )
     contributions: list[dict] = []
     if model is not None and not (is_cold and cold_ref_type == "none"):
@@ -141,19 +157,23 @@ def predict_line(
         except Exception:  # explanations must never block a prediction
             log.exception("explain failed for line %s", line.id)
     else:
-        base = cold_ref if is_cold else ref
+        base = (sim_ref or cold_ref) if is_cold else ref
         logq = _heuristic_logq(base, is_cold)
         model_name = "heuristic_v0"
     dist = PriceDistribution(QUANTILE_LEVELS, np.exp(logq))
+    uses_similar = bool(sim_ref) and (model is None or getattr(model, "cold_ref_mode", "fsc") == "similar")
+    cold_used, cold_used_type = (sim_ref, "similar_items") if uses_similar else (cold_ref, cold_ref_type)
     payload = {
         **dist.to_dict(),
         "median": round(dist.median, 4),
         "low_data": n_prior < LOW_DATA_PRIOR_AWARDS,
         "cold_start": is_cold,
         "n_prior_awards": n_prior,
-        "history_rows": len(hist),  # award rows on file when priced; more later = stale (refresh_stale_predictions)
-        "reference_price": round(cold_ref if is_cold else ref, 4),
-        "reference_type": cold_ref_type if is_cold else ref_type,
+        # Award rows on file when priced (raw, before the quality filter): more later = stale (refresh_stale_predictions).
+        "history_rows": int(raw_counts.get(line.nsn, 0)),
+        "similar_items": evidence,
+        "reference_price": round(cold_used if is_cold else ref, 4),
+        "reference_type": cold_used_type if is_cold else ref_type,
         "model": model_name,
         "as_of": as_of.isoformat(),
         "contributions": contributions,

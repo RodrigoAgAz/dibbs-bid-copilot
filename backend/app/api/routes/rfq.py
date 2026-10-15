@@ -54,6 +54,17 @@ def dibbs_url(sol_number: str) -> str:
     return f"https://www.dibbs.bsm.dla.mil/rfq/rfqrec.aspx?sn={sol_number.replace('-', '')}"
 
 
+def _named(ctx: TenantContext, items: list[dict]) -> list[dict]:
+    """Add item names to similar-item evidence (public catalog data)."""
+    if not items:
+        return []
+    names = dict(ctx.db.execute(
+        select(SolicitationLine.nsn, SolicitationLine.nomenclature)
+        .where(SolicitationLine.nsn.in_([i["nsn"] for i in items]), SolicitationLine.nomenclature.is_not(None))
+    ).all())
+    return [{**i, "nomenclature": names.get(i["nsn"])} for i in items]
+
+
 def quote_request_out(ctx: TenantContext, qr: QuoteRequest) -> QuoteRequestOut:
     emails = ctx.db.execute(
         select(EmailMessage).where(EmailMessage.quote_request_id == qr.id).order_by(EmailMessage.created_at)
@@ -176,6 +187,7 @@ def _line_detail(ctx: TenantContext, line: SolicitationLine, org: Organization) 
             model=q.get("model"),
             contributions=q.get("contributions", []),
             similar_awards=q.get("similar_awards", []),
+            similar_items=_named(ctx, q.get("similar_items") or []),
             created_at=pred.created_at,
         )
         if pred

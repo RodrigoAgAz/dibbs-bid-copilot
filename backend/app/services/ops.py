@@ -90,6 +90,9 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
     nsns = db.execute(
         select(func.count(func.distinct(AwardHistory.nsn))).where(AwardHistory.source != "synthetic")
     ).scalar_one()
+    by_source = dict(db.execute(
+        select(AwardHistory.source, func.count()).where(AwardHistory.source != "synthetic").group_by(AwardHistory.source)
+    ).all())
     model = db.execute(select(ModelRun).where(ModelRun.is_active.is_(True)).limit(1)).scalar_one_or_none()
 
     runs = {}
@@ -127,6 +130,7 @@ def data_health(db: Session, now: datetime | None = None) -> dict:
         "award_rows": int(real_awards),
         "award_rows_last_30_days": int(recent_awards),
         "nsns_with_history": int(nsns),
+        "award_rows_by_source": {str(k): int(v) for k, v in by_source.items()},
         "model": _model_info(model, real_awards) if model else None,
         "live_track_record": live_track_record(db),
         "runs": runs,
@@ -142,8 +146,11 @@ def live_track_record(db: Session, since_days: int = 180, since: date = TRACK_RE
     before their return-by date; a prediction made after the award could already contain the winning price.)
     """
     today = today_et()
+    from app.services.data_quality import MAX_RATIO, RELIABLE_SOURCES
+
     rows = db.execute(
-        select(SolicitationLine.id, Solicitation.return_by_date, AwardHistory.unit_price, AwardHistory.award_date)
+        select(SolicitationLine.id, Solicitation.return_by_date, AwardHistory.unit_price, AwardHistory.award_date,
+               AwardHistory.source, SolicitationLine.nsn)
         .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
         .join(AwardHistory, (AwardHistory.solicitation_number == Solicitation.solicitation_number)
               & (AwardHistory.nsn == SolicitationLine.nsn))
@@ -154,8 +161,20 @@ def live_track_record(db: Session, since_days: int = 180, since: date = TRACK_RE
             AwardHistory.unit_price > 0,
         )
     ).all()
+    # Derived winning prices (contract total / requested quantity) count only when they agree with the NSN's
+    # verified prices (services/data_quality.py); a wrong label would score a right prediction as a miss.
+    derived_nsns = {nsn for _, _, _, _, source, nsn in rows if source not in RELIABLE_SOURCES}
+    verified = dict(db.execute(
+        select(AwardHistory.nsn, func.percentile_cont(0.5).within_group(AwardHistory.unit_price))
+        .where(AwardHistory.nsn.in_(derived_nsns), AwardHistory.source.in_(RELIABLE_SOURCES))
+        .group_by(AwardHistory.nsn)
+    ).all()) if derived_nsns and db.bind.dialect.name == "postgresql" else {}
     winners: dict[int, tuple[date, float]] = {}
-    for line_id, due, price, awarded in rows:
+    for line_id, due, price, awarded, source, nsn in rows:
+        if source not in RELIABLE_SOURCES:
+            ref = verified.get(nsn)
+            if not ref or not (1 / MAX_RATIO <= float(price) / float(ref) <= MAX_RATIO):
+                continue
         cut = min(d for d in (due, awarded) if d is not None)
         winners.setdefault(line_id, (cut, float(price)))
     inside = 0
@@ -199,6 +218,13 @@ def live_track_record(db: Session, since_days: int = 180, since: date = TRACK_RE
     }
 
 
+def _tier(m: dict | None) -> dict | None:
+    if not m:
+        return None
+    return {"n": m.get("n"), "median_abs_pct_error": m.get("median_abs_pct_error"),
+            "coverage_80": m.get("coverage_80"), "coverage_90": m.get("coverage_90")}
+
+
 def _model_info(model: ModelRun, real_awards: int) -> dict:
     """Held-out accuracy of the active model: tested on the most recent awards it never saw (time split)."""
     from app.services.training import REAL_ONLY_THRESHOLD
@@ -216,6 +242,10 @@ def _model_info(model: ModelRun, real_awards: int) -> dict:
         "coverage_80": main.get("coverage_80"),
         "coverage_90": main.get("coverage_90"),
         "baseline_median_abs_pct_error": base.get("median_abs_pct_error"),
+        "model_version": m.get("model_version"),
+        "with_history": _tier(main.get("warm")),
+        "new_parts": _tier(main.get("cold")),
+        "by_history": {k: _tier(v) for k, v in (main.get("by_history") or {}).items()},
         # Training drops the synthetic demo history once this many real award rows exist.
         "real_data": real_awards >= REAL_ONLY_THRESHOLD,
     }

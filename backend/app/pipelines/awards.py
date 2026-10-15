@@ -38,7 +38,7 @@ from app.pipelines.upserts import apply_record_page, upsert_awards
 
 log = logging.getLogger(__name__)
 TRACK_DAYS = 75
-MAX_AWARD_PDFS = 150
+MAX_AWARD_PDFS = 400  # award PDFs carry the exact line unit price; ~1 request each
 # ~1 request/second: 400 record pages is about 7 minutes per daily run.
 MAX_RECORD_PAGES = 400
 RECHECK_RECENT = timedelta(days=2)
@@ -71,19 +71,27 @@ def award_rows_from_listing(
             "source": "award_listing",
         }
         single = line is not None and len(line.solicitation.lines) == 1
+        derived = None
         if single and r.total_price and line.quantity:
-            out.append({**base, "quantity": line.quantity, "unit_of_issue": line.unit_of_issue,
-                        "unit_price": round(r.total_price / line.quantity, 5), "total_value": r.total_price})
-            continue
+            # total / requested quantity: wrong when DLA awarded another quantity or the total spans items,
+            # so the award PDF (exact line price) is preferred whenever the budget allows.
+            derived = {**base, "quantity": line.quantity, "unit_of_issue": line.unit_of_issue,
+                       "unit_price": round(r.total_price / line.quantity, 5), "total_value": r.total_price}
         if pdf_budget[0] <= 0 or not r.pdf_url:
+            if derived:
+                out.append(derived)
             continue
         pdf_budget[0] -= 1
         try:
             data = src.award_pdf(r.pdf_url)
         except Exception as exc:
             log.warning("award PDF %s failed: %s", r.pdf_url, exc)
+            if derived:
+                out.append(derived)
             continue
         if not data:
+            if derived:
+                out.append(derived)
             continue
         parsed = parse_award_pdf_text(pdf_to_text(data))
         lines = [ln for ln in parsed.lines if ln.quantity > 0]
@@ -91,6 +99,8 @@ def award_rows_from_listing(
         for ln in match[:1]:
             out.append({**base, "quantity": ln.quantity, "unit_of_issue": ln.unit_of_issue, "unit_price": ln.unit_price,
                         "total_value": ln.total, "source": "award_pdf"})
+        if not match and derived:
+            out.append(derived)
     return out
 
 

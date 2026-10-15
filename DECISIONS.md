@@ -223,6 +223,22 @@ Ambiguities resolved during the build, and deviations from the build prompt. New
   (`#>>` on Postgres, `json_extract` on SQLite) instead of loading thousands of full explanations. Responses are
   gzip-compressed (3.5 MB → about 320 KB for 4,300 lines).
 
+## Pricing model v2 and data quality (2026-10-15; details in ml/research/README.md)
+- **Derived award prices are quarantined unless verified.** Contract total / requested quantity (award
+  listings, record pages) is wrong whenever DLA awarded another quantity or the total spans items. Training,
+  evaluation, the live track record and live pricing all use only verified prices (RFQ-PDF history, award PDFs)
+  plus derived prices within 5x of the NSN's verified median (`services/data_quality.py`). Award labeling
+  fetches the award PDF first (budget 400 per run) and falls back to the derived price.
+- **v2 adds part-number-family evidence for new parts** (`dibbs_ml/items.py`): other NSNs in the same FSC whose
+  approved-source CAGE + part-number stem match. It is the cold-start reference when present, plus three
+  features; name-only and manufacturer-only similarity were measured and dropped (no signal). Also a
+  `niin_country` feature. v1 artifacts keep working (`cold_ref_mode` defaults to "fsc").
+- **Model code changes trigger one retrain** (`MODEL_CODE_VERSION`, queued by the worker at startup and the
+  hourly ops check; the job sets its own marker so an outgoing worker with older code can't). Promotion still
+  requires a better pinball loss than the active model on the same held-out window.
+- **Accuracy is reported by history depth** (no history / 1 / 2-4 / 5+ awards) in the model metrics, the
+  health endpoint and the landing page, because the overall median mixes two very different populations.
+
 ## Daily digest
 - Weekdays 09:00 ET (after the 06:00/08:00 ingests), one email per owner/member with: the most profitable
   bid-worthy lines that arrived in the last 26 h, bid-worthy lines closing within 2 days without a recorded bid,

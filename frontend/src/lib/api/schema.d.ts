@@ -896,6 +896,17 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** AccuracyTierOut */
+        AccuracyTierOut: {
+            /** N */
+            n?: number | null;
+            /** Median Abs Pct Error */
+            median_abs_pct_error?: number | null;
+            /** Coverage 80 */
+            coverage_80?: number | null;
+            /** Coverage 90 */
+            coverage_90?: number | null;
+        };
         /** ActiveModelOut */
         ActiveModelOut: {
             /** Run Id */
@@ -924,6 +935,17 @@ export interface components {
              * @default false
              */
             real_data: boolean;
+            /** Model Version */
+            model_version?: string | null;
+            with_history?: components["schemas"]["AccuracyTierOut"] | null;
+            new_parts?: components["schemas"]["AccuracyTierOut"] | null;
+            /**
+             * By History
+             * @default {}
+             */
+            by_history: {
+                [key: string]: components["schemas"]["AccuracyTierOut"] | null;
+            };
         };
         /** ActualBidIn */
         ActualBidIn: {
@@ -1128,6 +1150,13 @@ export interface components {
             award_rows_last_30_days: number;
             /** Nsns With History */
             nsns_with_history: number;
+            /**
+             * Award Rows By Source
+             * @default {}
+             */
+            award_rows_by_source: {
+                [key: string]: number;
+            };
             model: components["schemas"]["ActiveModelOut"] | null;
             live_track_record?: components["schemas"]["TrackRecordOut"] | null;
             /** Runs */
@@ -1587,6 +1616,13 @@ export interface components {
             }[];
             /** Similar Awards */
             similar_awards: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Similar Items
+             * @default []
+             */
+            similar_items: {
                 [key: string]: unknown;
             }[];
             /**

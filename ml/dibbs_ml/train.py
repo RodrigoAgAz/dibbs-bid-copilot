@@ -47,13 +47,26 @@ def split_by_time(frame: pd.DataFrame, as_of: date) -> tuple[pd.DataFrame, pd.Da
     return parts["train"], parts["calib"], parts["test"], windows
 
 
+# Accuracy is reported by how much award history the NSN had: that is what a broker can expect per line.
+HISTORY_TIERS = [("no history", 0, 0), ("1 award", 1, 1), ("2-4 awards", 2, 4), ("5+ awards", 5, 10**9)]
+
+
 def evaluate_model(model: PricingModel, test: pd.DataFrame, kind: str = "model") -> tuple[dict, np.ndarray]:
     logq, is_cold = model.predict_log(test, kind=kind)
     price = test["unit_price"].to_numpy(dtype=float)
     m = quantile_metrics(logq, price, model.levels)
+
+    def flat(mask):
+        return {k: v for k, v in quantile_metrics(logq[mask], price[mask], model.levels).items() if not isinstance(v, dict)}
+
     if is_cold.any() and (~is_cold).any():
-        m["warm"] = {k: v for k, v in quantile_metrics(logq[~is_cold], price[~is_cold]).items() if not isinstance(v, dict)}
-        m["cold"] = {k: v for k, v in quantile_metrics(logq[is_cold], price[is_cold]).items() if not isinstance(v, dict)}
+        m["warm"] = flat(~is_cold)
+        m["cold"] = flat(is_cold)
+    n_prior = test["n_prior_awards"].to_numpy(dtype=float) if "n_prior_awards" in test else np.zeros(len(test))
+    m["by_history"] = {
+        label: flat((n_prior >= lo) & (n_prior <= hi)) for label, lo, hi in HISTORY_TIERS
+        if ((n_prior >= lo) & (n_prior <= hi)).sum() >= 5
+    }
     return m, logq
 
 
@@ -62,9 +75,10 @@ def train_from_awards(
     as_of: date,
     ppi: PPI | None = None,
     active_model: PricingModel | None = None,
+    items=None,
 ) -> TrainResult:
     ppi = ppi or default_ppi()
-    frame = build_training_frame(awards, ppi)
+    frame = build_training_frame(awards, ppi, items=items)
     if len(frame) < 3 * MIN_WINDOW_ROWS:
         raise ValueError(f"not enough training rows ({len(frame)}); run the backfill or seed first")
     train, calib, test, windows = split_by_time(frame, as_of)
@@ -76,7 +90,10 @@ def train_from_awards(
     main_m, logq = evaluate_model(model, test, "model")
     raw_m, _ = evaluate_model(model, test, "uncalibrated")
     base_m, base_logq = evaluate_model(model, test, "baseline")
-    ref = np.where(test["is_cold"], test["cold_ref_price"], test["ref_price"]).astype(float)
+    from dibbs_ml.models import cold_frame
+
+    cold_ref = cold_frame(test, model.cold_ref_mode)["cold_ref_used"].to_numpy(dtype=float)
+    ref = np.where(test["is_cold"], cold_ref, test["ref_price"]).astype(float)
     calib_plot = pwin_calibration(logq, test["unit_price"].to_numpy(dtype=float), ref, model.levels)
     base_calib = pwin_calibration(base_logq, test["unit_price"].to_numpy(dtype=float), ref, model.levels)
     backtest = run_backtest(test, logq, model.levels)

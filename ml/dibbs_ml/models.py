@@ -126,11 +126,25 @@ def widen(pred: np.ndarray, factor: float, levels=QUANTILE_LEVELS) -> np.ndarray
     return mid + factor * (pred - mid)
 
 
-def cold_frame(df: pd.DataFrame) -> pd.DataFrame:
-    """Re-express rows relative to the cold-start (no NSN history) reference."""
+def cold_frame(df: pd.DataFrame, mode: str = "fsc") -> pd.DataFrame:
+    """Re-express rows relative to the cold-start (no NSN history) reference.
+
+    mode "fsc" (v1): DoD price, else the FSC median. mode "similar" (v2): similar-item evidence (same
+    part-number family / manufacturer) when there is any, else the v1 reference. `cold_ref_used` is the
+    reference the cold model's log-ratio predictions are relative to; `y_cold` is recomputed against it.
+    """
     c = df.copy()
-    c["ref_type"] = c["cold_ref_type"]
-    c["log_ref_price"] = np.log(c["cold_ref_price"].astype(float))
+    ref = c["cold_ref_price"].astype(float).to_numpy()
+    rtype = c["cold_ref_type"].astype(object).to_numpy()
+    if mode == "similar" and "sim_ref_price" in c:
+        s = pd.to_numeric(c["sim_ref_price"], errors="coerce").to_numpy(dtype=float)
+        ok = np.isfinite(s) & (s > 0)
+        ref, rtype = np.where(ok, s, ref), np.where(ok, "similar_items", rtype)
+    c["ref_type"] = rtype
+    c["cold_ref_used"] = ref
+    c["log_ref_price"] = np.log(ref)
+    if "unit_price" in c:
+        c["y_cold"] = np.log(c["unit_price"].astype(float).to_numpy() / ref)
     return c
 
 
@@ -146,6 +160,7 @@ class PricingModel:
     warm_deltas: np.ndarray
     cold_deltas: np.ndarray
     cold_widen: float = COLD_WIDEN
+    cold_ref_mode: str = "fsc"  # v1 artifacts have no such attribute and fall back to this class default
     trained_at: str = ""
     train_window: str = ""
     calib_window: str = ""
@@ -153,11 +168,12 @@ class PricingModel:
 
     # ------------------------------------------------------------ training
     @classmethod
-    def train(cls, train_df: pd.DataFrame, calib_df: pd.DataFrame, levels=QUANTILE_LEVELS) -> PricingModel:
-        cats = category_levels(pd.concat([train_df, cold_frame(train_df)]))
+    def train(cls, train_df: pd.DataFrame, calib_df: pd.DataFrame, levels=QUANTILE_LEVELS,
+              cold_ref_mode: str = "similar") -> PricingModel:
+        cats = category_levels(pd.concat([train_df, cold_frame(train_df, cold_ref_mode)]))
         warm_train = train_df[~train_df["is_cold"]]
         warm = QuantileGBM(FEATURES, cats, levels).fit(warm_train, warm_train["y"].to_numpy())
-        ctrain = cold_frame(train_df)
+        ctrain = cold_frame(train_df, cold_ref_mode)
         cold = QuantileGBM(COLD_FEATURES, cats, levels).fit(ctrain, ctrain["y_cold"].to_numpy())
         baseline = Baseline(levels).fit(warm_train, warm_train["y"].to_numpy())
         cold_baseline = Baseline(levels).fit(ctrain, ctrain["y_cold"].to_numpy())
@@ -170,6 +186,8 @@ class PricingModel:
             cold_baseline=cold_baseline,
             warm_deltas=np.zeros(len(levels)),
             cold_deltas=np.zeros(len(levels)),
+            cold_ref_mode=cold_ref_mode,
+            model_version="lgbm_quantile_v2" if cold_ref_mode == "similar" else "lgbm_quantile_v1",
         )
         # Group-conditional split conformal on the calibration window.
         cw = calib_df[~calib_df["is_cold"]]
@@ -177,10 +195,10 @@ class PricingModel:
             model.warm_deltas = fit_conformal(warm.predict(cw), cw["y"].to_numpy(), levels)
         cc = calib_df[calib_df["is_cold"]]
         if len(cc) < MIN_GROUP_CALIBRATION:
-            cc = cold_frame(calib_df)  # not enough true cold rows: calibrate the FSC model on all rows
+            cc = cold_frame(calib_df, cold_ref_mode)  # not enough true cold rows: calibrate on all rows
             ycc = cc["y_cold"].to_numpy()
         else:
-            cc = cold_frame(cc)
+            cc = cold_frame(cc, cold_ref_mode)
             ycc = cc["y_cold"].to_numpy()
         if len(cc):
             model.cold_deltas = fit_conformal(cold.predict(cc), ycc, levels)
@@ -203,21 +221,21 @@ class PricingModel:
                     q = apply_conformal(q, self.warm_deltas)
             out[warm_idx] = np.log(w["ref_price"].to_numpy(dtype=float))[:, None] + q
         if cold_idx.size:
-            c = cold_frame(df.iloc[cold_idx])
+            c = cold_frame(df.iloc[cold_idx], self.cold_ref_mode)
             if kind == "baseline":
                 q = self.cold_baseline.predict(c)
             else:
                 q = self.cold.predict(c)
                 if kind == "model":
                     q = widen(apply_conformal(q, self.cold_deltas), self.cold_widen, self.levels)
-            out[cold_idx] = np.log(c["cold_ref_price"].to_numpy(dtype=float))[:, None] + q
+            out[cold_idx] = np.log(c["cold_ref_used"].to_numpy(dtype=float))[:, None] + q
         return np.sort(out, axis=1), is_cold
 
     def explain(self, row: pd.DataFrame, top: int = 6) -> list[dict]:
         """Top feature contributions to the median prediction (log-ratio units -> % effect)."""
         is_cold = bool(row["is_cold"].iloc[0]) if "is_cold" in row else bool(row["n_prior_awards"].iloc[0] == 0)
         model = self.cold if is_cold else self.warm
-        frame = cold_frame(row) if is_cold else row
+        frame = cold_frame(row, self.cold_ref_mode) if is_cold else row
         contrib = model.contributions(frame)[0]
         feats = model.features
         pairs = sorted(zip(feats, contrib[:-1], strict=True), key=lambda t: -abs(t[1]))[:top]

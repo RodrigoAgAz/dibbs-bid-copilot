@@ -101,8 +101,8 @@ function DataFreshness() {
           </div>
           {data.model?.real_data && data.model.median_abs_pct_error != null && (
             <div>
-              Model: median price error {Math.round(data.model.median_abs_pct_error * 100)}% on {data.model.test_rows?.toLocaleString()} recent
-              awards it never saw
+              Model: median price error {Math.round((data.model.with_history?.median_abs_pct_error ?? data.model.median_abs_pct_error) * 100)}%
+              on parts with price history ({data.model.test_rows?.toLocaleString()} recent awards it never saw)
             </div>
           )}
           {data.checks

@@ -362,6 +362,58 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
         </Card>
       </div>
 
+      {(p?.similar_items ?? []).length > 0 && (
+        <Card data-testid="similar-items">
+          <CardHeader>
+            <CardTitle>Similar parts DLA bought</CardTitle>
+            <CardDescription>
+              Same part-number family or same manufacturer and item name. Prices adjusted for inflation and to this quantity
+              {p?.cold_start ? "; with no history for this NSN, they are the best evidence of its price" : ""}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <THead>
+                <tr>
+                  <TH>Part</TH>
+                  <TH>Why similar</TH>
+                  <TH>Last award</TH>
+                  <TH className="text-right">Qty</TH>
+                  <TH className="text-right">Unit price</TH>
+                  <TH className="text-right">At this qty</TH>
+                </tr>
+              </THead>
+              <TBody>
+                {(p?.similar_items ?? []).map((raw) => {
+                  const it = raw as {
+                    nsn: string;
+                    nomenclature?: string | null;
+                    reason: string;
+                    award_date: string;
+                    quantity: number;
+                    unit_price: number;
+                    adjusted_price: number;
+                  };
+                  return (
+                    <TR key={it.nsn}>
+                      <TD className="max-w-[240px] truncate" title={it.nomenclature ?? ""}>
+                        {it.nomenclature ?? "—"}
+                        <div className="font-mono text-[11px] text-muted-foreground">{formatNsn(it.nsn)}</div>
+                      </TD>
+                      <TD className="text-[12px]">{it.reason}</TD>
+                      <TD>{formatDate(it.award_date)}</TD>
+                      <TD className="num text-right">{num(it.quantity)}</TD>
+                      <TD className="num text-right">{money(it.unit_price)}</TD>
+                      <TD className="num text-right font-medium">{money(it.adjusted_price)}</TD>
+                    </TR>
+                  );
+                })}
+              </TBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>

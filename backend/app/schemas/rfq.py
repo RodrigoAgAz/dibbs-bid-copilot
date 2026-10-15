@@ -193,6 +193,8 @@ class PredictionOut(BaseModel):
     model: str | None
     contributions: list[dict[str, Any]]
     similar_awards: list[dict[str, Any]]
+    # Other NSNs in the same part-number family / from the same manufacturer and what DLA paid for them.
+    similar_items: list[dict[str, Any]] = []
     created_at: datetime
 
 

@@ -123,11 +123,19 @@ export default function LandingPage() {
               <h2 className="text-xl font-semibold">Measured, not promised</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 The pricing model is tested on the {num(health.data.model.test_rows)} most recent real DIBBS awards it never saw during
-                training, and retrained every week as new awards post.
+                training, and retrained every week as new awards post. Parts DLA has never bought are much harder to price: for those the
+                app shows what similar parts sold for and asks for a supplier quote first.
               </p>
             </div>
             <dl className="grid grid-cols-3 gap-4">
-              <Stat label="Median price error" value={`${Math.round(health.data.model.median_abs_pct_error * 100)}%`} />
+              <Stat
+                label={
+                  health.data.model.with_history?.median_abs_pct_error != null
+                    ? "Median error, parts with price history"
+                    : "Median price error"
+                }
+                value={`${Math.round((health.data.model.with_history?.median_abs_pct_error ?? health.data.model.median_abs_pct_error) * 100)}%`}
+              />
               <Stat
                 label="Winning price inside the 80% range"
                 value={health.data.model.coverage_80 != null ? `${Math.round(health.data.model.coverage_80 * 100)}%` : "—"}

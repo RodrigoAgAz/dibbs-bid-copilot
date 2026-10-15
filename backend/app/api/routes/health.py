@@ -57,6 +57,13 @@ class PipelineRunOut(BaseModel):
     last_finished_at: str | None
 
 
+class AccuracyTierOut(BaseModel):
+    n: int | None = None
+    median_abs_pct_error: float | None = None
+    coverage_80: float | None = None
+    coverage_90: float | None = None
+
+
 class ActiveModelOut(BaseModel):
     run_id: int
     trained_at: str | None
@@ -68,6 +75,10 @@ class ActiveModelOut(BaseModel):
     coverage_90: float | None = None
     baseline_median_abs_pct_error: float | None = None
     real_data: bool = False
+    model_version: str | None = None
+    with_history: AccuracyTierOut | None = None
+    new_parts: AccuracyTierOut | None = None
+    by_history: dict[str, AccuracyTierOut | None] = {}
 
 
 class TrackRecordOut(BaseModel):
@@ -87,6 +98,7 @@ class DataHealthOut(BaseModel):
     award_rows: int
     award_rows_last_30_days: int
     nsns_with_history: int
+    award_rows_by_source: dict[str, int] = {}
     model: ActiveModelOut | None
     live_track_record: TrackRecordOut | None = None
     runs: dict[str, PipelineRunOut]

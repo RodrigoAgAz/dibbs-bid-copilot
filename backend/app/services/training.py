@@ -41,16 +41,23 @@ def load_awards_frame(db: Session) -> pd.DataFrame:
         AwardHistory.awardee_cage,
         AwardHistory.contract_number,
         AwardHistory.solicitation_number,
+        AwardHistory.source,
     )
     if real_only:
         stmt = stmt.where(AwardHistory.source != "synthetic")
+    stmt = stmt.where(AwardHistory.unit_price > 0, AwardHistory.quantity > 0)
     awards = pd.DataFrame(
         db.execute(stmt).all(),
         columns=["nsn", "award_date", "unit_price", "quantity", "unit_of_issue", "awardee_cage",
-                 "contract_number", "solicitation_number"],
+                 "contract_number", "solicitation_number", "source"],
     )
     if awards.empty:
         return awards
+    from app.services.data_quality import filter_awards
+
+    awards, quality = filter_awards(awards)
+    log.info("training awards: %s", quality)
+    awards.attrs["quality"] = quality
     awards["fsc"] = awards["nsn"].str[:4]
     ctx = pd.DataFrame(
         db.execute(
@@ -87,7 +94,11 @@ def load_awards_frame(db: Session) -> pd.DataFrame:
 def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = False) -> dict:
     df = load_awards_frame(db)
     active_run, active_model = get_active_model(db)
-    result = train_from_awards(df, as_of=as_of, active_model=active_model)
+    from app.services.item_index import build_item_index, clear_item_index
+
+    items = build_item_index(db)  # similar items (same part family / manufacturer) for the cold-start model
+    result = train_from_awards(df, as_of=as_of, active_model=active_model, items=items)
+    clear_item_index()
     promote, reason = should_promote(result.metrics)
     if force_promote:
         promote, reason = True, f"forced ({reason})"
@@ -107,7 +118,8 @@ def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = Fals
     if promote:
         db.execute(update(ModelRun).where(ModelRun.id != run.id).values(is_active=False))
         run.is_active = True
-    run.metrics = {**result.metrics, "promoted": promote, "promote_reason": reason}
+    run.metrics = {**result.metrics, "promoted": promote, "promote_reason": reason,
+                   "model_version": result.model.model_version, "data_quality": df.attrs.get("quality")}
     db.flush()
     n_synth = db.execute(
         select(func.count()).select_from(AwardHistory).where(AwardHistory.source == "synthetic")

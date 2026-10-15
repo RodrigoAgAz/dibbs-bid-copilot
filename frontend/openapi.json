@@ -2003,6 +2003,56 @@
         ],
         "title": "AcceptInviteIn"
       },
+      "AccuracyTierOut": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Abs Pct Error"
+          },
+          "coverage_80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 80"
+          },
+          "coverage_90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 90"
+          }
+        },
+        "type": "object",
+        "title": "AccuracyTierOut"
+      },
       "ActiveModelOut": {
         "properties": {
           "run_id": {
@@ -2105,6 +2155,52 @@
             "type": "boolean",
             "title": "Real Data",
             "default": false
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "with_history": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccuracyTierOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_parts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccuracyTierOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "by_history": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AccuracyTierOut"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "By History",
+            "default": {}
           }
         },
         "type": "object",
@@ -2840,6 +2936,14 @@
           "nsns_with_history": {
             "type": "integer",
             "title": "Nsns With History"
+          },
+          "award_rows_by_source": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Award Rows By Source",
+            "default": {}
           },
           "model": {
             "anyOf": [
@@ -4177,6 +4281,15 @@
             },
             "type": "array",
             "title": "Similar Awards"
+          },
+          "similar_items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Similar Items",
+            "default": []
           },
           "created_at": {
             "type": "string",

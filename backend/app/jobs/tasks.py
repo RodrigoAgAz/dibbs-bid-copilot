@@ -131,10 +131,46 @@ def demo_refresh_job() -> list:
         return refresh_demo_orgs(db)
 
 
+MODEL_CODE_VERSION = "lgbm_quantile_v2"  # bump when the training code changes: one retrain is queued
+
+
+def queue_retrain_if_model_code_changed() -> str | None:
+    """Queue one retrain (bulk) after a deploy with new model code; promotion still needs a better test score."""
+    from sqlalchemy import select
+
+    from app.jobs.queue import enqueue_unique
+    from app.models import IngestCheckpoint, ModelRun
+
+    with session_scope() as db:
+        if db.execute(select(ModelRun.id).limit(1)).first() is None:
+            return None
+        row = db.execute(select(IngestCheckpoint).where(IngestCheckpoint.source == "model_code",
+                                                        IngestCheckpoint.key == "version")).scalar_one_or_none()
+        if row is not None and row.detail == MODEL_CODE_VERSION:
+            return None
+    return enqueue_unique(retrain_for_model_code_job)
+
+
+@bulk
+def retrain_for_model_code_job() -> dict:
+    """Retrain once for new model code. The marker is set here, by the new code, so an outgoing worker still
+    running older code (deploy overlap) can't mark it done: it doesn't have this function and the job fails."""
+    from app.models import IngestCheckpoint
+
+    with session_scope() as db:
+        row = db.query(IngestCheckpoint).filter_by(source="model_code", key="version").one_or_none()
+        if row is None:
+            db.add(IngestCheckpoint(source="model_code", key="version", status="done", detail=MODEL_CODE_VERSION))
+        else:
+            row.detail = MODEL_CODE_VERSION
+    return retrain_job()
+
+
 def ops_check_job() -> dict:
     from app.services.ops import run_ops_check
 
     queue_engine_refresh_if_needed()
+    queue_retrain_if_model_code_changed()
     with session_scope() as db:
         return run_ops_check(db)
 

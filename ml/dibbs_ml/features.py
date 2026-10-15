@@ -35,7 +35,11 @@ CAT_FEATURES = [
     "inspection_point",
     "fob",
     "ref_type",
+    "niin_country",  # NATO cataloguing country (00/01 = US): foreign-origin items price differently
 ]
+# Similar-item evidence (dibbs_ml.items): filled by build_training_frame / the pricing service when an item index
+# is available, NaN otherwise.
+SIM_FEATURE_NAMES = ["fam_log_ref_vs_fsc", "fam_n", "fam_spread"]
 NUM_FEATURES = [
     "log_quantity",
     "qty_rel_median",
@@ -57,6 +61,7 @@ NUM_FEATURES = [
     "log_last_to_dod",
     "inflation_change",
     "log_ref_price",
+    *SIM_FEATURE_NAMES,
 ]
 FEATURES = NUM_FEATURES + CAT_FEATURES
 # Features that only exist with NSN history: the cold-start (FSC-level) model never sees them.
@@ -243,6 +248,8 @@ def compute_features(
     feats["inspection_point"] = _cat(ctx.get("inspection_point"))
     feats["fob"] = _cat(ctx.get("fob"))
     feats["ref_type"] = ref_type
+    nsn = str(ctx.get("nsn") or "")
+    feats["niin_country"] = nsn[4:6] if len(nsn) >= 6 else "NA"
     return feats, ref, ref_type
 
 
@@ -282,11 +289,12 @@ CONTEXT_COLUMNS = [
 ]
 
 
-def build_training_frame(awards: pd.DataFrame, ppi: PPI) -> pd.DataFrame:
+def build_training_frame(awards: pd.DataFrame, ppi: PPI, items=None) -> pd.DataFrame:
     """One row per award with features, target and bookkeeping columns.
 
     `awards` columns: nsn, fsc, award_date, unit_price, quantity, awardee_cage, and optionally
     issue_date + CONTEXT_COLUMNS (solicitation context joined by solicitation number).
+    `items` (dibbs_ml.items.ItemIndex): adds similar-item evidence from OTHER NSNs' awards before each row's as_of.
     """
     df = awards.copy()
     df = df[(df["unit_price"] > 0) & (df["quantity"] > 0)].copy()
@@ -298,6 +306,11 @@ def build_training_frame(awards: pd.DataFrame, ppi: PPI) -> pd.DataFrame:
             df[c] = None
     df = df.sort_values(["nsn", "award_date"]).reset_index(drop=True)
     fsc_index = FscMedianIndex(df)
+    histories = None
+    if items is not None:
+        from dibbs_ml.items import histories_for
+
+        histories = histories_for(df)
 
     rows: list[dict] = []
     for nsn, g in df.groupby("nsn", sort=False):
@@ -305,9 +318,18 @@ def build_training_frame(awards: pd.DataFrame, ppi: PPI) -> pd.DataFrame:
         for rec in g.itertuples(index=False):
             as_of = row_as_of(rec.issue_date, rec.award_date)
             ctx = {c: getattr(rec, c) for c in CONTEXT_COLUMNS}
+            ctx["nsn"] = nsn
             fmed = fsc_index.get(rec.fsc, as_of)
             feats, ref, ref_type = compute_features(hist, ctx, rec.quantity, as_of, ppi, fmed)
             cold_ref, cold_ref_type = cold_reference(ctx, fmed)
+            sim_ref = np.nan
+            if items is not None:
+                from dibbs_ml.items import similar_item_features
+
+                sim, sref, _ = similar_item_features(items.neighbors(nsn), histories, rec.quantity, as_of, ppi,
+                                                     str(rec.fsc), fmed, items=items, nsn=nsn)
+                feats.update(sim)
+                sim_ref = sref if sref else np.nan
             prior = hist.before(as_of)
             rows.append(
                 {
@@ -321,6 +343,7 @@ def build_training_frame(awards: pd.DataFrame, ppi: PPI) -> pd.DataFrame:
                     "ref_price": ref,
                     "cold_ref_price": cold_ref,
                     "cold_ref_type": cold_ref_type,
+                    "sim_ref_price": sim_ref,
                     "last_price_raw": float(prior.prices[-1]) if len(prior) else np.nan,
                     "is_cold": len(prior) == 0,
                     "y": math.log(float(rec.unit_price) / ref),

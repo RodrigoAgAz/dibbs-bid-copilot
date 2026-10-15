@@ -106,7 +106,8 @@ def test_bulk_jobs_have_their_own_queue_and_worker_pools_parse():
     from app.jobs.queue import BULK_QUEUE, QUEUE_NAME, queue_for
     from app.jobs.worker import parse_pools
 
-    for f in (tasks.award_labeling_job, tasks.retrain_job, tasks.nightly_backfill_job, tasks.initial_live_load_job):
+    for f in (tasks.award_labeling_job, tasks.retrain_job, tasks.nightly_backfill_job, tasks.initial_live_load_job,
+              tasks.retrain_for_model_code_job):
         assert queue_for(f) == BULK_QUEUE
     for f in (tasks.daily_ingest_job, tasks.followups_job, tasks.ops_check_job, tasks.send_quote_request_job):
         assert queue_for(f) == QUEUE_NAME
@@ -342,6 +343,11 @@ def test_live_track_record_uses_only_predictions_made_before_close(db):
     db.add(AwardHistory(nsn=line.nsn, award_date=today - timedelta(days=3), unit_price=1.1, quantity=10,
                         contract_number="SPE-TR-1", solicitation_number=sol.solicitation_number, source="award_listing"))
     db.commit()
+    # A derived (listing) winning price only counts once verified prices for the NSN back it up.
+    assert live_track_record(db, since=today - timedelta(days=30))["n"] == 0
+    db.add(AwardHistory(nsn=line.nsn, award_date=today - timedelta(days=400), unit_price=1.0, quantity=10,
+                        contract_number="SPE-TR-0", source="rfq_pdf_history"))
+    db.commit()
     tr = live_track_record(db, since=today - timedelta(days=30))
     assert tr["n"] == 1 and tr["coverage_80"] == 1.0
     assert live_track_record(db, since=today - timedelta(days=12))["n"] == 0  # only pre-fix predictions
@@ -368,3 +374,24 @@ def test_public_top_lines_only_with_the_public_demo(client, db, settings):
     assert client.get("/api/public/top-lines").status_code == 404
     settings(public_demo=True)
     assert client.get("/api/public/top-lines").json() == []  # no demo org seeded
+
+
+def test_new_model_code_queues_exactly_one_retrain(db, monkeypatch):
+    from app.jobs import queue, tasks
+    from app.models import IngestCheckpoint, ModelRun
+
+    calls = []
+    monkeypatch.setattr(queue, "enqueue_unique", lambda func, *a, **k: calls.append(func.__name__) or "job")
+    assert tasks.queue_retrain_if_model_code_changed() is None  # no model yet: the seed/initial load trains
+    db.add(ModelRun(model_type="lgbm_quantile_conformal", train_window="a..b", test_window="b..c", metrics={},
+                    is_active=True))
+    db.commit()
+    tasks.queue_retrain_if_model_code_changed()
+    assert calls == ["retrain_for_model_code_job"]
+    # The job marks the version itself (so an older worker can't): afterwards nothing more is queued.
+    monkeypatch.setattr(tasks, "retrain_job", lambda: {"ok": True})
+    assert tasks.retrain_for_model_code_job() == {"ok": True}
+    assert db.query(IngestCheckpoint).filter_by(source="model_code").one().detail == tasks.MODEL_CODE_VERSION
+    calls.clear()
+    tasks.queue_retrain_if_model_code_changed()
+    assert calls == []

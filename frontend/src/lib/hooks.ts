@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, unwrap } from "@/lib/api/client";
 
@@ -34,4 +35,40 @@ export function useDataHealth() {
     staleTime: 5 * 60_000,
     refetchInterval: 10 * 60_000,
   });
+}
+
+const MATHS_KEY = "show-maths";
+const mathsListeners = new Set<() => void>();
+let mathsSession: boolean | null = null; // this page view's choice, for when storage is blocked
+
+function readMaths(): boolean {
+  if (mathsSession !== null) return mathsSession;
+  try {
+    return window.localStorage.getItem(MATHS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** "Show the maths": the simple view hides the model's working (triage, competitors, sensitivity, the book's limits).
+ * One switch in the header, remembered per browser. */
+export function useShowMaths(): [boolean, (on: boolean) => void] {
+  const on = useSyncExternalStore(
+    (cb) => {
+      mathsListeners.add(cb);
+      return () => mathsListeners.delete(cb);
+    },
+    readMaths,
+    () => false,
+  );
+  const set = useCallback((v: boolean) => {
+    mathsSession = v;
+    try {
+      window.localStorage.setItem(MATHS_KEY, v ? "1" : "0");
+    } catch {
+      // storage blocked: the choice holds for this page view
+    }
+    mathsListeners.forEach((l) => l());
+  }, []);
+  return [on, set];
 }

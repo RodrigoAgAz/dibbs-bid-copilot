@@ -93,7 +93,8 @@ def test_backfill_resumable_and_report(db):
     try:
         path = write_fsc_volume_report(db, out / "fsc_volume.md")
         text = path.read_text(encoding="utf-8")
-        assert "| 6145 *" in text and "Automated (T/U)" in text
+        # 6145 is in the report but no longer starred: the default watchlist is the weapon-system catalog.
+        assert "| 6145 |" in text and "Automated (T/U)" in text
     finally:
         shutil.rmtree(out, ignore_errors=True)
 
@@ -116,9 +117,9 @@ def test_adding_an_fsc_loads_its_recent_rfqs_right_away(client, db, monkeypatch)
     calls = []
     monkeypatch.setattr(queue, "enqueue", lambda func, *a, **k: calls.append((func.__name__, a)) or "job")
     signup(client, "fsc@broker.example.com", org="FSC Org")
-    r = client.put("/api/settings", json={"fsc_watchlist": ["5305"]}, headers=csrf(client))
-    assert r.status_code == 200 and r.json()["loading_fscs"] == []  # 5305 was already watched (defaults)
-    r = client.put("/api/settings", json={"fsc_watchlist": ["5305", "6145"]}, headers=csrf(client))
+    r = client.put("/api/settings", json={"fsc_watchlist": ["1005"]}, headers=csrf(client))
+    assert r.status_code == 200 and r.json()["loading_fscs"] == []  # 1005 was already watched (defaults)
+    r = client.put("/api/settings", json={"fsc_watchlist": ["1005", "6145"]}, headers=csrf(client))
     assert r.json()["loading_fscs"] == ["6145"]
     assert ("expand_watchlist_job", (["6145"],)) in calls
     out = ingest_new_fscs(db, {"6145"}, mode="fixture")

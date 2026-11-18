@@ -1,18 +1,35 @@
 # The Invisible Hand: product status and capabilities
 
-*Snapshot as of 2026-10-22. Repo: `dibbs-bid-copilot` (GitHub `RodrigoAgAz/dibbs-bid-copilot`, branch `main`, last commit
-`a50e92c`, 2026-10-15, "Pilot loop ... (step 7)"). Pricing engine **v13**, model code `lgbm_quantile_v2.2`, 10 database
-migrations.*
+*Snapshot as of 2026-11-18. Repo: `dibbs-bid-copilot` (GitHub `RodrigoAgAz/dibbs-bid-copilot`, branch `main`). Pricing
+engine **v13**, model code `lgbm_quantile_v2.2`, 10 database migrations. The weapon-system catalog and the simple view
+(2026-11-18) are described below; see DECISIONS.md for the reasoning.*
 
 ---
 
 ## 1. What the product is, in one paragraph
 
 A multi-tenant SaaS for small federal contractors ("brokers") who quote on Defense Logistics Agency (DLA) solicitations
-posted on **DIBBS**. Every day it pulls the new RFQs in each firm's supply classes (FSCs), enriches each line with the part's
-procurement history and approved sources, predicts the **distribution of the winning unit price**, estimates what the
-broker would pay a supplier, emails suppliers for quotes and reads their replies with an LLM, and then **recommends a bid**
-(or a "no bid" with reasons). The broker reviews it and submits on DIBBS themselves. **The app never submits bids.**
+posted on **DIBBS** for **spare parts of US weapon systems**. Every day it pulls the new RFQs in each firm's supply classes
+(FSCs), enriches each line with the part's procurement history and approved sources, predicts the **distribution of the
+winning unit price**, estimates what the broker would pay a supplier, emails suppliers for quotes and reads their replies
+with an LLM, and then **recommends a bid** (or a "no bid" with reasons). The broker reviews it and submits on DIBBS
+themselves. **The app never submits bids.**
+
+### What it prices (the default catalog)
+
+| Category | Supply class (FSC) | Example parts | Typical unit prices |
+|---|---|---|---|
+| Tanks & combat vehicles | 2530 vehicular brake, steering, axle, wheel and **track** components | Track shoes, road wheels, drive sprockets, idlers, brake kits | $150 – $12,000 |
+| Rifles & machine guns | 1005 guns through 30 mm | Bolt carriers, barrels, lower receivers, triggers, feeders | $8 – $3,500 |
+| Grenade launchers | 1010 guns over 30 mm up to 75 mm | 40 mm feed trays, launcher barrels and sights, pintle mounts | $25 – $6,000 |
+| Rocket launchers | 1055 launchers, rocket and pyrotechnic | Launch tubes, firing mechanisms, smoke-grenade dischargers | $40 – $15,000 |
+| Night vision | 5855 night vision equipment | Image intensifier tubes, monoculars, thermal weapon sights | $35 – $14,000 |
+
+DLA buys **parts** for these systems through DIBBS, not whole tanks, live grenades or RPGs. Ammunition is managed by the
+Army, and the US doesn't buy RPGs. Every category above is a real supply class that posts on DIBBS. Real volume in five
+captured days of DIBBS index files: 2530 107 lines, 1005 76, 5855 13, 1010 7, 1055 2. Tracked combat vehicles (FSC 2350)
+had no lines at all, which is why tank parts come from 2530. The old fastener catalog (screws, bolts, nuts, gaskets,
+fittings, wire) is gone from the defaults and the demo.
 
 ---
 
@@ -20,8 +37,10 @@ broker would pay a supplier, emails suppliers for quotes and reads their replies
 
 | Area | Status |
 |---|---|
-| Codebase | Feature-complete through the 7-step "make the maths a real value add" plan (steps 1–7 all committed). Local `main` is in sync with `origin/main`; only `data/` (local DB + scratch exports) is untracked. |
-| Deployment | Built for **Railway** (6 services: backend, worker, scheduler, frontend, Postgres, Redis). The decisions log documents it running in **live mode** on real DIBBS data (live QA pass on 2026-10-15 with ~4,300 open lines). I did not check whether it is up right now. |
+| Codebase | Feature-complete through the 7-step "make the maths a real value add" plan, plus the weapon-system catalog and the simple view (2026-11-18). |
+| Catalog | Five weapon-system categories (§1). The demo data, defaults, landing page and home page all use them. |
+| Screens | **Simple view by default.** A **"Show the maths"** switch in the header reveals the model's working on every page (see §3.2). Nothing is computed differently. |
+| Deployment | Built for **Railway** (6 services: backend, worker, scheduler, frontend, Postgres, Redis). It has run in **live mode** on real DIBBS data (live QA pass on 2026-10-15). After the next deploy, the demo orgs switch to the new catalog automatically at boot. The new classes' recent RFQs then load, and a bounded backfill plus a retrain runs for their price history (about an hour at DIBBS's 1 request/second). |
 | Sign-in | **Development mode.** The sign-up and password pages are switched off. Signed-out visitors either get a simple username login (`SIMPLE_LOGIN_*`, signs in as the Atlas demo owner) or land in the read-only demo through `/enter`. `NEXT_PUBLIC_AUTH_PAGES=true` brings the real sign-up/login back. |
 | Real-world integrations | DIBBS scraping, USAspending and BLS PPI are **verified**. Resend email, Anthropic LLM, Twilio + ElevenLabs voice, SAM.gov and Apify are **built from docs and tested against mocks only**, not against the live services. |
 | Proof of value | **Not yet proven.** The pilot loop (step 7) exists to measure profit per broker-hour against a firm's own process, but **no real firm's bids, costs or outcomes have been imported yet**. |
@@ -40,12 +59,15 @@ broker would pay a supplier, emails suppliers for quotes and reads their replies
 
 ### 3.2 Pages
 
-| Page | What it does |
-|---|---|
-| **Landing** `/` (public) | Live stats from the database: open RFQ lines tracked, NSNs with price history, award prices on file, newest DIBBS posting, "winning price inside the 80% / 90% range". Live top-three opportunities from the public demo. "How it works", "Measured, not promised". |
-| **Today / Home** `/dashboard` | A navigation hub, then "Where to start": the most pressing opportunities in plain language, plus the **portfolio** view (open book against working capital, award capacity, sourcing hours and supplier concentration, with notes on which lines are held back and why). |
-| **Lines** `/lines` | Every open, bid-worthy line in the firm's watchlist. Filters: FSC, due within N days, quote status, search. Sorts: "best bets" (quoted lines by expected profit, then unquoted lines by triage score, then by order size), plus others. Badges for confidence, "Quote first", demo lines. CSV export. |
-| **RFQ detail** `/rfq/[solicitation]` | The main working page. Header facts (buyer, buyer email, NAICS, set-aside, FOB, inspection, first article, flags such as fast award/AIDC). **Recommendation** (recommended bid, conservative/aggressive alternatives, or no-bid with reasons). **Why this price** and **Price story** (plain-language explanation). **P(win) vs bid** curve. **Landed cost per unit** waterfall. **Procurement history** table. **Most similar past awards** / **Similar parts DLA bought**. **Who wins this NSN** (manufacturers vs resellers, incumbents, how far under the last price). DLA evaluation notes. Sensitivity table (opens when the decision is fragile). Triage factors for unquoted lines. **Suppliers & quotes** (draft/send RFQ emails, simulated replies in demo, manual quote entry, review/edit parsed quotes with evidence badges, AI call button). **Decision history** (every snapshot). Record your **actual bid** and **actual cost**. Recompute button. |
+Every signed-in page has a **"Show the maths"** switch in the header, off by default and remembered per browser. Off is the
+pitch view: the answer in plain words. On adds the model's working underneath it. The table says what each view shows.
+
+| Page | Simple view (default) | Adds with "Show the maths" |
+|---|---|---|
+| **Landing** `/` (public) | Hero ("for the small suppliers who keep US weapon systems running"), **What it prices** (the five categories with icons and FSCs), live stats (open lines tracked, award prices on file, parts with price history, newest posting), "Measured, not promised" accuracy, live top-three opportunities from the public demo, how it works. | (public page, no switch) |
+| **Today / Home** `/dashboard` | **What you sell**: one tile per category the firm watches, with today's lines worth bidding and order value, linking to the filtered list. Then search, the five work lanes (closing soon, ready to bid, worth quoting, replies to review, new parts) and the most pressing opportunities in plain language. | **Your book**: the portfolio against working capital, award capacity, sourcing hours and supplier concentration, with the lines held back and why. |
+| **Lines** `/lines` | Every open, bid-worthy line: due, item, quantity, bid, chance to win, expected profit, quote status. Filters (category/FSC, due within, quote status, search; `?fsc=1005` deep links), sorts, CSV export. | Predicted median, landed cost and flag columns (confidence, quote first, approved source only...). |
+| **RFQ detail** `/rfq/[solicitation]` | Header facts (buyer, NAICS, set-aside, FOB, inspection, first article, fast award/AIDC). **Recommendation**: recommended bid, chance to win, expected profit (or "profit if sourced"), your cost, conservative/aggressive alternatives, or no-bid with reasons; "quote first" and target-cost notes; copy the bid; record your actual bid and cost. **Chance to win at each price** curve. **Price story**. **Who wins this part** (past awardees, wins, last price). **What DLA paid before** (history chart with the predicted range). **Suppliers & quotes** (draft/send RFQ emails, simulated replies in the demo, manual entry, review parsed quotes with evidence badges, AI call button). | Formula wording and P(win) labels; cost-model tier and **triage** factors; **DLA evaluation** checks; **sensitivity** table; **decision history** (every snapshot); the **competitor model** (manufacturer vs reseller, "winnable by a broker", undercut vs last price, active players in the FSC, competitor view of P(win)); **similar parts DLA bought**; **landed cost waterfall**; **why this price** (price drivers); **most similar past awards**. |
 | **History** `/history` | Tracked lines, win rate, "recommendation would win", median price error, winner inside the 80% range, left on the table, realized margin vs priced-for margin. **Pilot section**: lines compared, your profit/hour, the tool's profit/hour, increment, regret, by confidence tier, caveats. |
 | **Suppliers** `/suppliers` | The firm's supplier book: company, CAGE, contact, quotes email, phone, timezone, FSCs it's saved for, consent to AI calls. Add/edit/delete. |
 | **Settings** `/settings` | FSC watchlist; set-aside eligibility; cost inputs; margins and limits; portfolio and risk; supplier outreach; notifications; team (see §6 for every field). |
@@ -106,12 +128,23 @@ offline **fixture** twin built from real captured samples (`backend/tests/fixtur
 Nothing is pooled across organizations. One firm's quotes never inform another firm's cost estimates.
 
 ### 4.3 Demo data
-- `make seed` / `python dev.py seed` creates two demo orgs (**Atlas Federal Supply**, **Bluewater Parts Co.**), synthetic
-  solicitations with fictional office codes `SPEZZ1..7` (they can't collide with real ones), synthetic award history and a
-  trained model. Live deployments hide the synthetic lines.
+- `make seed` / `python dev.py seed` creates two demo orgs, synthetic solicitations with fictional office codes `SPEZZ1..7`
+  (they can't collide with real ones), synthetic award history for ~300 weapon-system parts, and a trained model.
+  - **Atlas Federal Supply** watches all five categories.
+  - **Bluewater Parts Co.** watches rifles/machine guns and grenade launchers only.
+  - The synthetic parts carry realistic names, part-number patterns, prices ($8 to $15k) and small order quantities, and
+    their NAICS codes follow the category.
+  - The seed uses real history instead of synthetic only when ≥500 real awards exist **in the new classes**.
+  - Today's 40 open demo lines are spread evenly over the categories. Locally, 24 of the 40 are worth bidding, and every
+    category has at least three. Most of the others are approved-source parts still waiting for a quote on the exact part
+    number.
+  - Demo orgs cap a line at $250,000 (DLA's simplified acquisition threshold) instead of the $25,000 default, because
+    weapon parts cost thousands a unit.
+  - Live deployments hide the synthetic lines.
 - The **demo refresher** (every 2 h) picks up to 12 *real* open lines for demo orgs and attaches simulated quotes from six
-  fictional "(demo)" suppliers (CAGE `ZZD01`–`ZZD06`, example.com addresses), so visitors see the whole sourcing loop on
-  live RFQs.
+  fictional "(demo)" suppliers, so visitors see the whole sourcing loop on live RFQs. The suppliers are Harbor Armament
+  Supply, Keystone Tactical Parts, Northwind Optics & Night Vision, Summit Track & Drivetrain, Bayline Ordnance
+  Distributors and Granite State Defense Components (CAGE `ZZD01`–`ZZD06`, example.com addresses).
 
 ---
 
@@ -326,6 +359,14 @@ organizations, users, org_settings, refresh_tokens, password_reset_tokens, invit
 
 **Integrations not tested live:** Resend, inbound email adapters, Anthropic (tested against a fake SDK), Twilio, ElevenLabs,
 SAM.gov, Apify. PUB LOG characteristics format is unverified and no data is loaded.
+
+**Weapon-system catalog**
+- Live volume is uneven. Tank running gear (2530) and rifle parts (1005) post daily. Rocket-launcher parts (1055) are rare,
+  about 2 lines in 5 days, so that tile is often empty on the live feed. The demo data fills it.
+- The real price history on file was built for fasteners. The new classes need the post-deploy backfill and retrain before
+  live prices are as good as they were for fasteners. Until then, more lines show "quote first".
+- Inflation adjustment for all five uses the broad metals index (WPU10), because the offline PPI file has no ordnance or
+  optics series.
 
 **Data coverage:** DIBBS keeps ~30 days of RFQ files and ~45 days of award listings; deeper history only comes from RFQ PDFs.
 Multi-NSN PDFs were never observed. Set-aside isn't in the PDF text, so the index code is used.

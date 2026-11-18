@@ -137,5 +137,7 @@ export function filtersFromQuery(q: URLSearchParams, base: DashboardFilters): Da
   if (Number.isFinite(d) && d > 0) f.dueWithin = d;
   const search = q.get("q");
   if (search) f.search = search;
+  const fsc = q.get("fsc");
+  if (fsc && /^\d{4}$/.test(fsc)) f.fscs = [fsc];
   return f;
 }

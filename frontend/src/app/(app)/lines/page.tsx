@@ -15,6 +15,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { filtersFromQuery } from "@/lib/opportunities";
 import { DEFAULT_FILTERS, filterLines, sortLines, splitNoBid, statusOf, type DashboardFilters, type DashboardLine, type FlagKey, type SortKey } from "@/lib/dashboard";
 import { countdown, formatDate, formatDateTime, formatNsn, fscLabel, money, num, pct } from "@/lib/format";
+import { useShowMaths } from "@/lib/hooks";
 import { downloadCsv, linesToCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 
@@ -157,6 +158,7 @@ function LineCards({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean }
 
 function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean }) {
   const router = useRouter();
+  const [maths] = useShowMaths();
   return (
     <>
     <LineCards lines={lines} noBid={noBid} />
@@ -166,13 +168,13 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
           <TH className="pl-4">Due</TH>
           <TH className="min-w-[260px]">Item</TH>
           <TH className="text-right">Qty</TH>
-          <TH className="text-right">Pred. median</TH>
-          <TH className="text-right">Landed</TH>
-          <TH className="text-right">Rec. bid</TH>
-          <TH className="text-right">P(win)</TH>
-          <TH className="text-right">Exp. profit</TH>
+          {maths && <TH className="text-right">Pred. median</TH>}
+          {maths && <TH className="text-right">Landed</TH>}
+          <TH className="text-right">{maths ? "Rec. bid" : "Bid"}</TH>
+          <TH className="text-right">{maths ? "P(win)" : "Chance to win"}</TH>
+          <TH className="text-right">{maths ? "Exp. profit" : "Expected profit"}</TH>
           <TH>Quotes</TH>
-          {noBid ? <TH>No-bid reason</TH> : <TH>Flags</TH>}
+          {noBid ? <TH>No-bid reason</TH> : maths && <TH>Flags</TH>}
         </tr>
       </THead>
       <TBody>
@@ -205,8 +207,8 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
             <TD className="num text-right">
               {num(l.quantity)} <span className="text-[10px] text-muted-foreground">{l.unit_of_issue}</span>
             </TD>
-            <TD className="num text-right">{money(l.predicted_median)}</TD>
-            <TD className="num text-right">{money(l.landed_cost)}</TD>
+            {maths && <TD className="num text-right">{money(l.predicted_median)}</TD>}
+            {maths && <TD className="num text-right">{money(l.landed_cost)}</TD>}
             <TD className="num text-right font-semibold">{noBid ? <span className="font-normal">{money(l.recommended_bid)}</span> : money(l.recommended_bid)}</TD>
             <TD className="num text-right">
               <PWin value={l.p_win} level={l.flags.confidence} />
@@ -228,9 +230,11 @@ function LinesTable({ lines, noBid }: { lines: DashboardLine[]; noBid?: boolean 
                 {l.no_bid_reason}
               </TD>
             ) : (
-              <TD>
-                <FlagBadges flags={l.flags} compact />
-              </TD>
+              maths && (
+                <TD>
+                  <FlagBadges flags={l.flags} compact />
+                </TD>
+              )
             )}
           </TR>
         ))}

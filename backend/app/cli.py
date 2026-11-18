@@ -61,6 +61,7 @@ def bootstrap() -> None:
             run_seed()
         else:
             typer.echo(f"AUTO_SEED: {n} organization(s) present, skipping seed")
+    _maybe_switch_catalog()
     _secure_accounts()
 
 
@@ -105,6 +106,29 @@ def _maybe_queue_initial_live_load() -> None:
         else:
             marker.detail = job
     typer.echo(f"AUTO_BACKFILL: queued initial live load (job {job})")
+
+
+def _maybe_switch_catalog() -> None:
+    """Demo orgs still on the fastener classes move to the weapon-system catalog; its recent RFQs load now and, on a live
+    deployment, its price history is backfilled and the model retrained."""
+    from app.db import session_scope
+    from app.jobs.queue import enqueue
+    from app.jobs.tasks import catalog_backfill_job, expand_watchlist_job
+    from app.pipelines.ingest import watched_fscs
+    from app.services.demo_refresh import switch_demo_watchlists
+
+    with session_scope() as db:
+        before = watched_fscs(db)
+        switched = switch_demo_watchlists(db)
+        new = sorted(watched_fscs(db) - before) if switched else []
+    if not switched:
+        return
+    typer.echo(f"catalog: demo watchlists switched {switched}")
+    if new:
+        typer.echo(f"catalog: loading recent RFQs for {new} (job {enqueue(expand_watchlist_job, new)})")
+        if get_settings().connector_mode == "live":
+            job = enqueue(catalog_backfill_job, new, job_timeout=8 * 3600)
+            typer.echo(f"catalog: backfilling price history for {new} (job {job})")
 
 
 def _maybe_queue_engine_refresh() -> None:

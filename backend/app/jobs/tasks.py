@@ -64,6 +64,23 @@ def expand_watchlist_job(fscs: list[str]) -> dict:
         return ingest_new_fscs(db, set(fscs))
 
 
+@bulk
+def catalog_backfill_job(fscs: list[str]) -> dict:
+    """Supply classes a live deployment just started watching: their PDF procurement history and recent awards, then a
+    retrain (bounded like the initial live load; the nightly backfill keeps growing it). Promotion rules apply as usual."""
+    from app.pipelines.backfill import run_backfill
+    from app.services.training import train_and_maybe_promote
+
+    out: dict = {}
+    with session_scope() as db:
+        out["backfill"] = run_backfill(db, sorted(fscs), date(2023, 1, 1), date.today(), mode="live", max_pdfs=800,
+                                       max_award_dates=2, max_award_pages=5, max_nsn_searches=5)
+    with session_scope() as db:
+        out["train"] = train_and_maybe_promote(db, as_of=date.today())
+    log.info("catalog backfill %s: %s", sorted(fscs), {k: v.get("status", v.get("promoted")) for k, v in out.items()})
+    return out
+
+
 def followups_job() -> dict:
     from app.services.sourcing import run_followups
 

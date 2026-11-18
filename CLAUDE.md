@@ -47,7 +47,7 @@ docs/               data_sources.md (observed DIBBS formats)
 ## Commands
 
 Docker (target environment): `docker compose up -d && make seed`, then `make test`, `make lint`,
-`make ingest`, `make backfill FSC=5305,5310 START=2023-01-01 END=today`, `make train`.
+`make ingest`, `make backfill FSC=2530,1005 START=2023-01-01 END=today`, `make train`.
 
 Without Docker/make (this repo was built on Windows without either): `python dev.py <target>`
 mirrors the Makefile and starts an embedded PostgreSQL 16 (`pgserver`) automatically:

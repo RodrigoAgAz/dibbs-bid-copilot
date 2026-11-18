@@ -37,7 +37,15 @@ test("sign up, log in, see today's RFQs, open one, see a recommendation", async 
   const rec = page.getByTestId("recommendation").first();
   await expect(rec).toBeVisible();
   await expect(rec.getByTestId("recommended-bid")).toHaveText(/\$\d/);
-  await expect(rec.getByText("P(win)", { exact: true })).toBeVisible();
+  // The simple view leads with the answer in plain words...
+  await expect(rec.getByText("Chance to win", { exact: true })).toBeVisible();
+  await expect(page.getByText("Chance to win at each price").first()).toBeVisible();
+  await expect(page.getByText("What DLA paid before").first()).toBeVisible();
+  await expect(page.getByText("Landed cost per unit")).toHaveCount(0);
+
+  // ...and "Show the maths" brings back the model's working.
+  await page.getByRole("switch", { name: "Show the maths" }).click();
+  await expect(rec.getByText("P(win)", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("P(win) vs bid").first()).toBeVisible();
   await expect(page.getByText("Procurement history").first()).toBeVisible();
   await expect(page.getByText("Landed cost per unit").first()).toBeVisible();

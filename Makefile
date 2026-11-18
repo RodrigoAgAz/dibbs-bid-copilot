@@ -12,7 +12,7 @@ MODE ?=
         test-frontend test-e2e lint api-types shell
 
 help:
-	@echo "make up | down | logs | seed | backfill FSC=5305,5310 START=2023-01-01 END=today | ingest | labels"
+	@echo "make up | down | logs | seed | backfill FSC=2530,1005 START=2023-01-01 END=today | ingest | labels"
 	@echo "make train | fsc-report | test | lint | api-types"
 
 up:

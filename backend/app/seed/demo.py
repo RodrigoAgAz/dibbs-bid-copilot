@@ -2,8 +2,8 @@
 
 Creates (idempotently; re-running resets the demo data):
   * two demo organizations with one owner each + a platform superadmin -> DEMO_CREDENTIALS.md
-  * history for ~300 NSNs across the default FSCs: synthetic (SPEZZ* solicitation numbers, fictional
-    companies) unless >= 500 real award rows already exist from a backfill
+  * history for ~300 NSNs across the default FSCs (weapon-system parts): synthetic (SPEZZ* solicitation numbers, fictional
+    companies) unless >= 500 real award rows in those FSCs already exist from a backfill
   * 40 open "today" RFQ lines, a trained model, predictions, recommendations, quote requests,
     parsed mock supplier quotes (some needing review), provisional and no-bid lines
   * a few past lines with actual bids and awards so /history has outcomes
@@ -17,7 +17,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import delete, func, insert, select
 
-from app.config import REPO_ROOT, get_settings
+from app.config import DEMO_MAX_LINE_VALUE, DEMO_NICHE_WATCHLIST, REPO_ROOT, get_settings
 from app.core.security import hash_password
 from app.core.timeutil import today_et
 from app.db import session_scope
@@ -51,6 +51,8 @@ DEMO_ORGS = [
 ]
 SUPERADMIN = {"email": "admin@copilot-demo.example.com", "password": "AdminDemo!2026"}
 REAL_HISTORY_THRESHOLD = 500
+# NAICS DLA cites for each supply class (the RFQ PDF's Section A); synthetic lines borrow it.
+NAICS_BY_FSC = {"2530": "336992", "1005": "332994", "1010": "332994", "1055": "332995", "5855": "333314"}
 
 
 def _say(msg: str) -> None:
@@ -142,7 +144,7 @@ def _insert_open_lines(db, data) -> list[SolicitationLine]:
             return_by_date=r["return_by_date"], buyer_code=r["buyer_code"], buyer_name="Demo Buyer",
             buyer_email="buyer@dla-demo.example.com", set_aside=r["set_aside"], fast_award=r["fast_award"],
             aidc=r["aidc"], inspection_point=r["inspection_point"], fob=r["fob"], first_article=r["first_article"],
-            naics="332722", status="Open",
+            naics=NAICS_BY_FSC.get(r["fsc"], "332994"), status="Open",
             packaging="Military packaging per MIL-STD-2073-1E; marking per MIL-STD-129" if random.random() < 0.6
             else "Commercial packaging per ASTM D3951; marking per MIL-STD-129",
             raw_json={"synthetic": True, "true_next_price": round(r["_true_next_price"], 4)},
@@ -185,7 +187,7 @@ def _create_orgs(db) -> list[Organization]:
         org = Organization(name=o["name"], cage_code=o["cage"], plan="demo")
         db.add(org)
         db.flush()
-        db.add(OrgSettings(organization_id=org.id))
+        db.add(OrgSettings(organization_id=org.id, max_line_value=DEMO_MAX_LINE_VALUE))
         _upsert_user(db, org, o["email"], o["password"], UserRole.owner, o["full_name"])
         orgs.append(org)
     admin_org = db.execute(select(Organization).where(Organization.name == "Platform Admin")).scalar_one_or_none()
@@ -197,7 +199,7 @@ def _create_orgs(db) -> list[Organization]:
     _upsert_user(db, admin_org, SUPERADMIN["email"], SUPERADMIN["password"], UserRole.owner, "Platform Admin", True)
     db.get(OrgSettings, orgs[0].id).set_aside_eligibility = ["SB", "WOSB"]
     # Second org watches a narrower niche, so the two dashboards differ.
-    db.get(OrgSettings, orgs[1].id).fsc_watchlist = ["5305", "5306", "5310", "5330"]
+    db.get(OrgSettings, orgs[1].id).fsc_watchlist = list(DEMO_NICHE_WATCHLIST)
     db.flush()
     from app.services.accounts import ensure_demo_viewer
 
@@ -354,8 +356,11 @@ def run_seed(force_synthetic: bool = False, skip_train: bool = False) -> None:
     today = today_et()
     with session_scope() as db:
         _reset_demo(db)
+        # Real history only replaces the synthetic one when it covers the supply classes the demo watches.
         real = db.execute(
-            select(func.count()).select_from(AwardHistory).where(AwardHistory.source != "synthetic")
+            select(func.count()).select_from(AwardHistory).where(
+                AwardHistory.source != "synthetic",
+                func.substr(AwardHistory.nsn, 1, 4).in_(get_settings().default_fsc_watchlist))
         ).scalar_one()
         use_real = real >= REAL_HISTORY_THRESHOLD and not force_synthetic
         data = generate(end=today - timedelta(days=1), n_open_lines=40)

@@ -1,7 +1,9 @@
 # The Invisible Hand (DLA DIBBS bid pricing; repo: dibbs-bid-copilot)
 
 A multi-tenant SaaS tool for small federal contractors ("brokers") who quote on Defense Logistics Agency
-solicitations posted on [DIBBS](https://www.dibbs.bsm.dla.mil/). Every day it:
+solicitations posted on [DIBBS](https://www.dibbs.bsm.dla.mil/), for spare parts of five weapon systems by default:
+tanks and combat vehicles (FSC 2530: track, wheels, brakes), rifles and machine guns (1005), grenade launchers (1010),
+rocket launchers (1055) and night vision (5855). Every day it:
 
 1. **Ingests** new DIBBS RFQs in each firm's Federal Supply Classes (FSCs).
 2. **Enriches** each line with the NSN's procurement history, approved sources and solicitation flags.
@@ -144,7 +146,7 @@ judgment call, and [`docs/data_sources.md`](docs/data_sources.md) for the observ
 | `make seed` | `python dev.py seed` | Demo data + trained model (idempotent; re-running resets the demo) |
 | `make ingest` | `python dev.py ingest` | Daily RFQ ingest (`MODE=live` to hit DIBBS; default `CONNECTOR_MODE`) |
 | `make labels` | `python dev.py labels` | Attach newly posted awards to solicitations |
-| `make backfill FSC=5305,5310 START=2023-01-01 END=today` | `python dev.py backfill --fsc 5305,5310 --start 2023-01-01 --end today` | Resumable history backfill |
+| `make backfill FSC=2530,1005 START=2023-01-01 END=today` | `python dev.py backfill --fsc 2530,1005 --start 2023-01-01 --end today` | Resumable history backfill |
 | `make train` | `python dev.py train` | Retrain, evaluate, write `ml/reports/latest_model.md`, promote if better |
 | `make fsc-report` | `python dev.py fsc-report` | Write `ml/reports/fsc_volume.md` |
 | | `python -m app.cli import-characteristics <file>` | Load FLIS / PUB LOG item characteristics (see `docs/data_sources.md` §13) |
@@ -159,7 +161,7 @@ Superadmin: `python -m app.cli create-superadmin you@example.com`.
 ### Backfill
 
 ```bash
-make backfill FSC=5305,5306,5310,5330,5340,4730,6145 START=2023-01-01 END=today MODE=live
+make backfill FSC=2530,1005,1010,1055,5855 START=2023-01-01 END=today MODE=live
 ```
 
 DIBBS only keeps about 30 days of RFQ index files and about 45 days of award listings online. Every

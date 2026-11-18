@@ -1,4 +1,4 @@
-"""Resumable historical backfill:  make backfill FSC=5305,5310 START=2023-01-01 END=today
+"""Resumable historical backfill:  make backfill FSC=2530,1005 START=2023-01-01 END=today
 
 What DIBBS makes publicly available shapes this (docs/data_sources.md):
   * RFQ index files only for the last ~30 days of postings, award listings for ~45 days;

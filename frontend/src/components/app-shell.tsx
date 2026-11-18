@@ -6,10 +6,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Building2, CalendarClock, Eye, History, ListChecks, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
 import { Brand, HandMark } from "@/components/brand";
 import { Button } from "@/components/ui/button";
-import { Badge, Tip } from "@/components/ui/misc";
+import { Badge, Switch, Tip } from "@/components/ui/misc";
 import { api } from "@/lib/api/client";
 import { formatDate, timeAgo } from "@/lib/format";
-import { useDataHealth, useMe } from "@/lib/hooks";
+import { useDataHealth, useMe, useShowMaths } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { AUTH_PAGES } from "@/lib/flags";
 
@@ -67,14 +67,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <MathsSwitch />
             <DataFreshness />
             {me?.organization.plan === "demo" && (
-              <Badge variant="warning" className="hidden sm:inline-flex">
+              <Badge variant="warning" className="hidden lg:inline-flex">
                 Demo company
               </Badge>
             )}
             {me && (
-              <div className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex" data-testid="org-name">
+              <div className="hidden items-center gap-1.5 text-xs text-muted-foreground xl:flex" data-testid="org-name">
                 <Building2 className="h-3.5 w-3.5" />
                 <span className="max-w-[200px] truncate font-medium text-foreground">{me.organization.name}</span>
                 <span>·</span>
@@ -93,6 +94,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
       <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-4">{children}</main>
     </div>
+  );
+}
+
+/** The simple view by default; the switch reveals the model's working on every page. */
+function MathsSwitch() {
+  const [on, set] = useShowMaths();
+  return (
+    <label
+      className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs text-muted-foreground"
+      title="Show the maths: the model's working behind every number"
+      data-testid="maths-switch"
+    >
+      <Switch checked={on} onCheckedChange={set} aria-label="Show the maths" />
+      <span className="hidden xl:inline">Show the maths</span>
+      <span className="hidden lg:inline xl:hidden" aria-hidden>
+        Maths
+      </span>
+    </label>
   );
 }
 

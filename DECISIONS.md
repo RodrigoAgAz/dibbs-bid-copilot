@@ -462,3 +462,33 @@ proven until it does.
   policies, increment, regret, by confidence tier, caveats); `pilot-report --org <id>` writes `ml/reports/pilot_<org>.md`
   with the same numbers, the per-line table and the caveats. The local database holds no pilot data, so no report is
   committed; the first real one replaces this sentence.
+
+## Weapon-system catalog and the simple view (2026-11-18)
+The product is pitched as a venture for a school project; fasteners undersold it. It now prices parts for five weapon
+systems, and the screens lead with the answer while the maths stays one switch away.
+- **Parts, not weapons.** DIBBS does not sell whole tanks, live grenades or RPGs to brokers (ammunition is Army-managed;
+  the US does not buy RPGs). It buys their spare parts every day, so the catalog is five real supply classes: 2530
+  (vehicular brake, steering, axle, wheel and **track** components: tank and combat-vehicle running gear), 1005 (guns
+  through 30 mm: rifles and machine guns), 1010 (guns 30-75 mm: 40 mm grenade launchers), 1055 (rocket and pyrotechnic
+  launchers) and 5855 (night vision). **2350 (tracked combat vehicles) was the first pick and was dropped**: the five
+  captured index files (2026-10-04..08) hold no 2350 lines at all; tank track and wheels post under 2530. Live volume in
+  those files: 1005 76 lines, 2530 107, 5855 13, 1010 7, 1055 2 (rocket launchers are thin on the live feed).
+- **Defaults and demo data.** `DEFAULT_FSC_WATCHLIST` is the new five; the second demo org watches 1005 + 1010. The
+  synthetic generator's `FSC_SPECS` hold weapon-part names, price ranges ($8 to $15k), part-number patterns and smaller
+  typical quantities; synthetic NAICS follow the class (336992 tanks, 332994 small arms, 332995 ordnance, 333314 optics).
+  The seed uses real history only when it covers the new classes. PPI: the offline CSV has no ordnance or optics series,
+  so the broad metals index (WPU10) deflates all five, stated in `inflation.py`.
+- **Demo line cap at the simplified acquisition threshold.** The $25,000 `max_line_value` default turned 10 of 40 demo lines
+  into no-bids once a unit cost thousands; demo orgs (seed and the live switch) use $250,000. Real orgs keep the default.
+  Approved-source-only parts without a conforming quote stay no-bids: that rule is the product's, not the catalog's.
+- **Live switch, once, at boot.** `switch_demo_watchlists` moves demo orgs whose watchlist is still within the legacy
+  fastener classes (`LEGACY_FSC_WATCHLIST`) to the new lists; a demo org on anything else, and every non-demo org, is left
+  alone, so a paying firm never has its classes changed. `bootstrap` then queues the recent-RFQ load for the new classes
+  and, in live mode, `catalog_backfill_job` (bounded like the initial live load: 800 PDFs, then a retrain under the normal
+  promotion rules). Fastener rows already in the database stay; they still train the model.
+- **Simple view by default, "Show the maths" in the header.** Off: the RFQ page shows the bid, chance to win, expected
+  profit and cost, the win-chance curve, the price story, who wins the part, past prices and suppliers. On: the triage
+  factors, cost-model tier, DLA evaluation checks, sensitivity, decision history, competitor model, similar parts, landed
+  cost waterfall and price drivers; the lines table adds predicted median, landed cost and flags; the home page adds the
+  portfolio ("Your book"). Nothing is computed differently; the switch is per browser (localStorage, falls back to the
+  page view). The home page and landing page lead with the five categories.

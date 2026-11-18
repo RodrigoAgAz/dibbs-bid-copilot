@@ -4,7 +4,7 @@
     python dev.py setup          # create backend/.venv, install Python + npm deps, Playwright browsers
     python dev.py pg             # start the embedded Postgres 16 (pgserver) and print DATABASE_URL
     python dev.py migrate | seed | ingest | labels | train | fsc-report | followups
-    python dev.py backfill --fsc 5305,5310 --start 2023-01-01 --end today
+    python dev.py backfill --fsc 2530,1005 --start 2023-01-01 --end today
     python dev.py api            # FastAPI on :8000 (reload)
     python dev.py web            # Next.js dev server on :3000
     python dev.py test           # backend + ML pytest, frontend vitest

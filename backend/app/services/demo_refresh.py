@@ -41,13 +41,35 @@ log = logging.getLogger(__name__)
 TARGET_QUOTED_LINES = 12
 QUOTES_PER_LINE = 3
 DEMO_SUPPLIERS = [
-    ("ZZD01", "Harbor Fastener Supply (demo)", "Dana Lee"),
-    ("ZZD02", "Keystone Industrial Parts (demo)", "Jordan Patel"),
-    ("ZZD03", "Northwind Seal & Gasket (demo)", "Morgan Garcia"),
-    ("ZZD04", "Summit Wire & Cable (demo)", "Casey Nguyen"),
-    ("ZZD05", "Bayline Hardware Distributors (demo)", "Riley Smith"),
-    ("ZZD06", "Granite State Fittings (demo)", "Taylor Kim"),
+    ("ZZD01", "Harbor Armament Supply (demo)", "Dana Lee"),
+    ("ZZD02", "Keystone Tactical Parts (demo)", "Jordan Patel"),
+    ("ZZD03", "Northwind Optics & Night Vision (demo)", "Morgan Garcia"),
+    ("ZZD04", "Summit Track & Drivetrain (demo)", "Casey Nguyen"),
+    ("ZZD05", "Bayline Ordnance Distributors (demo)", "Riley Smith"),
+    ("ZZD06", "Granite State Defense Components (demo)", "Taylor Kim"),
 ]
+
+
+def switch_demo_watchlists(db: Session) -> dict[int, list[str]]:
+    """Demo orgs still watching the legacy fastener classes move to the weapon-system catalog (once: a demo org already
+    on any other class is left alone). The narrow fastener niche becomes the narrow weapons niche. Returns the new
+    watchlist per switched org; the caller loads the new classes' RFQs and history."""
+    from app.config import DEFAULT_FSC_WATCHLIST, DEMO_MAX_LINE_VALUE, DEMO_NICHE_WATCHLIST, LEGACY_FSC_WATCHLIST
+    from app.models import Organization, OrgSettings
+
+    legacy = set(LEGACY_FSC_WATCHLIST)
+    out: dict[int, list[str]] = {}
+    for org in db.execute(select(Organization).where(Organization.plan == "demo")).scalars():
+        s = db.get(OrgSettings, org.id)
+        current = set(s.fsc_watchlist or []) if s else set()
+        if not current or not current <= legacy:
+            continue
+        s.fsc_watchlist = list(DEFAULT_FSC_WATCHLIST if current == legacy else DEMO_NICHE_WATCHLIST)
+        if s.max_line_value is not None and s.max_line_value < DEMO_MAX_LINE_VALUE:
+            s.max_line_value = DEMO_MAX_LINE_VALUE
+        out[org.id] = list(s.fsc_watchlist)
+    db.flush()
+    return out
 
 
 def ensure_demo_suppliers(db: Session, org_id: int) -> list[SupplierContact]:
@@ -57,11 +79,13 @@ def ensure_demo_suppliers(db: Session, org_id: int) -> list[SupplierContact]:
         c = db.execute(
             select(SupplierContact).where(SupplierContact.organization_id == org_id, SupplierContact.cage_code == cage)
         ).scalar_one_or_none()
+        slug = "".join(ch for ch in name.lower() if ch.isalnum())[:20]
         if c is None:
-            slug = "".join(ch for ch in name.lower() if ch.isalnum())[:20]
             c = SupplierContact(organization_id=org_id, cage_code=cage, company_name=name, name=person,
                                 email=f"quotes@{slug}.example.com", notes="Fictional demo supplier")
             db.add(c)
+        # Names follow the catalog (the fictional suppliers were fastener houses before 2026-11).
+        c.company_name, c.email = name, f"quotes@{slug}.example.com"
         c.fsc_tags = fscs  # a "saved supplier" candidate on every line the demo org watches
         out.append(c)
     db.flush()

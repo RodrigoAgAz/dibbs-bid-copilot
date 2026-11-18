@@ -11,7 +11,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
-DEFAULT_FSC_WATCHLIST = ["5305", "5306", "5310", "5330", "5340", "4730", "6145"]
+# Weapon-system parts: tank and combat-vehicle running gear, rifles and machine guns, grenade launchers, rocket
+# launchers, night vision.
+DEFAULT_FSC_WATCHLIST = ["2530", "1005", "1010", "1055", "5855"]
+# The fastener supply classes the product watched before 2026-11 (switch_demo_watchlists moves demo orgs off them).
+LEGACY_FSC_WATCHLIST = ["5305", "5306", "5310", "5330", "5340", "4730", "6145"]
+# The second demo org's narrower niche: small arms and grenade launchers.
+DEMO_NICHE_WATCHLIST = ["1005", "1010"]
+# Weapon-system parts run to thousands of dollars a unit: the demo orgs cap a line at the simplified acquisition
+# threshold (automated DIBBS buys sit under it) instead of the fastener-sized $25,000 default.
+DEMO_MAX_LINE_VALUE = 250_000.0
 
 
 class Settings(BaseSettings):

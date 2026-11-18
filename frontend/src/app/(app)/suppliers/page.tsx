@@ -69,7 +69,7 @@ function SupplierForm({ initial, onDone }: { initial?: Supplier; onDone: () => v
           </NativeSelect>
         </div>
         <Field id="timezone" label="Timezone (optional)" placeholder="America/Chicago" defaultValue={initial?.timezone ?? ""} />
-        <Field id="fsc_tags" label="Saved for FSCs" placeholder="5305, 5310" defaultValue={(initial?.fsc_tags ?? []).join(", ")} />
+        <Field id="fsc_tags" label="Saved for FSCs" placeholder="1005, 2530" defaultValue={(initial?.fsc_tags ?? []).join(", ")} />
       </div>
       <Checkbox
         name="call_consent"

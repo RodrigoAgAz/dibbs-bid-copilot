@@ -69,9 +69,21 @@ export function countdown(daysLeft: number | null | undefined): { label: string;
   return { label: `${daysLeft} days`, tone: "normal" };
 }
 
+/** The five weapon-system categories the product watches by default: real DLA supply classes for parts of each. */
+export const CATEGORIES: { fsc: string; title: string; blurb: string }[] = [
+  { fsc: "2530", title: "Tanks & combat vehicles", blurb: "Track shoes, road wheels, sprockets, brakes" },
+  { fsc: "1005", title: "Rifles & machine guns", blurb: "Bolt carriers, barrels, receivers, triggers" },
+  { fsc: "1010", title: "Grenade launchers", blurb: "40 mm feed trays, barrels, sights, mounts" },
+  { fsc: "1055", title: "Rocket launchers", blurb: "Launch tubes, firing mechanisms, smoke dischargers" },
+  { fsc: "5855", title: "Night vision", blurb: "Intensifier tubes, monoculars, thermal sights" },
+];
+
 export const FSC_NAMES: Record<string, string> = {
+  "1005": "Rifles & machine guns",
+  "1010": "Grenade launchers (guns 30–75 mm)",
+  "1055": "Rocket launchers",
   "1560": "Airframe structural components",
-  "2530": "Vehicular brake, steering & axle parts",
+  "2530": "Tanks & combat vehicles: track, wheels & brakes",
   "2540": "Vehicular furniture & accessories",
   "2590": "Misc. vehicular components",
   "2805": "Gasoline reciprocating engines",
@@ -114,6 +126,7 @@ export const FSC_NAMES: Record<string, string> = {
   "5355": "Knobs & pointers",
   "5360": "Coil, flat & wire springs",
   "5365": "Rings, shims & spacers",
+  "5855": "Night vision & thermal sights",
   "5970": "Electrical insulators",
   "5975": "Electrical hardware & supplies",
   "5925": "Circuit breakers",

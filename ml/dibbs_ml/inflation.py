@@ -20,6 +20,12 @@ FSC_SERIES: dict[str, str] = {
     "4730": "WPU10",  # Fittings: broad metals index
     "5330": "WPU0713",  # Miscellaneous rubber products (packing, gaskets, o-rings)
     "6145": "WPU1026",  # Nonferrous wire and cable
+    # Weapon-system parts: the offline CSV has no ordnance or optics series, so the broad metals index deflates them.
+    "2530": "WPU10",  # Tank and combat-vehicle track, wheels and brakes
+    "1005": "WPU10",  # Rifles and machine guns
+    "1010": "WPU10",  # Grenade launchers (guns over 30 mm up to 75 mm)
+    "1055": "WPU10",  # Rocket launchers
+    "5855": "WPU10",  # Night vision
 }
 DEFAULT_SERIES = "WPU10"
 ALL_SERIES = sorted(set(FSC_SERIES.values()) | {DEFAULT_SERIES})

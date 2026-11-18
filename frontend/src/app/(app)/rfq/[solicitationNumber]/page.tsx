@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Badge, Label, Tip } from "@/components/ui/misc";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { api, errorMessage, unwrap, type Schemas } from "@/lib/api/client";
-import { useMe } from "@/lib/hooks";
+import { useMe, useShowMaths } from "@/lib/hooks";
 import { competitors, priceStory, type Award } from "@/lib/insights";
 import { REFERENCE_LABELS, countdown, formatDate, formatDateTime, formatNsn, formatSolicitation, isDemoSolicitation, modelLabel, money, num, pct, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -477,6 +477,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
     mutationFn: async () => unwrap(await api.POST("/api/rfq/lines/{line_id}/refresh", { params: { path: { line_id: line.id } } })),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["rfq", sn] }),
   });
+  const [maths] = useShowMaths();
   if (!r) return null;
   const ex = (r.explanation ?? {}) as Record<string, unknown>;
   const review = pendingReview(line);
@@ -487,7 +488,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
         <div>
           <CardTitle>Recommendation</CardTitle>
           <CardDescription>
-            Maximizes P(win) × (bid − landed cost) × quantity
+            {maths ? "Maximizes P(win) × (bid − landed cost) × quantity" : "The price that pays best: chance to win × margin × quantity"}
             {typeof ex.confidence === "string" && ex.confidence !== "none" ? (
               <span className="ml-2 rounded border px-1.5 py-0.5 text-[11px]" data-testid="confidence">
                 {ex.confidence} confidence{typeof ex.n_prior_awards === "number" ? ` · ${plural(ex.n_prior_awards, "past award")}` : ""}
@@ -521,7 +522,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             <div className="text-xs text-muted-foreground">per {line.unit_of_issue}</div>
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">P(win)</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{maths ? "P(win)" : "Chance to win"}</div>
             <div className="num text-xl font-semibold">{pct(r.p_win_at_recommended)}</div>
           </div>
           <div>
@@ -539,7 +540,9 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             )}
           </div>
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{r.provisional ? "Assumed cost" : "Landed cost"}</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              {r.provisional ? (maths ? "Assumed cost" : "Estimated cost") : maths ? "Landed cost" : "Your cost"}
+            </div>
             <div className="num text-xl font-semibold">{money(r.landed_cost_per_unit)}</div>
             {!r.provisional && ex.quote_evidence && typeof ex.quote_evidence === "object" ? (
               <QuoteEvidenceNote evidence={ex.quote_evidence as Record<string, string>} />
@@ -603,8 +606,8 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             No supplier quote yet, so this bid is set where it is likely to win ({pct(r.p_win_at_recommended)} chance), not optimized
             against a guessed cost. A supplier quote at or below the target keeps your minimum margin; once quotes are in, the bid is
             optimized against your real cost.
-            {ex.cost_estimate && typeof ex.cost_estimate === "object" ? <CostEstimateNote est={ex.cost_estimate as CostEstimate} /> : null}
-            {ex.triage && typeof ex.triage === "object" ? <TriageBox t={ex.triage as TriageInfo} /> : null}
+            {maths && ex.cost_estimate && typeof ex.cost_estimate === "object" ? <CostEstimateNote est={ex.cost_estimate as CostEstimate} /> : null}
+            {maths && ex.triage && typeof ex.triage === "object" ? <TriageBox t={ex.triage as TriageInfo} /> : null}
           </div>
         ) : r.provisional && !r.no_bid && (
           <p className="rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
@@ -618,11 +621,11 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
             {(line.outcome as { won?: boolean } | null)?.won && <ActualCost line={line} sn={sn} />}
           </div>
         </div>
-        {ex.evaluation && typeof ex.evaluation === "object" ? <EvaluationBox ev={ex.evaluation as EvaluationInfo} /> : null}
-        {ex.sensitivity && typeof ex.sensitivity === "object" && !r.no_bid ? (
+        {maths && ex.evaluation && typeof ex.evaluation === "object" ? <EvaluationBox ev={ex.evaluation as EvaluationInfo} /> : null}
+        {maths && ex.sensitivity && typeof ex.sensitivity === "object" && !r.no_bid ? (
           <SensitivityBox s={ex.sensitivity as SensitivityInfo} base={r.recommended_bid} />
         ) : null}
-        <DecisionHistory lineId={line.id} />
+        {maths && <DecisionHistory lineId={line.id} />}
         <p className="text-[11px] text-muted-foreground">
           The Invisible Hand never submits bids. Review the recommendation and submit your quote on DIBBS yourself.
         </p>
@@ -632,6 +635,7 @@ function RecommendationCard({ line, sn }: { line: Line; sn: string }) {
 }
 
 function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; voiceEnabled: boolean; demo: boolean }) {
+  const [maths] = useShowMaths();
   const r = line.recommendation;
   const ex = (r?.explanation ?? {}) as {
     curve?: { bid: number; p_win: number; expected_profit: number }[];
@@ -674,10 +678,10 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
         <RecommendationCard line={line} sn={sol.solicitation_number} />
         <Card>
           <CardHeader>
-            <CardTitle>P(win) vs bid</CardTitle>
+            <CardTitle>{maths ? "P(win) vs bid" : "Chance to win at each price"}</CardTitle>
             <CardDescription>
-              Chance the winning price is above your bid, and the expected profit at each bid
-              {p && !guessOnly ? ` (predicted median ${money(p.median)}, ${modelLabel(p.model)})` : ""}
+              {maths ? "Chance the winning price is above your bid, and the expected profit at each bid" : "Bid higher and you earn more per unit but win less often"}
+              {maths && p && !guessOnly ? ` (predicted median ${money(p.median)}, ${modelLabel(p.model)})` : ""}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
@@ -714,10 +718,10 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Who wins this NSN</CardTitle>
+            <CardTitle>{maths ? "Who wins this NSN" : "Who wins this part"}</CardTitle>
             <CardDescription>
               Past awardees, most wins first
-              {ex.contestability ? (
+              {maths && ex.contestability ? (
                 <span className="ml-2 rounded border px-1.5 py-0.5 text-[11px]" data-testid="contestability">
                   winnable by a broker: {pct(ex.contestability.p_winnable)}
                 </span>
@@ -731,7 +735,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
                   <TH>Awardee</TH>
                   <TH className="text-right">Wins</TH>
                   <TH className="text-right">Last price</TH>
-                  <TH className="text-right">vs last price</TH>
+                  {maths && <TH className="text-right">vs last price</TH>}
                   <TH>Last award</TH>
                 </tr>
               </THead>
@@ -749,6 +753,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
                       </TD>
                       <TD className="num text-right">{c.wins}</TD>
                       <TD className="num text-right">{c.lastPrice == null ? <span className="text-muted-foreground">unverified</span> : money(c.lastPrice)}</TD>
+                      {maths && (
                       <TD className="num text-right">
                         {p?.median_ratio != null ? (
                           <Tip content={`Typically wins at ${pct(p.median_ratio)} of the inflation-adjusted previous award (${plural(p.n_ratio, "award")} in this supply class)`}>
@@ -758,20 +763,21 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TD>
+                      )}
                       <TD>{formatDate(c.lastDate)}</TD>
                     </TR>
                   );
                 })}
                 {!line.history.length && (
                   <TR>
-                    <TD colSpan={5} className="text-center text-xs text-muted-foreground">
-                      No past awards for this NSN.
+                    <TD colSpan={maths ? 5 : 4} className="text-center text-xs text-muted-foreground">
+                      No past awards for this part.
                     </TD>
                   </TR>
                 )}
               </TBody>
             </Table>
-            {ex.competitors ? (
+            {maths && ex.competitors ? (
               <div className="space-y-1 border-t px-3 py-2 text-xs" data-testid="competitors">
                 {ex.contestability ? <p>{ex.contestability.reason.charAt(0).toUpperCase() + ex.contestability.reason.slice(1)}.</p> : null}
                 {ex.competitors.fsc_players.length > 0 && (
@@ -796,7 +802,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
         </Card>
       </div>
 
-      {(p?.similar_items ?? []).length > 0 && (
+      {maths && (p?.similar_items ?? []).length > 0 && (
         <Card data-testid="similar-items">
           <CardHeader>
             <CardTitle>Similar parts DLA bought</CardTitle>
@@ -848,10 +854,10 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
         </Card>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className={cn("grid gap-4", maths && "xl:grid-cols-2")}>
         <Card>
           <CardHeader>
-            <CardTitle>Procurement history</CardTitle>
+            <CardTitle>{maths ? "Procurement history" : "What DLA paid before"}</CardTitle>
             <CardDescription>
               {history.length
                 ? `${plural(history.length, "past award")} for this NSN${unverified ? ` (${num(unverified)} unverified)` : ""}${p && !guessOnly ? " · shaded band = predicted 10–90% range" : ""}`
@@ -862,6 +868,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
             <HistoryChart awards={history} levels={guessOnly ? undefined : p?.levels} prices={guessOnly ? undefined : p?.prices} quantity={line.quantity} />
           </CardContent>
         </Card>
+        {maths && (
         <Card>
           <CardHeader>
             <CardTitle>Landed cost per unit</CardTitle>
@@ -880,8 +887,10 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
+      {maths && (
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>
@@ -934,6 +943,7 @@ function LineSection({ line, sol, voiceEnabled, demo }: { line: Line; sol: Sol; 
           </CardContent>
         </Card>
       </div>
+      )}
 
       <Card>
         <CardHeader>

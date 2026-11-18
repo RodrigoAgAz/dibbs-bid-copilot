@@ -104,11 +104,18 @@ def _truncate(engine) -> None:
 @pytest.fixture(autouse=True)
 def _clean_state(engine):
     from app.core.ratelimit import get_limiter
+    from app.services.competitors import clear_competitor_index
     from app.services.email.providers import set_email_provider
+    from app.services.item_index import clear_item_index
+    from app.services.pricing import clear_model_cache
 
     _truncate(engine)
     get_limiter().reset()
     set_email_provider(None)
+    # Process-wide caches built from an earlier test's rows (the model cache is keyed by a run id the truncate reuses).
+    clear_competitor_index()
+    clear_item_index()
+    clear_model_cache()
     yield
 
 

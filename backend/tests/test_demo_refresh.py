@@ -120,3 +120,29 @@ def test_tidy_labels_seeded_demo_suppliers_and_fixes_old_threads(db):
     assert abs((msgs["outbound"] - sent).total_seconds()) < 2 and sent < msgs["inbound"] < now
     assert tidy_demo_org(db, org) == 0  # idempotent
     assert tidy_demo_org(db, other) == 0
+
+
+def test_switch_demo_watchlists_moves_fastener_demo_orgs_to_the_weapons_catalog(client, db):
+    from app.config import DEFAULT_FSC_WATCHLIST, DEMO_MAX_LINE_VALUE, DEMO_NICHE_WATCHLIST, LEGACY_FSC_WATCHLIST
+    from app.models import OrgSettings
+    from app.services.demo_refresh import switch_demo_watchlists
+
+    ids = {}
+    for name in ("atlas", "bluewater", "custom", "real"):
+        client.cookies.clear()
+        ids[name] = signup(client, f"owner@{name}-demo.example.com", org=f"{name} (demo)")["organization"]["id"]
+    for name in ("atlas", "bluewater", "custom"):
+        db.get(Organization, ids[name]).plan = "demo"
+    db.get(OrgSettings, ids["atlas"]).fsc_watchlist = list(LEGACY_FSC_WATCHLIST)
+    db.get(OrgSettings, ids["bluewater"]).fsc_watchlist = ["5305", "5306", "5310", "5330"]
+    db.get(OrgSettings, ids["custom"]).fsc_watchlist = ["5305", "6515"]  # someone changed it: leave it alone
+    db.get(OrgSettings, ids["real"]).fsc_watchlist = list(LEGACY_FSC_WATCHLIST)  # a paying firm keeps its classes
+    db.commit()
+
+    out = switch_demo_watchlists(db)
+    db.commit()
+    assert out == {ids["atlas"]: DEFAULT_FSC_WATCHLIST, ids["bluewater"]: DEMO_NICHE_WATCHLIST}
+    assert db.get(OrgSettings, ids["atlas"]).max_line_value == DEMO_MAX_LINE_VALUE
+    assert db.get(OrgSettings, ids["custom"]).fsc_watchlist == ["5305", "6515"]
+    assert db.get(OrgSettings, ids["real"]).fsc_watchlist == list(LEGACY_FSC_WATCHLIST)
+    assert switch_demo_watchlists(db) == {}  # once only

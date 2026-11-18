@@ -17,15 +17,18 @@ import {
   Search,
   Settings,
   Sparkles,
+  Target,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import { ErrorState, Loading } from "@/components/common";
+import { CATEGORY_ICON } from "@/components/categories";
 import { DemoGuide } from "@/components/demo-guide";
 import { OnboardingChecklist } from "@/components/onboarding";
 import { api, unwrap } from "@/lib/api/client";
 import { type DashboardLine } from "@/lib/dashboard";
-import { formatDate, formatDateTime, formatNsn, money, num, plural } from "@/lib/format";
+import { CATEGORIES, formatDate, formatDateTime, formatNsn, money, num, plural } from "@/lib/format";
+import { useShowMaths } from "@/lib/hooks";
 import { LANES, defaultLane, dueText, laneLines, orderValue, reasons, verdict, type LaneKey } from "@/lib/opportunities";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +40,46 @@ const LANE_ICON: Record<LaneKey, LucideIcon> = {
   new: PackageSearch,
 };
 const SHOWN = 8;
+
+/** The weapon systems the firm sells parts for, with today's open lines and order value in each. */
+function Categories({ lines }: { lines: DashboardLine[] }) {
+  const settings = useQuery({ queryKey: ["settings"], queryFn: async () => unwrap(await api.GET("/api/settings")) });
+  const watched = new Set(settings.data?.fsc_watchlist ?? lines.map((l) => l.fsc));
+  const cats = CATEGORIES.filter((c) => watched.has(c.fsc));
+  if (!cats.length) return null;
+  return (
+    <section aria-labelledby="cats-heading" className="mb-8" data-testid="categories">
+      <h2 id="cats-heading" className="mb-3 font-serif text-xl tracking-tight">
+        What you sell
+      </h2>
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+        {cats.map((c) => {
+          const inCat = lines.filter((l) => l.fsc === c.fsc);
+          const worth = inCat.filter((l) => !l.no_bid).length;
+          const value = inCat.reduce((t, l) => t + orderValue(l), 0);
+          const Icon = CATEGORY_ICON[c.fsc] ?? Target;
+          return (
+            <li key={c.fsc}>
+              <Link
+                href={`/lines?fsc=${c.fsc}`}
+                className="flex h-full min-h-[148px] flex-col rounded-xl border bg-card p-4 transition-colors duration-200 hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                data-testid={`category-${c.fsc}`}
+              >
+                <Icon className="h-6 w-6 text-primary" />
+                <span className="mt-3 text-sm font-semibold">{c.title}</span>
+                <span className="mt-0.5 text-xs leading-snug text-muted-foreground">{c.blurb}</span>
+                <span className="mt-auto pt-3 text-xs">
+                  <b className="num">{num(worth)}</b> worth bidding
+                  {value > 0 && <span className="text-muted-foreground"> · ≈ {money(value, { compact: true, digits: 0 })}</span>}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
 
 /** The open book against the firm's limits: what is in flight, what the week's hours cover, where the capital sits. */
 function PortfolioCard() {
@@ -298,6 +341,7 @@ const QUICK_LINKS: { href: string; label: string; icon: LucideIcon }[] = [
 ];
 
 function Home() {
+  const [maths] = useShowMaths();
   const router = useRouter();
   const params = useSearchParams();
   const q = useQuery({ queryKey: ["dashboard"], queryFn: async () => unwrap(await api.GET("/api/dashboard")) });
@@ -337,6 +381,7 @@ function Home() {
       </header>
       <OnboardingChecklist />
       <DemoGuide lines={lines} />
+      {!q.isLoading && !q.error && <Categories lines={lines} />}
 
       <section aria-labelledby="nav-heading" className="mb-8 space-y-4">
         <h2 id="nav-heading" className="sr-only">
@@ -369,7 +414,7 @@ function Home() {
         )}
       </section>
 
-      {!q.isLoading && !q.error && <PortfolioCard />}
+      {!q.isLoading && !q.error && maths && <PortfolioCard />}
 
       {!q.isLoading && !q.error && (
         <section aria-labelledby="opps-heading" data-testid="opportunities">

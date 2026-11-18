@@ -20,56 +20,46 @@ import pandas as pd
 
 from dibbs_ml.inflation import PPI, default_ppi
 
+# Five weapon-system supply classes DLA buys spare parts for on DIBBS (real FSCs; volumes in docs/data_sources.md):
+# whole weapons and live munitions are not bought this way, their parts are.
 FSC_SPECS: dict[str, dict] = {
-    "5305": {
-        "names": ["SCREW,CAP,SOCKET HEAD", "SCREW,MACHINE", "SCREW,SELF-LOCKING", "SCREW,TAPPING", "SETSCREW",
-                  "SCREW,CAP,HEXAGON HEAD"],
-        "price": (0.12, 18.0), "uoi": ["EA", "EA", "EA", "HD", "BX"], "pn": ["NAS1352-{a}-{b}P", "MS24693-C{a}{b}",
-                                                                          "MS51958-{a}{b}", "NAS1101-{a}-{b}"],
+    "2530": {  # Vehicular brake, steering, axle, wheel and track components: tank and combat-vehicle running gear
+        "names": ["SHOE,TRACK,VEHICULAR", "WHEEL,ROAD,TRACKED VEHICLE", "SPROCKET,TRACK DRIVE", "IDLER WHEEL ASSEMBLY",
+                  "TRACK ASSEMBLY,VEHICULAR", "SHOCK ABSORBER,TRACKED VEHICLE", "PARTS KIT,SHOE BRAKE"],
+        "price": (150.0, 12000.0), "uoi": ["EA", "EA", "EA", "KT"], "pn": ["12{a:02d}{b:04d}", "19207-12{a:02d}{b:03d}",
+                                                                         "MS{a:02d}{b:03d}-1"],
     },
-    "5306": {
-        "names": ["BOLT,MACHINE", "BOLT,INTERNALLY RELIEVED BODY", "BOLT,CLOSE TOLERANCE", "BOLT,SHEAR",
-                  "BOLT,EXTERNALLY RELIEVED BODY"],
-        "price": (0.6, 65.0), "uoi": ["EA"], "pn": ["AN{a}-{b}A", "NAS6604-{a}{b}", "MS21250-{a}0{b}",
-                                                   "NAS1104-{a}{b}"],
+    "1005": {  # Guns, through 30 mm: rifles and machine guns
+        "names": ["CARRIER ASSEMBLY,BOLT", "BARREL ASSEMBLY,MACHINE GUN", "RECEIVER,LOWER,RIFLE", "TRIGGER ASSEMBLY",
+                  "BUFFER ASSEMBLY,RIFLE", "FEEDER,AUTOMATIC GUN", "EXTRACTOR,CARTRIDGE", "BOLT ASSEMBLY,RIFLE"],
+        "price": (8.0, 3500.0), "uoi": ["EA"], "pn": ["129{a:02d}{b:03d}", "8448{a:02d}{b:02d}", "5504{a:02d}{b:02d}"],
     },
-    "5310": {
-        "names": ["NUT,SELF-LOCKING,HEXAGON", "NUT,PLAIN,HEXAGON", "WASHER,FLAT", "WASHER,LOCK",
-                  "NUT,PLAIN,CASTELLATED", "NUT,SELF-LOCKING,PLATE"],
-        "price": (0.06, 12.0), "uoi": ["EA", "EA", "HD"], "pn": ["MS21042L{a}", "MS21043-{a}", "AN960C{a}{b}",
-                                                               "NAS1291-{a}", "MS35338-{a}{b}"],
+    "1010": {  # Guns, over 30 mm up to 75 mm: 40 mm grenade launchers
+        "names": ["FEED TRAY ASSEMBLY,40MM", "BARREL,GRENADE LAUNCHER", "SIGHT,GRENADE LAUNCHER", "CHUTE ASSEMBLY,40MM",
+                  "BOLT ASSEMBLY,GRENADE LAUNCHER", "MOUNT,PINTLE", "RECOIL ADAPTER,GRENADE LAUNCHER"],
+        "price": (25.0, 6000.0), "uoi": ["EA"], "pn": ["8448{a:02d}{b:02d}", "1257{a:02d}{b:02d}", "D{a:02d}{b:04d}"],
     },
-    "5330": {
-        "names": ["PACKING,PREFORMED", "GASKET", "SEAL,NONMETALLIC SPECIAL SHAPED SECTION", "PACKING,PREFORMED",
-                  "GASKET,FLANGE"],
-        "price": (0.15, 45.0), "uoi": ["EA", "EA", "PG"], "pn": ["M83248/1-{a}{b}", "MS29513-{a}{b}",
-                                                               "M25988/1-{a}{b}", "NAS1612-{a}"],
+    "1055": {  # Launchers, rocket and pyrotechnic
+        "names": ["LAUNCHER,ROCKET", "TUBE ASSEMBLY,LAUNCHER", "FIRING MECHANISM,LAUNCHER", "DISCHARGER,SMOKE GRENADE",
+                  "DETENT,ROCKET LAUNCHER", "HARNESS,WIRING,LAUNCHER"],
+        "price": (40.0, 15000.0), "uoi": ["EA", "EA", "SE"], "pn": ["117{a:02d}{b:03d}", "9{a:02d}{b:04d}",
+                                                                 "1302{a:02d}{b:02d}"],
     },
-    "5340": {
-        "names": ["CLAMP,LOOP", "BRACKET,ANGLE", "HINGE,BUTT", "CLIP,SPRING TENSION", "HANDLE,BOW",
-                  "STRAP,RETAINING", "LATCH,SLIDE"],
-        "price": (0.9, 140.0), "uoi": ["EA"], "pn": ["MS21919WDG{a}", "AN742-{a}{b}", "NAS1715-{a}{b}",
-                                                    "MS9068-{a}{b}"],
-    },
-    "4730": {
-        "names": ["ADAPTER,STRAIGHT,TUBE TO BOSS", "ELBOW,TUBE", "NIPPLE,TUBE", "COUPLING HALF,QUICK DISCONNECT",
-                  "UNION,TUBE", "TEE,TUBE", "CAP,TUBE"],
-        "price": (2.5, 260.0), "uoi": ["EA"], "pn": ["MS21902-{a}", "AN815-{a}D", "MS24387-{a}", "AN929-{a}D",
-                                                    "MS21921-{a}{b}"],
-    },
-    "6145": {
-        "names": ["WIRE,ELECTRICAL", "CABLE,POWER,ELECTRICAL", "CABLE,SPECIAL PURPOSE,ELECTRICAL",
-                  "WIRE,ELECTRICAL", "CABLE,RADIO FREQUENCY"],
-        "price": (0.25, 30.0), "uoi": ["FT", "FT", "RO", "EA"], "pn": ["M22759/16-{a}-9", "M27500-{a}RC{b}S23",
-                                                                     "M16878/4BF{a}", "M17/{a}-RG{b}"],
+    "5855": {  # Night vision equipment, emitted and reflected radiation
+        "names": ["IMAGE INTENSIFIER TUBE", "NIGHT VISION MONOCULAR", "THERMAL WEAPON SIGHT", "EYEPIECE ASSEMBLY",
+                  "OBJECTIVE LENS ASSEMBLY", "MOUNT,NIGHT VISION DEVICE", "RECEIVER,INFRARED"],
+        "price": (35.0, 14000.0), "uoi": ["EA"], "pn": ["A3{a:02d}{b:03d}", "MX-{a:02d}{b:03d}/UV",
+                                                       "1349{a:02d}{b:02d}"],
     },
 }
+# Relative volume of each class in the generated history (rifle and vehicle parts are the most common buys).
+FSC_WEIGHTS = {"2530": 1.3, "1005": 1.3, "1010": 0.8, "1055": 0.6, "5855": 0.9}
 
 ADJ = ["Keystone", "Patriot", "Summit", "Liberty", "Ironwood", "Bluewater", "Granite", "Redstone", "Northfield",
        "Cardinal", "Harbor", "Frontier", "Allied", "Pioneer", "Sentinel", "Eagle Rock", "Tri-State", "Precision",
        "Coastal", "Heartland", "Pinnacle", "Atlas", "Meridian", "Capitol", "Lakeshore", "Silverline"]
-NOUN = ["Fastener", "Aerospace", "Industrial", "Defense", "Hardware", "Fluid Power", "Seal", "Wire & Cable",
-        "Components", "Supply", "Parts", "Bolt & Nut", "Fittings", "Tool"]
+NOUN = ["Armament", "Aerospace", "Industrial", "Defense", "Ordnance", "Tactical", "Optics", "Vehicle Systems",
+        "Components", "Supply", "Parts", "Arms", "Precision", "Track & Drivetrain"]
 SUFFIX = ["Supply Co.", "Inc.", "LLC", "Corp.", "Distributors", "Group", "Manufacturing", "Industries"]
 LOCATIONS = [("Columbus", "OH"), ("Dayton", "OH"), ("Richmond", "VA"), ("Norfolk", "VA"), ("Philadelphia", "PA"),
              ("Wichita", "KS"), ("Tulsa", "OK"), ("Phoenix", "AZ"), ("San Diego", "CA"), ("Los Angeles", "CA"),
@@ -155,7 +145,7 @@ def generate(
 
     nsns, awards, sources = [], [], []
     used_nsn: set[str] = set()
-    fsc_weights = np.array([1.3, 1.0, 1.3, 1.0, 0.9, 0.9, 0.7])[: len(fscs)]
+    fsc_weights = np.array([FSC_WEIGHTS.get(f, 1.0) for f in fscs])
     fsc_choice = rng.choice(fscs, size=n_nsns, p=fsc_weights / fsc_weights.sum())
     for fsc in fsc_choice:
         spec = FSC_SPECS[fsc]
@@ -168,8 +158,8 @@ def generate(
         lo, hi = spec["price"]
         base = float(np.exp(rng.uniform(np.log(lo), np.log(hi))))
         uoi = str(rng.choice(spec["uoi"]))
-        if uoi in ("HD", "BX", "RO", "PG"):
-            base *= float(rng.uniform(8, 40))
+        if uoi in ("KT", "SE"):
+            base *= float(rng.uniform(1.5, 4))
         aso = bool(rng.random() < 0.35)
         amsc = str(rng.choice(["C", "B", "P"])) if aso else str(rng.choice(["G", "G", "G", "T"]))
         n_src = int(rng.integers(1, 4))
@@ -177,7 +167,8 @@ def generate(
         for m in mfrs:
             sources.append({"nsn": nsn, "cage_code": manufacturers[m]["cage_code"], "part_number": _part_number(rng, fsc)})
         rate = float(np.clip(rng.lognormal(np.log(4.0), 0.8), 0.4, 18))  # awards/year
-        typical_q = float(np.clip(rng.lognormal(np.log(300 if base < 2 else 80 if base < 20 else 20), 0.9), 1, 20000))
+        typical_q = float(np.clip(rng.lognormal(np.log(120 if base < 50 else 30 if base < 500 else 8 if base < 3000 else 3),
+                                                0.9), 1, 5000))
         rec = {
             "nsn": nsn, "fsc": fsc, "niin": niin, "nomenclature": str(rng.choice(spec["names"])),
             "unit_of_issue": uoi, "amsc": amsc, "approved_source_only": aso, "n_approved_sources": n_src,
@@ -250,7 +241,17 @@ def generate(
     with_hist = award_df.groupby("nsn").size()
     warm = list(with_hist[with_hist >= 2].index)
     cold = [n for n in nsn_df["nsn"] if n not in set(with_hist.index)]
-    picks = list(rng.choice(warm, size=min(n_open_lines - 4, len(warm)), replace=False))
+    # Spread the warm lines evenly over the supply classes (a demo shows every category), then top up at random.
+    n_warm = min(n_open_lines - 4, len(warm))
+    per_fsc = n_warm // len(fscs)
+    picks: list[str] = []
+    for f in fscs:
+        pool = [n for n in warm if n[:4] == f]
+        if per_fsc and pool:
+            picks += list(rng.choice(pool, size=min(per_fsc, len(pool)), replace=False))
+    rest = [n for n in warm if n not in set(picks)]
+    if n_warm > len(picks) and rest:
+        picks += list(rng.choice(rest, size=min(n_warm - len(picks), len(rest)), replace=False))
     picks += cold[:4] if len(cold) >= 4 else list(rng.choice(nsn_df["nsn"], size=4, replace=False))
     today = end + timedelta(days=1)
     for i, nsn in enumerate(picks):

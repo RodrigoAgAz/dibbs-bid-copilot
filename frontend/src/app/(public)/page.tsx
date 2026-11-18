@@ -5,22 +5,23 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeDollarSign, BarChart3, FileSearch, Inbox, Lock, MailCheck, ShieldCheck, Target } from "lucide-react";
+import { CATEGORY_ICON } from "@/components/categories";
 import { Button } from "@/components/ui/button";
 import { api, errorMessage, unwrap } from "@/lib/api/client";
-import { formatDate, formatSolicitation, money, num, pct, plural } from "@/lib/format";
+import { CATEGORIES, formatDate, formatSolicitation, money, num, pct, plural } from "@/lib/format";
 import { AUTH_PAGES } from "@/lib/flags";
 import { useAuthOptions, useDataHealth } from "@/lib/hooks";
 
 const STEPS = [
   {
     icon: Inbox,
-    title: "Every new RFQ in your FSCs",
-    body: "Each DIBBS posting is pulled in as it lands, filtered to the federal supply classes you sell, with buyer, set-aside, FOB, inspection and approved-source details.",
+    title: "Every new solicitation in your categories",
+    body: "Each DIBBS posting is pulled in as it lands, filtered to the weapon systems you sell parts for, with buyer, set-aside, delivery, inspection and approved-source details.",
   },
   {
     icon: FileSearch,
-    title: "The NSN's price history",
-    body: "Past awards for the same NSN (who won, at what unit price and quantity) from the RFQ's procurement history and DLA award postings.",
+    title: "The part's price history",
+    body: "Past awards for the same part (who won, at what unit price and quantity) from the RFQ's procurement history and DLA award postings.",
   },
   {
     icon: BarChart3,
@@ -86,13 +87,14 @@ export default function LandingPage() {
     <div>
       <section className="border-b bg-gradient-to-b from-primary/5 to-background">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-primary">For DLA DIBBS brokers and small suppliers</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-primary">For the small suppliers who keep US weapon systems running</p>
           <h1 className="max-w-3xl text-3xl font-semibold tracking-tight sm:text-5xl">
             Price every DIBBS solicitation in minutes, not hours.
           </h1>
           <p className="mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            The Invisible Hand reads each day&apos;s RFQs in your supply classes, pulls the NSN&apos;s award history, predicts the winning price,
-            collects supplier quotes and recommends the bid with the best expected profit.
+            DLA posts thousands of solicitations a week for parts of tanks, rifles, grenade launchers, rocket launchers and night-vision gear.
+            The Invisible Hand reads every one in your categories, pulls the part&apos;s award history, predicts the winning price, collects
+            supplier quotes and recommends the bid with the best expected profit.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {options.data?.public_demo && (
@@ -116,6 +118,28 @@ export default function LandingPage() {
               <Stat label="Newest DIBBS posting" value={formatDate(health.data.newest_rfq_posting_date)} />
             </dl>
           )}
+        </div>
+      </section>
+
+      <section className="border-b" aria-labelledby="prices-heading" data-testid="landing-categories">
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <h2 id="prices-heading" className="text-xl font-semibold">
+            What it prices
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">Spare parts DLA buys every day, in five supply classes.</p>
+          <ul className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+            {CATEGORIES.map((c) => {
+              const Icon = CATEGORY_ICON[c.fsc];
+              return (
+                <li key={c.fsc} className="rounded-xl border bg-card p-4">
+                  {Icon && <Icon className="h-7 w-7 text-primary" />}
+                  <div className="mt-3 text-sm font-semibold">{c.title}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{c.blurb}</div>
+                  <div className="mt-2 font-mono text-[11px] text-muted-foreground">FSC {c.fsc}</div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </section>
 

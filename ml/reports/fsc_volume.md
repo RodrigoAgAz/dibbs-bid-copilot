@@ -1,12 +1,12 @@
 # FSC volume report
 
-Generated 2026-11-18 from the database (real DIBBS data only; synthetic SPEZZ* demo rows excluded).
+Generated 2026-10-15 from the database (real DIBBS data only; synthetic SPEZZ* demo rows excluded).
 
 Ranked by number of solicitations. `*` marks the current default watchlist.
 
 | FSC | Solicitations | Automated (T/U) | Median award value | NSNs with >= 3 awards | Distinct awardees | NSNs | Award rows |
 |---|---|---|---|---|---|---|---|
-| 6145 | 58 | 100% | $372 | 0% | 2 | 55 | 2 |
+| 6145 * | 58 | 100% | $372 | 0% | 2 | 55 | 2 |
 
 ## Observed in the captured index files
 

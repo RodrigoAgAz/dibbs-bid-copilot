@@ -146,3 +146,35 @@ def test_switch_demo_watchlists_moves_fastener_demo_orgs_to_the_weapons_catalog(
     assert db.get(OrgSettings, ids["custom"]).fsc_watchlist == ["5305", "6515"]
     assert db.get(OrgSettings, ids["real"]).fsc_watchlist == list(LEGACY_FSC_WATCHLIST)
     assert switch_demo_watchlists(db) == {}  # once only
+
+
+def test_never_loaded_watched_fscs_are_queued_once_on_the_newest_code(client, db, monkeypatch):
+    from datetime import date as date_
+
+    from app.config import get_settings
+    from app.jobs import queue, tasks
+    from app.models import IngestCheckpoint, OrgSettings
+
+    org_id = signup(client, "owner@switch-demo.example.com", org="switch (demo)")["organization"]["id"]
+    db.get(OrgSettings, org_id).fsc_watchlist = ["1005", "6145"]
+    db.commit()
+    calls = []
+    monkeypatch.setattr(queue, "enqueue_unique", lambda func, *a, **k: calls.append((func.__name__, a)) or "job")
+    monkeypatch.setattr(get_settings(), "connector_mode", "fixture")
+    assert tasks.queue_new_fsc_loads_if_needed() == []  # fixture databases load from the settings change
+
+    monkeypatch.setattr(get_settings(), "connector_mode", "live")
+    sol = Solicitation(solicitation_number="SPE7M026T9999", type_code="T", issue_date=date_.today(),
+                       return_by_date=date_.today())
+    db.add(sol)
+    db.flush()
+    db.add(SolicitationLine(solicitation_id=sol.id, line_no=1, nsn="6145012345678", fsc="6145", niin="012345678", quantity=1))
+    db.commit()
+    assert tasks.queue_new_fsc_loads_if_needed() == ["1005"]  # 6145 already has lines
+    assert ("expand_watchlist_job", (["1005"],)) in calls and ("catalog_backfill_job", (["1005"],)) in calls
+
+    monkeypatch.setattr("app.pipelines.ingest.ingest_new_fscs", lambda db, fscs: {"new_lines": 0})
+    tasks.expand_watchlist_job(["1005"])  # DIBBS had nothing recent for it: still recorded as loaded
+    assert db.execute(select(IngestCheckpoint).where(IngestCheckpoint.source == "fsc_load")).scalar_one().key == "1005"
+    calls.clear()
+    assert tasks.queue_new_fsc_loads_if_needed() == [] and calls == []

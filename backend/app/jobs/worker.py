@@ -64,6 +64,9 @@ def _queue_startup_jobs() -> None:
 
         queue_retrain_if_model_code_changed()
         queue_research_if_requested()  # cheap when the demo is already topped up
+        from app.jobs.tasks import queue_new_fsc_loads_if_needed
+
+        queue_new_fsc_loads_if_needed()  # e.g. the demo orgs' switch to the weapon-system catalog at boot
     except Exception:  # never take the worker down
         log.exception("startup jobs could not be queued")
 

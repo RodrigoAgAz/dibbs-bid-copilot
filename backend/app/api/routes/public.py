@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.core.timeutil import today_et
 from app.db import get_db
-from app.models import Organization, Recommendation, Solicitation, SolicitationLine
+from app.models import Organization, OrgSettings, Recommendation, Solicitation, SolicitationLine
 from app.services.accounts import DEMO_VIEWER_ORG
 from app.services.biddable import not_awarded
 
@@ -53,12 +53,15 @@ def top_lines(db: Session = Depends(get_db)) -> list[TopLine]:
     if org is None:
         return []
     today = today_et()
+    s = db.get(OrgSettings, org.id)
+    watched = list(s.fsc_watchlist or []) if s else []
     rows = db.execute(
         select(Recommendation, SolicitationLine, Solicitation)
         .join(SolicitationLine, Recommendation.solicitation_line_id == SolicitationLine.id)
         .join(Solicitation, SolicitationLine.solicitation_id == Solicitation.id)
         .where(
             Recommendation.organization_id == org.id,
+            SolicitationLine.fsc.in_(watched),  # not lines from classes the demo stopped watching
             Recommendation.no_bid.is_(False),
             Recommendation.recommended_bid.is_not(None),
             Solicitation.return_by_date >= today,

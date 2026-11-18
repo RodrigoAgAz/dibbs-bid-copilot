@@ -483,9 +483,13 @@ systems, and the screens lead with the answer while the maths stays one switch a
   Approved-source-only parts without a conforming quote stay no-bids: that rule is the product's, not the catalog's.
 - **Live switch, once, at boot.** `switch_demo_watchlists` moves demo orgs whose watchlist is still within the legacy
   fastener classes (`LEGACY_FSC_WATCHLIST`) to the new lists; a demo org on anything else, and every non-demo org, is left
-  alone, so a paying firm never has its classes changed. `bootstrap` then queues the recent-RFQ load for the new classes
-  and, in live mode, `catalog_backfill_job` (bounded like the initial live load: 800 PDFs, then a retrain under the normal
-  promotion rules). Fastener rows already in the database stay; they still train the model.
+  alone, so a paying firm never has its classes changed. Loading the new classes is **not queued from boot**: on the
+  first deploy it was, and the outgoing worker (still listening during the deploy) took the jobs and lost them, leaving
+  the live demo with no lines. Instead `queue_new_fsc_loads_if_needed` (live mode; worker startup after its 60 s delay,
+  and the hourly ops check) queues the recent-RFQ load and `catalog_backfill_job` (800 PDFs, then a retrain under the
+  normal promotion rules) for any watched class with no line on file and no `fsc_load` checkpoint; the load records
+  the checkpoint, so a class with no recent RFQs is not retried. Fastener rows already in the database stay; they still
+  train the model. The public top lines only show classes the demo org still watches.
 - **Simple view by default, "Show the maths" in the header.** Off: the RFQ page shows the bid, chance to win, expected
   profit and cost, the win-chance curve, the price story, who wins the part, past prices and suppliers. On: the triage
   factors, cost-model tier, DLA evaluation checks, sensitivity, decision history, competitor model, similar parts, landed

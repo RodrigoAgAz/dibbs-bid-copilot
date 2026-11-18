@@ -57,11 +57,48 @@ def nightly_backfill_job() -> dict:
 
 
 def expand_watchlist_job(fscs: list[str]) -> dict:
-    """Default queue (serialized with the ingest): it upserts the same tables."""
+    """Default queue (serialized with the ingest): it upserts the same tables. Records each class as loaded, so
+    queue_new_fsc_loads_if_needed never loads it again (even when DIBBS had no recent RFQs for it)."""
+    from sqlalchemy import select
+
+    from app.models import IngestCheckpoint
     from app.pipelines.ingest import ingest_new_fscs
 
     with session_scope() as db:
-        return ingest_new_fscs(db, set(fscs))
+        out = ingest_new_fscs(db, set(fscs))
+        done = {k for (k,) in db.execute(
+            select(IngestCheckpoint.key).where(IngestCheckpoint.source == "fsc_load", IngestCheckpoint.key.in_(fscs))
+        ).all()}
+        for f in sorted(set(fscs) - done):
+            db.add(IngestCheckpoint(source="fsc_load", key=f, status="done", detail=str(out.get("new_lines"))))
+        return out
+
+
+def queue_new_fsc_loads_if_needed() -> list[str]:
+    """Live mode: watched supply classes never loaded (no line on file, no load recorded) get their recent RFQs and,
+    on the bulk queue, their price history. Not a job itself: the worker calls it at startup (on the newest code) and
+    the hourly ops check, so a load queued during a deploy and lost to it is picked up again."""
+    from sqlalchemy import select
+
+    from app.config import get_settings
+    from app.jobs.queue import enqueue_unique
+    from app.models import IngestCheckpoint, SolicitationLine
+    from app.pipelines.ingest import watched_fscs
+
+    if get_settings().connector_mode != "live":
+        return []  # fixture/demo databases load a newly watched class from the settings change itself
+    with session_scope() as db:
+        watched = watched_fscs(db)
+        loaded = {k for (k,) in db.execute(select(IngestCheckpoint.key).where(IngestCheckpoint.source == "fsc_load")).all()}
+        with_lines = {f for (f,) in db.execute(
+            select(SolicitationLine.fsc).where(SolicitationLine.fsc.in_(watched)).distinct()
+        ).all()}
+    missing = sorted(watched - loaded - with_lines)
+    if missing:
+        enqueue_unique(expand_watchlist_job, missing)
+        enqueue_unique(catalog_backfill_job, missing, job_timeout=8 * 3600)
+        log.info("never-loaded watched FSCs %s: queued their recent RFQs and history", missing)
+    return missing
 
 
 @bulk
@@ -216,6 +253,7 @@ def ops_check_job() -> dict:
 
     queue_engine_refresh_if_needed()
     queue_retrain_if_model_code_changed()
+    queue_new_fsc_loads_if_needed()
     with session_scope() as db:
         return run_ops_check(db)
 

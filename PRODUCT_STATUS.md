@@ -1,8 +1,31 @@
 # The Invisible Hand: product status and capabilities
 
-*Snapshot as of 2026-11-18. Repo: `dibbs-bid-copilot` (GitHub `RodrigoAgAz/dibbs-bid-copilot`, branch `main`). Pricing
-engine **v13**, model code `lgbm_quantile_v2.2`, 10 database migrations. The weapon-system catalog and the simple view
-(2026-11-18) are described below; see DECISIONS.md for the reasoning.*
+*Snapshot as of 2026-11-18, after the weapon-system catalog went live. Repo: `dibbs-bid-copilot` (GitHub
+`RodrigoAgAz/dibbs-bid-copilot`, branch `main`). Live site: https://frontend-production-9d5c.up.railway.app. Pricing
+engine **v13**, model code `lgbm_quantile_v2.2`, 10 database migrations. DECISIONS.md has the reasoning behind every
+choice below.*
+
+---
+
+## 0. How it works, end to end (the 60-second version)
+
+1. **DLA posts solicitations.** Every business day the Defense Logistics Agency posts thousands of requests for quotes on
+   DIBBS, many of them for spare parts of weapon systems (tank track, rifle bolt carriers, night-vision tubes...).
+2. **We read every one in your categories.** Every 2 hours the product downloads DIBBS's daily files and keeps the lines in
+   the supply classes the firm sells. For each, it reads the solicitation PDF, which lists every past award for that part:
+   who won, at what unit price and quantity, often going back 10–20 years.
+3. **We predict the winning price.** A machine-learning model trained on about 150,000 real past awards predicts the
+   range the winning unit price will land in, not just one number. That gives the chance of winning at any bid.
+4. **We find your cost.** The product emails the suppliers who can actually make the part, reads their replies with an AI
+   model (Claude), and works out the full cost of delivering it: freight, inspection, packaging and financing included.
+5. **We recommend the bid.** It picks the price that maximizes chance to win × margin × quantity, within what DLA's
+   automated evaluation actually awards. It also gives a safer and a riskier option, or says "don't bid" and why.
+6. **You submit.** The broker reviews it and submits on DIBBS. The product never submits anything. Every decision is saved,
+   so after the award posts the product can show whether its bid would have won.
+
+On screen this is the **simple view**: bid, chance to win, expected profit, who usually wins, what DLA paid before. A
+**"Show the maths"** switch in the header reveals everything underneath: confidence, cost-model tiers, competitor model,
+sensitivity, portfolio limits.
 
 ---
 
@@ -40,12 +63,14 @@ fittings, wire) is gone from the defaults and the demo.
 | Codebase | Feature-complete through the 7-step "make the maths a real value add" plan, plus the weapon-system catalog and the simple view (2026-11-18). |
 | Catalog | Five weapon-system categories (§1). The demo data, defaults, landing page and home page all use them. |
 | Screens | **Simple view by default.** A **"Show the maths"** switch in the header reveals the model's working on every page (see §3.2). Nothing is computed differently. |
-| Deployment | Built for **Railway** (6 services: backend, worker, scheduler, frontend, Postgres, Redis). It has run in **live mode** on real DIBBS data (live QA pass on 2026-10-15). After the next deploy, the demo orgs switch to the new catalog automatically at boot. The new classes' recent RFQs then load, and a bounded backfill plus a retrain runs for their price history (about an hour at DIBBS's 1 request/second). |
+| Deployment | **Live on Railway** (6 services: backend, worker, scheduler, frontend, Postgres, Redis), in live mode on real DIBBS data. The weapon-system catalog deployed on 2026-11-18. The demo orgs switched over, and the new classes' recent RFQs loaded. A bounded price-history backfill and retrain for them was queued after that load. |
+| Live demo right now | **282 real open lines** across all five categories, **62 worth bidding**: 2530 tanks 151 lines (25 bid), 1005 rifles 115 (29), 1010 grenade launchers 4 (3), 1055 rocket launchers 5 (2), 5855 night vision 7 (3). Examples: a rifle bolt-carrier assembly at $3,693/unit, a tracked-vehicle hull parts kit at $2,226, wheel hubs at $652. Most of the rest are approved-source parts waiting for a quote on the exact part number. |
+| Public "top opportunities" strip | **Empty for now.** It only shows high-confidence lines, and the new classes have little price history on the live site until the backfill and retrain finish. |
 | Sign-in | **Development mode.** The sign-up and password pages are switched off. Signed-out visitors either get a simple username login (`SIMPLE_LOGIN_*`, signs in as the Atlas demo owner) or land in the read-only demo through `/enter`. `NEXT_PUBLIC_AUTH_PAGES=true` brings the real sign-up/login back. |
 | Real-world integrations | DIBBS scraping, USAspending and BLS PPI are **verified**. Resend email, Anthropic LLM, Twilio + ElevenLabs voice, SAM.gov and Apify are **built from docs and tested against mocks only**, not against the live services. |
 | Proof of value | **Not yet proven.** The pilot loop (step 7) exists to measure profit per broker-hour against a firm's own process, but **no real firm's bids, costs or outcomes have been imported yet**. |
-| Model accuracy (real data) | On real awards: median absolute error of the predicted median is ~15–17%, **no better than "last award adjusted for inflation"**. Range coverage is good (80%/90% ranges hold ~76–84% / ~87–89%). New parts with no history are much worse (median error around 64% with part-family evidence, worse without). |
-| Tests | ~26 test files and ~180 test functions across backend + ML, plus Vitest unit tests and one Playwright end-to-end flow. |
+| Model accuracy (real data) | Live model (run 6), tested on the 7,390 most recent real awards it never saw (2026-08-15 to 2026-11-15): **80% ranges hold 84% of winning prices, 90% ranges hold 93%**. The median error is 30% overall, but that mixes two populations. On parts with price history it was ~15–17% in earlier runs, **no better than "last award adjusted for inflation"**. New parts with no history are much worse. The model's value is the calibrated ranges and the win-chance curve, not the point estimate. |
+| Tests | All backend + ML tests, the 27 frontend unit tests and the Playwright end-to-end flow (sign up → log in → open a line → simple view → "Show the maths") pass. |
 
 ---
 
@@ -101,7 +126,7 @@ pitch view: the answer in plain words. On adds the model's working underneath it
 | **DIBBS CAGE pop-up** | Company name and address for a CAGE | HTML behind the DoD banner | Verified |
 | **USAspending API** | Recipient UEI, business size categories, **number of offers received**, solicitation link | JSON API, ~90-day publication lag, totals only | Verified against fixtures; optional cross-check, not used for price labels |
 | **SAM.gov Entity API** | UEI, registration details | Needs `SAM_API_KEY` | **Unverified** (no key during build) |
-| **BLS PPI via FRED** | Producer price indices to inflation-adjust old awards (fasteners → WPU1081, rubber → WPU0713, wire → WPU1026, other metals → WPU10) | Committed CSV `ml/data/ppi.csv`, refreshed with `ml/scripts/refresh_ppi.py` | Verified |
+| **BLS PPI via FRED** | Producer price indices to inflation-adjust old awards. All five weapon-system classes use the metals index WPU10, because the file has no ordnance or optics series. The legacy fastener classes keep WPU1081 / WPU0713 / WPU1026. | Committed CSV `ml/data/ppi.csv`, refreshed with `ml/scripts/refresh_ppi.py` | Verified |
 | **Apify** (fallback) | Alternative RFQ index source | Needs `APIFY_TOKEN` | **Unverified** |
 | **FLIS / PUB LOG characteristics** | Per-NSN technical characteristics (material, thread size...) used to find "similar parts" | Manual file import (`import-characteristics`). dla.mil blocks non-browser downloads, so the real format is **unverified** and **no data is loaded yet**. | Built, unused |
 | **DLA Master Solicitation Part I** | The automated-award evaluation rules encoded in `services/evaluation.py` | Read by hand from a PTAC deck of rev 46, cross-checked against rev 104 snippets. **A human should re-read rev 105 §3.** | Encoded |
@@ -158,7 +183,11 @@ Nothing is pooled across organizations. One firm's quotes never inform another f
    procurement history, approved sources and terms.
 4. Predict the winning-price distribution, then refresh every matching org's recommendations.
 5. Re-price open lines whose NSN gained award rows since they were last priced.
-6. A newly watched FSC loads its last 10 days of RFQs immediately.
+6. A newly watched FSC loads its last 10 days of RFQs immediately when a firm adds it in Settings.
+7. On the live site, a safety net covers any watched class that has never been loaded: no line on file, no load recorded.
+   This happened when the demo orgs switched catalogs at boot. The worker (at startup, on the newest code) and the hourly
+   ops check queue its 10-day load plus a bounded price-history backfill and retrain. The load records a checkpoint, so a
+   class with no recent RFQs isn't retried.
 
 ### 5.2 Award labeling (07:30 ET daily) and backfill (01:00 ET nightly)
 - **Labeling** checks only closed solicitations, with backoff (every 2 days for 2 weeks after close, then 5, then 14, up
@@ -299,7 +328,8 @@ independently.
 | Award labeling | 07:30 daily | bulk |
 | Nightly backfill | 01:00 daily (live mode) | bulk |
 | Supplier follow-ups | Hourly at :15 | default |
-| Ops check (stale data alerts, re-queue engine refresh / retrain after deploys) | Hourly at :45 | default |
+| Ops check (stale data alerts, re-queue engine refresh / retrain after deploys, load never-loaded watched classes) | Hourly at :45 | default |
+| New-class load (recent RFQs) / catalog backfill (history + retrain) | When a class is newly watched | default / bulk |
 | Daily digest | Mon–Fri 09:00 | default |
 | Retrain | Sunday 03:00 | bulk |
 
@@ -361,10 +391,15 @@ organizations, users, org_settings, refresh_tokens, password_reset_tokens, invit
 SAM.gov, Apify. PUB LOG characteristics format is unverified and no data is loaded.
 
 **Weapon-system catalog**
-- Live volume is uneven. Tank running gear (2530) and rifle parts (1005) post daily. Rocket-launcher parts (1055) are rare,
-  about 2 lines in 5 days, so that tile is often empty on the live feed. The demo data fills it.
-- The real price history on file was built for fasteners. The new classes need the post-deploy backfill and retrain before
-  live prices are as good as they were for fasteners. Until then, more lines show "quote first".
+- Live volume is uneven. Tank running gear (2530) and rifle parts (1005) post daily. Grenade-launcher, rocket-launcher and
+  night-vision parts are rarer: 4, 5 and 7 open lines on the live demo today. The local demo data spreads lines evenly.
+- Most live lines are "no bid" (220 of 282 today). Usually it's an approved-source part with no quote yet on the exact part
+  number. For a pitch, walk through the bid-worthy lines.
+- The real price history on file was built for fasteners. The new classes need the backfill and retrain before live
+  prices reach the same quality. Until then, more lines show "quote first" and the public top-opportunities strip stays
+  empty.
+- The first deploy queued the new-class load at boot, and the outgoing worker lost it. That's fixed: the worker and the
+  hourly ops check now queue it.
 - Inflation adjustment for all five uses the broad metals index (WPU10), because the offline PPI file has no ordnance or
   optics series.
 

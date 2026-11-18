@@ -13,12 +13,13 @@ from dibbs_ml.synthetic import generate
 from dibbs_ml.train import save_artifact, should_promote, train_from_awards
 
 AS_OF = date(2026, 6, 30)
+CATALOG = {"2530", "1005"}  # two of the synthetic classes: the rest of the test window is not the catalog
 
 
 @pytest.fixture(scope="module")
 def result():
     data = generate(n_nsns=180, start=date(2023, 1, 1), end=AS_OF, n_open_lines=10, seed=11)
-    return train_from_awards(data.awards, as_of=AS_OF)
+    return train_from_awards(data.awards, as_of=AS_OF, focus_fscs=CATALOG)
 
 
 def test_model_beats_baseline_on_primary_metric(result):
@@ -83,3 +84,22 @@ def test_fit_conformal_recovers_nominal_coverage():
     adj = apply_conformal(biased[2000:], d)
     cov = (y[2000:, None] <= adj).mean(axis=0)
     np.testing.assert_allclose(cov, levels, atol=0.03)
+
+
+def test_catalog_classes_are_scored_alone_for_model_and_baseline(result, tmp_dir):
+    m = result.metrics
+    assert m["catalog_fscs"] == ["1005", "2530"]
+    for kind in ("model", "baseline"):
+        cat = m[kind]["catalog"]
+        assert 0 < cat["n"] < m[kind]["n"]  # only the catalog's rows
+        assert set(m[kind]["by_fsc"]) == CATALOG
+        assert sum(s["n"] for s in m[kind]["by_fsc"].values()) == cat["n"]
+        assert cat["pinball_mean"] > 0
+    text = write_model_report(m, run_id=1, promoted=True, promote_reason="test", out_dir=tmp_dir).read_text("utf-8")
+    assert "### The catalog alone (FSC 1005, 2530)" in text and "| 2530 |" in text
+
+
+def test_without_a_catalog_there_is_no_catalog_segment():
+    data = generate(n_nsns=180, start=date(2023, 1, 1), end=AS_OF, n_open_lines=10, seed=11)
+    m = train_from_awards(data.awards, as_of=AS_OF, refit=False).metrics
+    assert "catalog" not in m["model"] and m["catalog_fscs"] == []

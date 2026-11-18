@@ -186,7 +186,7 @@ def demo_refresh_job() -> list:
 
 
 # .1: re-score the active model by history depth; .2: recent-data protocol + deployed refit (held-out twin kept)
-MODEL_CODE_VERSION = "lgbm_quantile_v2.2"  # bump when the training code changes: one retrain is queued
+MODEL_CODE_VERSION = "lgbm_quantile_v2.3"  # bump when the training code changes: one retrain is queued
 
 
 def queue_retrain_if_model_code_changed() -> str | None:

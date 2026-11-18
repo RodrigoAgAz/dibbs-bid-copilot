@@ -51,9 +51,15 @@ def split_by_time(frame: pd.DataFrame, as_of: date) -> tuple[pd.DataFrame, pd.Da
 
 # Accuracy is reported by how much award history the NSN had: that is what a broker can expect per line.
 HISTORY_TIERS = [("no history", 0, 0), ("1 award", 1, 1), ("2-4 awards", 2, 4), ("5+ awards", 5, 10**9)]
+# A segment (the catalog, or one supply class) is scored only with at least this many test rows.
+MIN_SEGMENT_ROWS = 5
 
 
-def evaluate_model(model: PricingModel, test: pd.DataFrame, kind: str = "model") -> tuple[dict, np.ndarray]:
+def evaluate_model(
+    model: PricingModel, test: pd.DataFrame, kind: str = "model", focus_fscs=None
+) -> tuple[dict, np.ndarray]:
+    """Held-out metrics. With `focus_fscs` (the supply classes the product sells), also scores those rows alone
+    (`catalog`) and each class (`by_fsc`): the whole test window mixes in every class the history covers."""
     logq, is_cold = model.predict_log(test, kind=kind)
     price = test["unit_price"].to_numpy(dtype=float)
     m = quantile_metrics(logq, price, model.levels)
@@ -69,6 +75,12 @@ def evaluate_model(model: PricingModel, test: pd.DataFrame, kind: str = "model")
         label: flat((n_prior >= lo) & (n_prior <= hi)) for label, lo, hi in HISTORY_TIERS
         if ((n_prior >= lo) & (n_prior <= hi)).sum() >= 5
     }
+    if focus_fscs and "fsc" in test:
+        fsc = test["fsc"].astype(str).to_numpy()
+        in_catalog = np.isin(fsc, sorted(focus_fscs))
+        if in_catalog.sum() >= MIN_SEGMENT_ROWS:
+            m["catalog"] = flat(in_catalog)
+        m["by_fsc"] = {f: flat(fsc == f) for f in sorted(focus_fscs) if (fsc == f).sum() >= MIN_SEGMENT_ROWS}
     return m, logq
 
 
@@ -78,6 +90,7 @@ def train_from_awards(
     ppi: PPI | None = None,
     active_model: PricingModel | None = None,
     items=None,
+    focus_fscs=None,
     refit: bool = True,
     deploy_calib_months: float = DEPLOY_CALIB_MONTHS,
 ) -> TrainResult:
@@ -96,9 +109,9 @@ def train_from_awards(
     model.train_window = f"{windows['train'][0]}..{windows['train'][1]}"
     model.calib_window = f"{windows['calib'][0]}..{windows['calib'][1]}"
 
-    main_m, logq = evaluate_model(model, test, "model")
-    raw_m, _ = evaluate_model(model, test, "uncalibrated")
-    base_m, base_logq = evaluate_model(model, test, "baseline")
+    main_m, logq = evaluate_model(model, test, "model", focus_fscs)
+    raw_m, _ = evaluate_model(model, test, "uncalibrated", focus_fscs)
+    base_m, base_logq = evaluate_model(model, test, "baseline", focus_fscs)
     from dibbs_ml.models import cold_frame
 
     cold_ref = cold_frame(test, model.cold_ref_mode)["cold_ref_used"].to_numpy(dtype=float)
@@ -118,16 +131,19 @@ def train_from_awards(
         "backtest": backtest,
         "rows": {"train": len(train), "calib": len(calib), "test": len(test), "total": len(frame)},
         "cold_share_test": float(test["is_cold"].mean()),
+        "catalog_fscs": sorted(focus_fscs) if focus_fscs else [],
         "windows": windows,
         "feature_importance": dict(list(model.warm.feature_importance().items())[:15]),
         "conformal_deltas": {"warm": model.warm_deltas.tolist(), "cold": model.cold_deltas.tolist()},
     }
     if active_model is not None:
         try:
-            act_m, _ = evaluate_model(getattr(active_model, "eval_model", None) or active_model, test, "model")
+            act_m, _ = evaluate_model(getattr(active_model, "eval_model", None) or active_model, test, "model",
+                                      focus_fscs)
             metrics["active_model_on_same_test"] = {
                 k: act_m[k] for k in ("pinball_mean", "mape_median", "median_abs_pct_error", "coverage_80",
-                                      "coverage_90", "n", "warm", "cold", "by_history") if k in act_m
+                                      "coverage_90", "n", "warm", "cold", "by_history", "catalog", "by_fsc")
+                if k in act_m
             }
         except Exception as exc:  # incompatible old artifact
             metrics["active_model_on_same_test"] = {"error": str(exc)[:300]}

@@ -95,6 +95,31 @@ def _charts(metrics: dict, out_dir: Path) -> dict[str, str]:
     return files
 
 
+def _catalog_section(metrics: dict, m: dict, b: dict) -> list[str]:
+    """The product's own supply classes alone, model vs baseline: the whole test window mixes in every class."""
+    c, bc = m["catalog"], b["catalog"]
+    gain = 1 - c["pinball_mean"] / bc["pinball_mean"] if bc["pinball_mean"] else None
+    out = [
+        f"### The catalog alone (FSC {', '.join(metrics.get('catalog_fscs') or [])})",
+        "",
+        f"{c['n']:,} test rows. Pinball loss {_fmt(c['pinball_mean'])} vs baseline {_fmt(bc['pinball_mean'])}"
+        + (f" (**{100 * gain:.0f}% {'lower' if gain >= 0 else 'higher'}**)." if gain is not None else "."),
+        "",
+        "| Class | Rows | Pinball | Baseline pinball | Median abs. % error | Baseline | 80% cov. | Baseline |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    rows = [("All five" if len(metrics.get("catalog_fscs") or []) == 5 else "Catalog", c, bc)]
+    rows += [(f, s, (b.get("by_fsc") or {}).get(f)) for f, s in (m.get("by_fsc") or {}).items()]
+    for label, s, sb in rows:
+        sb = sb or {}
+        out.append(
+            f"| {label} | {s['n']:,} | {_fmt(s['pinball_mean'])} | {_fmt(sb.get('pinball_mean'))} | "
+            f"{_fmt(s['median_abs_pct_error'], pct=True)} | {_fmt(sb.get('median_abs_pct_error'), pct=True)} | "
+            f"{_fmt(s['coverage_80'], pct=True)} | {_fmt(sb.get('coverage_80'), pct=True)} |"
+        )
+    return out + [""]
+
+
 def write_model_report(metrics: dict, run_id, promoted: bool, promote_reason: str, out_dir: Path | None = None,
                        data_note: str = "") -> Path:
     out_dir = out_dir or REPORTS
@@ -150,6 +175,8 @@ def write_model_report(metrics: dict, run_id, promoted: bool, promote_reason: st
                 f"{_fmt(s['mape_median'], pct=True)} | {_fmt(s['coverage_80'], pct=True)} | {_fmt(s['coverage_90'], pct=True)} |"
             )
         lines.append("")
+    if "catalog" in m and "catalog" in b:
+        lines += _catalog_section(metrics, m, b)
     act = metrics.get("active_model_on_same_test")
     if act and "pinball_mean" in act:
         lines += [f"Previously active model on the same test window: pinball {_fmt(act['pinball_mean'])}, "

@@ -496,3 +496,20 @@ systems, and the screens lead with the answer while the maths stays one switch a
   cost waterfall and price drivers; the lines table adds predicted median, landed cost and flags; the home page adds the
   portfolio ("Your book"). Nothing is computed differently; the switch is per browser (localStorage, falls back to the
   page view). The home page and landing page lead with the five categories.
+
+## LightGBM quantile model stays as v1 (2026-11-18)
+
+- **Kept as is, not simplified.** The project brief requires the model to beat a baseline. The live model (run 6,
+  `lgbm_quantile_v2`) has a mean pinball loss of **0.2096** against **0.2674** for the last-award + FSC-residuals
+  baseline on the same production data and time split (2026-10-15 run, `ml/research/README.md`): **22% lower**.
+- **Why pinball is the right test.** The product prices off the whole winning-price distribution (the chance-to-win
+  curve and its ranges), not one point guess, and pinball loss scores exactly that. The ranges are also honest: the 80%
+  range held 84% of winning prices against 73% for the baseline.
+- **Stated limit.** On parts with 5+ prior awards the median guess is no better than the baseline (13.0% vs 13.4%
+  median error); the gain comes from calibrated ranges and from new parts (79% vs 92%).
+- **The catalog is scored on its own.** The test window mixes in every class the history covers (mostly the old
+  fastener classes), so every retrain also scores the five catalog classes alone, model vs baseline, overall and per
+  class (`metrics[kind]["catalog"]`, `["by_fsc"]`), in the model report and in `/api/health/data` → `model.catalog`.
+  Promotion still uses the whole window. The health check's top-level `pinball_mean` now comes from the same test window
+  as its other numbers (it used to be the active run's original score), next to `baseline_pinball_mean`.
+  `MODEL_CODE_VERSION` went to v2.3 so the next deploy retrains once and re-scores the live model this way.

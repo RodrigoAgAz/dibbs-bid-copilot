@@ -226,6 +226,25 @@ def _tier(m: dict | None) -> dict | None:
             "coverage_80": m.get("coverage_80"), "coverage_90": m.get("coverage_90")}
 
 
+def _catalog_tier(m: dict | None, b: dict | None) -> dict | None:
+    if not m:
+        return None
+    b = b or {}
+    p, bp = m.get("pinball_mean"), b.get("pinball_mean")
+    return {**(_tier(m) or {}), "pinball_mean": p, "baseline_pinball_mean": bp,
+            "pinball_vs_baseline": round(1 - p / bp, 4) if p is not None and bp else None,
+            "baseline_median_abs_pct_error": b.get("median_abs_pct_error"), "baseline_coverage_80": b.get("coverage_80")}
+
+
+def _catalog_info(main: dict, base: dict, fscs: list[str]) -> dict | None:
+    """The product's own supply classes alone, model vs baseline, on the same test window."""
+    tier = _catalog_tier(main.get("catalog"), base.get("catalog"))
+    if tier is None:
+        return None
+    by_fsc = {f: _catalog_tier(s, (base.get("by_fsc") or {}).get(f)) for f, s in (main.get("by_fsc") or {}).items()}
+    return {**tier, "fscs": fscs, "by_fsc": by_fsc}
+
+
 def _model_info(model: ModelRun, real_awards: int, latest: ModelRun | None = None) -> dict:
     """Held-out accuracy of the active model: tested on the most recent awards it never saw (time split).
 
@@ -237,15 +256,19 @@ def _model_info(model: ModelRun, real_awards: int, latest: ModelRun | None = Non
     m = model.metrics or {}
     main, base = m.get("model") or {}, m.get("baseline") or {}
     test = (m.get("windows") or {}).get("test") or [None, None]
+    fscs = m.get("catalog_fscs") or []
     later = (latest.metrics or {}) if latest is not None and latest.id != model.id else {}
     if (later.get("active_model_on_same_test") or {}).get("warm"):
         main = later["active_model_on_same_test"]
         base = later.get("baseline") or base
         test = (later.get("windows") or {}).get("test") or test
+        fscs = later.get("catalog_fscs") or fscs
     return {
         "run_id": model.id,
         "trained_at": _iso(model.created_at),
-        "pinball_mean": m.get("pinball_mean"),
+        # Same test window as every other number here (the latest re-score when there is one).
+        "pinball_mean": main.get("pinball_mean", m.get("pinball_mean")),
+        "baseline_pinball_mean": base.get("pinball_mean"),
         "test_rows": main.get("n"),
         "test_window": [str(test[0]) if test[0] else None, str(test[1]) if test[1] else None],
         "median_abs_pct_error": main.get("median_abs_pct_error"),
@@ -256,6 +279,7 @@ def _model_info(model: ModelRun, real_awards: int, latest: ModelRun | None = Non
         "with_history": _tier(main.get("warm")),
         "new_parts": _tier(main.get("cold")),
         "by_history": {k: _tier(v) for k, v in (main.get("by_history") or {}).items()},
+        "catalog": _catalog_info(main, base, fscs),
         # Training drops the synthetic demo history once this many real award rows exist.
         "real_data": real_awards >= REAL_ONLY_THRESHOLD,
     }

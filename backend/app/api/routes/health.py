@@ -64,10 +64,26 @@ class AccuracyTierOut(BaseModel):
     coverage_90: float | None = None
 
 
+class CatalogTierOut(AccuracyTierOut):
+    pinball_mean: float | None = None
+    baseline_pinball_mean: float | None = None
+    pinball_vs_baseline: float | None = None  # 0.22 = the model's pinball loss is 22% lower than the baseline's
+    baseline_median_abs_pct_error: float | None = None
+    baseline_coverage_80: float | None = None
+
+
+class CatalogAccuracyOut(CatalogTierOut):
+    """The product's own supply classes alone (model vs baseline, same test window)."""
+
+    fscs: list[str] = []
+    by_fsc: dict[str, CatalogTierOut | None] = {}
+
+
 class ActiveModelOut(BaseModel):
     run_id: int
     trained_at: str | None
     pinball_mean: float | None
+    baseline_pinball_mean: float | None = None
     test_rows: int | None = None
     test_window: list[str | None] = []
     median_abs_pct_error: float | None = None
@@ -79,6 +95,7 @@ class ActiveModelOut(BaseModel):
     with_history: AccuracyTierOut | None = None
     new_parts: AccuracyTierOut | None = None
     by_history: dict[str, AccuracyTierOut | None] = {}
+    catalog: CatalogAccuracyOut | None = None
 
 
 class TrackRecordOut(BaseModel):

@@ -445,3 +445,40 @@ def test_simple_username_login_signs_in_as_the_configured_owner(client, db, sett
     r = client.post("/api/auth/login", json={"email": "Demo", "password": "demo"})
     assert r.status_code == 200 and r.json()["user"]["email"] == "owner@atlas-demo.example.com"
     assert r.json()["user"]["role"] == "owner"
+
+
+# ----------------------------------------------------------------------------- catalog accuracy
+def _run(id_, metrics):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(id=id_, metrics=metrics, created_at=None)
+
+
+def _seg(n, pinball, mdape=0.2, cov=0.8):
+    return {"n": n, "pinball_mean": pinball, "median_abs_pct_error": mdape, "coverage_80": cov, "coverage_90": 0.9}
+
+
+def test_model_health_reports_the_catalog_against_the_baseline():
+    from app.services.ops import _model_info
+
+    model = {**_seg(100, 0.25), "warm": _seg(60, 0.2), "catalog": _seg(40, 0.2), "by_fsc": {"2530": _seg(40, 0.2)}}
+    base = {**_seg(100, 0.30), "catalog": _seg(40, 0.25), "by_fsc": {"2530": _seg(40, 0.25, cov=0.7)}}
+    active = _run(6, {"pinball_mean": 0.25, "model": model, "baseline": base, "catalog_fscs": ["1005", "2530"]})
+    info = _model_info(active, real_awards=0)
+    assert info["pinball_mean"] == 0.25 and info["baseline_pinball_mean"] == 0.30
+    cat = info["catalog"]
+    assert cat["fscs"] == ["1005", "2530"] and cat["n"] == 40
+    assert cat["pinball_mean"] == 0.2 and cat["baseline_pinball_mean"] == 0.25 and cat["pinball_vs_baseline"] == 0.2
+    assert cat["by_fsc"]["2530"]["baseline_coverage_80"] == 0.7
+
+    # A later retrain that was not promoted re-scored the active model: every number comes from that window.
+    rescored = {**_seg(120, 0.24), "warm": _seg(70, 0.2), "catalog": _seg(50, 0.18), "by_fsc": {}}
+    later = _run(7, {"pinball_mean": 0.26, "active_model_on_same_test": rescored, "catalog_fscs": ["2530"],
+                     "baseline": {**_seg(120, 0.3), "catalog": _seg(50, 0.24)}})
+    info = _model_info(active, real_awards=0, latest=later)
+    assert info["pinball_mean"] == 0.24 and info["baseline_pinball_mean"] == 0.3
+    assert info["catalog"]["fscs"] == ["2530"] and info["catalog"]["pinball_vs_baseline"] == 0.25
+
+    # Runs trained before catalog scoring existed simply have none.
+    old = _run(5, {"pinball_mean": 0.25, "model": _seg(100, 0.25), "baseline": _seg(100, 0.3)})
+    assert _model_info(old, real_awards=0)["catalog"] is None

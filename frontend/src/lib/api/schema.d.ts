@@ -996,6 +996,8 @@ export interface components {
             trained_at: string | null;
             /** Pinball Mean */
             pinball_mean: number | null;
+            /** Baseline Pinball Mean */
+            baseline_pinball_mean?: number | null;
             /** Test Rows */
             test_rows?: number | null;
             /**
@@ -1027,6 +1029,7 @@ export interface components {
             by_history: {
                 [key: string]: components["schemas"]["AccuracyTierOut"] | null;
             };
+            catalog?: components["schemas"]["CatalogAccuracyOut"] | null;
         };
         /** ActualBidIn */
         ActualBidIn: {
@@ -1140,6 +1143,63 @@ export interface components {
             call_block_reasons: string[];
             /** Quote Requests */
             quote_requests: components["schemas"]["QuoteRequestOut"][];
+        };
+        /**
+         * CatalogAccuracyOut
+         * @description The product's own supply classes alone (model vs baseline, same test window).
+         */
+        CatalogAccuracyOut: {
+            /** N */
+            n?: number | null;
+            /** Median Abs Pct Error */
+            median_abs_pct_error?: number | null;
+            /** Coverage 80 */
+            coverage_80?: number | null;
+            /** Coverage 90 */
+            coverage_90?: number | null;
+            /** Pinball Mean */
+            pinball_mean?: number | null;
+            /** Baseline Pinball Mean */
+            baseline_pinball_mean?: number | null;
+            /** Pinball Vs Baseline */
+            pinball_vs_baseline?: number | null;
+            /** Baseline Median Abs Pct Error */
+            baseline_median_abs_pct_error?: number | null;
+            /** Baseline Coverage 80 */
+            baseline_coverage_80?: number | null;
+            /**
+             * Fscs
+             * @default []
+             */
+            fscs: string[];
+            /**
+             * By Fsc
+             * @default {}
+             */
+            by_fsc: {
+                [key: string]: components["schemas"]["CatalogTierOut"] | null;
+            };
+        };
+        /** CatalogTierOut */
+        CatalogTierOut: {
+            /** N */
+            n?: number | null;
+            /** Median Abs Pct Error */
+            median_abs_pct_error?: number | null;
+            /** Coverage 80 */
+            coverage_80?: number | null;
+            /** Coverage 90 */
+            coverage_90?: number | null;
+            /** Pinball Mean */
+            pinball_mean?: number | null;
+            /** Baseline Pinball Mean */
+            baseline_pinball_mean?: number | null;
+            /** Pinball Vs Baseline */
+            pinball_vs_baseline?: number | null;
+            /** Baseline Median Abs Pct Error */
+            baseline_median_abs_pct_error?: number | null;
+            /** Baseline Coverage 80 */
+            baseline_coverage_80?: number | null;
         };
         /** DashboardLine */
         DashboardLine: {

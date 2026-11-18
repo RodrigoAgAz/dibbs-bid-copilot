@@ -2225,6 +2225,17 @@
             ],
             "title": "Pinball Mean"
           },
+          "baseline_pinball_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Pinball Mean"
+          },
           "test_rows": {
             "anyOf": [
               {
@@ -2345,6 +2356,16 @@
             "type": "object",
             "title": "By History",
             "default": {}
+          },
+          "catalog": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogAccuracyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -2748,6 +2769,240 @@
           "quote_requests"
         ],
         "title": "CandidateOut"
+      },
+      "CatalogAccuracyOut": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Abs Pct Error"
+          },
+          "coverage_80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 80"
+          },
+          "coverage_90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 90"
+          },
+          "pinball_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinball Mean"
+          },
+          "baseline_pinball_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Pinball Mean"
+          },
+          "pinball_vs_baseline": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinball Vs Baseline"
+          },
+          "baseline_median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Median Abs Pct Error"
+          },
+          "baseline_coverage_80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Coverage 80"
+          },
+          "fscs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fscs",
+            "default": []
+          },
+          "by_fsc": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/CatalogTierOut"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "By Fsc",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "title": "CatalogAccuracyOut",
+        "description": "The product's own supply classes alone (model vs baseline, same test window)."
+      },
+      "CatalogTierOut": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Abs Pct Error"
+          },
+          "coverage_80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 80"
+          },
+          "coverage_90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage 90"
+          },
+          "pinball_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinball Mean"
+          },
+          "baseline_pinball_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Pinball Mean"
+          },
+          "pinball_vs_baseline": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinball Vs Baseline"
+          },
+          "baseline_median_abs_pct_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Median Abs Pct Error"
+          },
+          "baseline_coverage_80": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Coverage 80"
+          }
+        },
+        "type": "object",
+        "title": "CatalogTierOut"
       },
       "DashboardLine": {
         "properties": {

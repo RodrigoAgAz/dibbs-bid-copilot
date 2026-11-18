@@ -98,7 +98,11 @@ def train_and_maybe_promote(db: Session, as_of: date, force_promote: bool = Fals
     from app.services.item_index import build_item_index, clear_item_index
 
     items = build_item_index(db)  # similar items (same part family / manufacturer) for the cold-start model
-    result = train_from_awards(df, as_of=as_of, active_model=active_model, items=items)
+    from app.config import DEFAULT_FSC_WATCHLIST
+
+    # The catalog's classes are also scored on their own (model vs baseline): the test window mixes in every class.
+    result = train_from_awards(df, as_of=as_of, active_model=active_model, items=items,
+                               focus_fscs=set(DEFAULT_FSC_WATCHLIST))
     clear_item_index()
     try:
         result.metrics["pilot_regret"] = pilot_regret_metrics(db, result, active_model)
